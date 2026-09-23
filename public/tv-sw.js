@@ -1,7 +1,7 @@
-var TV_SHELL_CACHE = "v360-tv-shell-v046";
+var TV_SHELL_CACHE = "v360-tv-shell-v047";
 var TV_SHELL_FILES = [
   "/tv.html",
-  "/tv.js?v=046",
+  "/tv.js?v=047",
 ];
 
 self.addEventListener("install", function (event) {
@@ -43,7 +43,6 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Network-first for tv.js so Smart TVs never stick on a broken cached shell.
   if (new URL(event.request.url).pathname === "/tv.js") {
     event.respondWith(
       fetch(event.request)
@@ -52,14 +51,14 @@ self.addEventListener("fetch", function (event) {
             var copy = response.clone();
             caches.open(TV_SHELL_CACHE).then(function (cache) {
               cache.put(event.request, copy);
-              cache.put("/tv.js?v=046", copy.clone());
+              cache.put("/tv.js?v=047", copy.clone());
             });
           }
           return response;
         })
         .catch(function () {
           return caches.match(event.request).then(function (cached) {
-            return cached || caches.match("/tv.js?v=046");
+            return cached || caches.match("/tv.js?v=047");
           });
         })
     );

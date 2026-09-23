@@ -295,7 +295,7 @@ export function PlayerApp() {
 
     // Sraf: leave Next/React entirely — static pairing page (no IDB/SW)
     if (isFragileSmartTvBrowser()) {
-      window.location.replace("/tv.html?v=046");
+      window.location.replace("/tv.html?v=047");
       return () => {
         cancelled = true;
       };

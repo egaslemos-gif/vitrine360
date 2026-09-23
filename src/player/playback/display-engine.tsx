@@ -19,6 +19,9 @@ export type PlaybackItem = {
     offlineUrl?: string;
     checksum?: string;
   }[];
+  /** EXPERIENCE-09 — false when ref invalid / not published. Never execute HTML. */
+  experienceExecutable?: boolean;
+  experienceBlockReason?: string;
 };
 
 const stageStyle: CSSProperties = {
@@ -230,13 +233,80 @@ function Slide({ item, onNaturalEnd }: { item: PlaybackItem; onNaturalEnd?: () =
 
   if (item.type === "CLOCK") {
     return (
-      <div style={{ ...stageStyle, flexDirection: "column", background: "#0b1220", textAlign: "center" }}>
-        <p className="text-8xl font-semibold tabular-nums">
+      <div
+        style={{
+          ...stageStyle,
+          flexDirection: "column",
+          background: "#0b1220",
+          textAlign: "center",
+          padding: "4vh 6vw",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontWeight: 700,
+            lineHeight: 1,
+            letterSpacing: "0.04em",
+            fontVariantNumeric: "tabular-nums",
+            fontFamily: "ui-monospace, Consolas, monospace",
+            fontSize: "clamp(120px, 32vh, 320px)",
+          }}
+        >
           {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </p>
-        <p className="mt-4 text-2xl text-white/70">
+        <p
+          style={{
+            marginTop: "3vh",
+            opacity: 0.78,
+            fontWeight: 500,
+            fontSize: "clamp(40px, 7vh, 88px)",
+          }}
+        >
           {clock.toLocaleDateString()}
         </p>
+      </div>
+    );
+  }
+
+  // EXPERIENCE-09: typed Content reference only — no iframe / HTML / eval here.
+  // Runtime Core (EX-10) + Admission (EX-08) are required before execution.
+  if (item.type === "EXPERIENCE") {
+    const exp =
+      item.payload?.experience && typeof item.payload.experience === "object"
+        ? (item.payload.experience as { experienceId?: string; version?: string })
+        : null;
+    const blocked =
+      item.experienceExecutable === false ||
+      !exp?.experienceId ||
+      !exp?.version;
+    return (
+      <div
+        style={{
+          ...stageStyle,
+          flexDirection: "column",
+          textAlign: "center",
+          padding: "0 8vw",
+          background: "linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%)",
+        }}
+        data-experience-playback="safe-fallback"
+        data-experience-block={item.experienceBlockReason ?? (blocked ? "EXPERIENCE_UNAVAILABLE" : "PENDING_RUNTIME")}
+      >
+        <p className="text-sm tracking-[0.4em] text-white/40">VITRINE360</p>
+        <h1
+          className="mt-8 max-w-5xl text-4xl font-semibold leading-tight md:text-5xl"
+          style={{ fontFamily: "var(--font-fraunces), serif" }}
+        >
+          {item.title}
+        </h1>
+        <p className="mt-6 text-lg text-white/55">
+          {blocked ? "EXPERIENCE_UNAVAILABLE" : "EXPERIENCE · awaiting Runtime admission"}
+        </p>
+        {exp?.experienceId ? (
+          <p className="mt-3 font-mono text-sm text-white/35">
+            {exp.experienceId}@{exp.version}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -248,16 +318,49 @@ function Slide({ item, onNaturalEnd }: { item: PlaybackItem; onNaturalEnd?: () =
     "";
 
   return (
-    <div style={{ ...stageStyle, flexDirection: "column", textAlign: "center", padding: "0 8vw", background: "linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%)" }}>
-      <p className="text-sm tracking-[0.4em] text-white/40">VITRINE360</p>
+    <div
+      style={{
+        ...stageStyle,
+        flexDirection: "column",
+        textAlign: "center",
+        padding: "6vh 8vw",
+        background: "linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%)",
+      }}
+    >
+      <p
+        style={{
+          margin: 0,
+          letterSpacing: "0.35em",
+          opacity: 0.45,
+          fontWeight: 600,
+          fontSize: "clamp(20px, 2.8vh, 36px)",
+        }}
+      >
+        VITRINE360
+      </p>
       <h1
-        className="mt-8 max-w-5xl text-5xl font-semibold leading-tight md:text-6xl"
-        style={{ fontFamily: "var(--font-fraunces), serif" }}
+        style={{
+          marginTop: "4vh",
+          maxWidth: "92vw",
+          fontWeight: 700,
+          lineHeight: 1.15,
+          fontFamily: "var(--font-fraunces), Georgia, serif",
+          fontSize: "clamp(64px, 11vh, 160px)",
+        }}
       >
         {item.title}
       </h1>
       {body ? (
-        <p className="mt-8 max-w-4xl text-2xl leading-relaxed text-white/80 md:text-3xl">
+        <p
+          style={{
+            marginTop: "3.5vh",
+            maxWidth: "88vw",
+            opacity: 0.88,
+            lineHeight: 1.35,
+            fontWeight: 500,
+            fontSize: "clamp(36px, 5.5vh, 84px)",
+          }}
+        >
           {body}
         </p>
       ) : null}

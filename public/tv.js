@@ -5,7 +5,7 @@
  */
 (function () {
   var LS_KEY = "v360-player-config";
-  var VERSION = "0.1.18-smarttv-static";
+  var VERSION = "0.1.19-smarttv-static";
   var root = document.getElementById("root");
   var claimTimer = null;
   var bootSec = 0;
@@ -613,6 +613,19 @@
       .replace(/"/g, "&quot;");
   }
 
+  /** Sraf/Hisense often ignore CSS clamp()/vw — size type from viewport height in px. */
+  function tvFontPx(fractionOfHeight, minPx, maxPx) {
+    var h =
+      window.innerHeight ||
+      (document.documentElement && document.documentElement.clientHeight) ||
+      720;
+    var px = Math.round(Number(h) * Number(fractionOfHeight));
+    if (!(px > 0)) px = minPx;
+    if (px < minPx) px = minPx;
+    if (px > maxPx) px = maxPx;
+    return px;
+  }
+
   function buildMediaUrl(item) {
     if (item.assets && item.assets.length) return item.assets[0].url;
     if (item.payload && item.payload.url) return item.payload.url;
@@ -860,14 +873,17 @@
 
     if (type === "EXPERIENCE") {
       /* EXPERIENCE-09: Legacy must NOT execute Experience packages. */
+      var expBrand = tvFontPx(0.028, 20, 36);
+      var expTitle = tvFontPx(0.1, 56, 140);
+      var expSub = tvFontPx(0.04, 28, 56);
       setHtml(
         '<div class="slide ' + transitionClass(item.transition) + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-          'height:100%;padding:60px;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
-          '<p style="font-size:14px;letter-spacing:0.4em;opacity:0.4;margin:0">VITRINE360</p>' +
-          '<h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:600;margin:32px 0 0;max-width:900px;line-height:1.2">' +
+          'height:100%;padding:6vh 8vw;box-sizing:border-box;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
+          '<p style="font-size:' + expBrand + 'px;letter-spacing:0.35em;opacity:0.45;margin:0;font-weight:600">VITRINE360</p>' +
+          '<h1 style="font-size:' + expTitle + 'px;font-weight:700;margin:' + Math.round(expTitle * 0.35) + 'px 0 0;max-width:92vw;line-height:1.15">' +
             escapeHtml(item.title || "Experience") +
           '</h1>' +
-          '<p style="font-size:clamp(1rem,2.5vw,1.4rem);margin:28px 0 0;opacity:0.65">EXPERIENCE_UNSUPPORTED</p>' +
+          '<p style="font-size:' + expSub + 'px;margin:' + Math.round(expSub * 0.7) + 'px 0 0;opacity:0.65">EXPERIENCE_UNSUPPORTED</p>' +
         '</div>'
       );
       hold(slideDuration(item), generation);
@@ -889,17 +905,20 @@
       return;
     }
 
-    // TEXT, NOTICE, EVENT, NEWS, QR_CODE — render as text card
+    // TEXT, NOTICE, EVENT, NEWS, QR_CODE — TV-scale type (no clamp — Sraf drops it)
     var payload = item.payload || {};
     var body = payload.body || payload.message || payload.description || "";
+    var brandPx = tvFontPx(0.028, 20, 36);
+    var titlePx = tvFontPx(0.11, 64, 160);
+    var bodyPx = tvFontPx(0.055, 36, 84);
     setHtml(
       '<div class="slide ' + transitionClass(item.transition) + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-        'height:100%;padding:60px;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
-        '<p style="font-size:14px;letter-spacing:0.4em;opacity:0.4;margin:0">VITRINE360</p>' +
-        '<h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:600;margin:32px 0 0;max-width:900px;line-height:1.2">' +
+        'height:100%;padding:6vh 8vw;box-sizing:border-box;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
+        '<p style="font-size:' + brandPx + 'px;letter-spacing:0.35em;opacity:0.45;margin:0;font-weight:600">VITRINE360</p>' +
+        '<h1 style="font-size:' + titlePx + 'px;font-weight:700;margin:' + Math.round(titlePx * 0.35) + 'px 0 0;max-width:92vw;line-height:1.15">' +
           escapeHtml(item.title) +
         '</h1>' +
-        (body ? '<p style="font-size:clamp(1.1rem,3vw,1.6rem);margin:32px auto 0;max-width:800px;opacity:0.8;line-height:1.5">' +
+        (body ? '<p style="font-size:' + bodyPx + 'px;margin:' + Math.round(bodyPx * 0.7) + 'px auto 0;max-width:88vw;opacity:0.88;line-height:1.35;font-weight:500">' +
           escapeHtml(body) + '</p>' : '') +
       '</div>'
     );
@@ -1025,16 +1044,21 @@
 
     function update() {
       var now = new Date();
-      var h = String(now.getHours()).length < 2 ? "0" + now.getHours() : String(now.getHours());
-      var m = String(now.getMinutes()).length < 2 ? "0" + now.getMinutes() : String(now.getMinutes());
+      var h = String(now.getHours());
+      var m = String(now.getMinutes());
+      if (h.length < 2) h = "0" + h;
+      if (m.length < 2) m = "0" + m;
       var dateStr = now.toLocaleDateString();
+      var timePx = tvFontPx(0.32, 120, 320);
+      var datePx = tvFontPx(0.07, 40, 88);
       setHtml(
         '<div class="slide" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-          'height:100%;background:#0b1220">' +
-          '<p style="font-size:clamp(4rem,12vw,10rem);font-weight:600;margin:0;font-variant-numeric:tabular-nums">' +
+          'height:100%;background:#0b1220;text-align:center;padding:4vh 6vw;box-sizing:border-box">' +
+          '<p style="font-size:' + timePx + 'px;font-weight:700;margin:0;line-height:1;letter-spacing:0.04em;' +
+            'font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace">' +
             h + ":" + m +
           '</p>' +
-          '<p style="font-size:clamp(1.2rem,3vw,2rem);margin-top:16px;opacity:0.7">' +
+          '<p style="font-size:' + datePx + 'px;margin-top:' + Math.round(datePx * 0.55) + 'px;opacity:0.78;font-weight:500">' +
             dateStr +
           '</p>' +
         '</div>'
