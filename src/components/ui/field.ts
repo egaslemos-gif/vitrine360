@@ -7,4 +7,5 @@ export const nativeSelectClass =
 
 export const fieldStackClass = "block w-full min-w-0 space-y-2";
 
-export const formShellClass = "block w-full min-w-0 max-w-xl";
+export const formShellClass =
+  "w-[min(100%,36rem)] max-w-full shrink-0";

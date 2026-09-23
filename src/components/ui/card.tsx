@@ -8,7 +8,9 @@ export function Card({
   return (
     <div
       className={cn(
-        "block w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-sm",
+        // Do NOT default to w-full — inside flex centering (login, empty states)
+        // percentage width on the flex item collapses (cyclic %).
+        "rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-sm",
         className,
       )}
       {...props}
@@ -48,9 +50,7 @@ export function CardContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cn("block w-full p-6 pt-0", className)} {...props} />
-  );
+  return <div className={cn("p-6 pt-0", className)} {...props} />;
 }
 
 export function CardFooter({

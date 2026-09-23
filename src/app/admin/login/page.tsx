@@ -66,7 +66,7 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md border-0 bg-white/80 shadow-lg backdrop-blur">
+      <Card className="w-[min(100%,28rem)] shrink-0 border-0 bg-white/80 shadow-lg backdrop-blur">
         <CardHeader>
           <CardTitle
             className="text-3xl text-[var(--color-primary)]"
@@ -86,8 +86,8 @@ function LoginForm() {
           ) : null}
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={onSubmit} className="w-full min-w-0 space-y-4">
+            <div className="w-full min-w-0 space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -97,7 +97,7 @@ function LoginForm() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="w-full min-w-0 space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
