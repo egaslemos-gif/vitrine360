@@ -23,7 +23,7 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <h1 className="ui-page-title">{title}</h1>
         {description ? (
           <p className="ui-secondary mt-1 max-w-xl">{description}</p>

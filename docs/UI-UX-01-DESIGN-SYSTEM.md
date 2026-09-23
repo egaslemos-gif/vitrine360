@@ -26,7 +26,8 @@ Professional, lightweight, clear, consistent, operational admin UI:
 | `--color-primary` / `--color-primary-hover` | Brand accent (emerald) — not blanket green |
 | `--color-success` / `warning` / `danger` / `info` | Semantic status |
 | `--color-preview-bg` | Preview viewport fill |
-| `--spacing-*` | 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 |
+| `--spacing-3/5/10` | 12 / 20 / 40 (numeric only — named sm/md/xl break `max-w-*`) |
+| `--container-*` | `max-w-xs` … `max-w-7xl` (xs→7xl) |
 
 Typography utilities: `.ui-page-title`, `.ui-section-title`, `.ui-card-title`, `.ui-body`, `.ui-secondary`, `.ui-caption`, `.ui-sidebar-section`, `.ui-content-canvas`, `.ui-meta-grid`.
 

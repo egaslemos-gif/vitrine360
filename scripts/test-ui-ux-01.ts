@@ -68,6 +68,27 @@ function main() {
     !titleBlock.includes("font-display"),
     "UI-UX-001 page title not Fraunces",
   );
+  // Named --spacing-sm/md/xl collide with Tailwind max-w-* (collapse to 8–48px).
+  assert.ok(
+    !/--spacing-sm:/.test(css) &&
+      !/--spacing-md:/.test(css) &&
+      !/--spacing-xl:/.test(css) &&
+      !/--spacing-2xl:/.test(css),
+    "UI-UX-001 no spacing tokens that collide with max-w-*",
+  );
+  for (const c of [
+    "--container-sm",
+    "--container-md",
+    "--container-xl",
+    "--container-2xl",
+  ]) {
+    assert.ok(css.includes(c), `UI-UX-001 container ${c}`);
+  }
+  const pageHeader = read("src/components/ui/page-header.tsx");
+  assert.ok(
+    pageHeader.includes("flex-1") && pageHeader.includes("max-w-xl"),
+    "UI-UX-001 PageHeader title column flex-1 + max-w-xl",
+  );
   console.log("  UI-UX-001 PASS");
 
   // UI-UX-002 — StatusBadge SSoT
