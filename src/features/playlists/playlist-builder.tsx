@@ -38,6 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PlaylistTimedPreview } from "./playlist-timed-preview";
 import { TRANSITIONS, type Transition } from "@/domain/types";
 import { useEffect, useRef } from "react";
+import { TypeBadge } from "@/components/ui/type-badge";
 
 type PlaylistItem = {
   id: string;
@@ -116,12 +117,14 @@ function SortableItem({
       <div className="flex-1">
         <p className="font-medium text-sm">{item.content.title}</p>
         <p className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-          {item.content.type} •{" "}
-          {isNatural
-            ? "Natural"
-            : isFallback
-            ? `${item.content.durationMs / 1000}s (Content)`
-            : `${item.durationOverrideMs! / 1000}s (Override)`}
+          <TypeBadge contentType={item.content.type} />
+          <span>
+            {isNatural
+              ? "Natural"
+              : isFallback
+              ? `${item.content.durationMs / 1000}s (Content)`
+              : `${item.durationOverrideMs! / 1000}s (Override)`}
+          </span>
         </p>
       </div>
 
@@ -425,8 +428,8 @@ export function PlaylistBuilder({
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1 h-fit">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <Card className="h-fit border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-3">
           <CardHeader>
             <CardTitle>Detalhes</CardTitle>
           </CardHeader>
@@ -455,41 +458,21 @@ export function PlaylistBuilder({
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card className="border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Pré-visualização</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PlaylistTimedPreview
-              items={items.map((i) => ({
-                id: i.id,
-                title: i.content.title,
-                type: i.content.type,
-                durationMs: i.durationOverrideMs ?? i.content.durationMs,
-                transition: i.transition,
-                fitMode: i.fitMode,
-                payload: i.content.payload,
-                mediaUrl: i.content.mediaUrl,
-              }))}
-              selectedIndex={previewIndex}
-              onIndexChange={setPreviewIndex}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Sequência de Reprodução</CardTitle>
+            <CardTitle>Itens da Playlist</CardTitle>
             <Button size="sm" onClick={() => setIsPickerOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Conteúdo
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar
             </Button>
           </CardHeader>
           <CardContent>
             {items.length === 0 ? (
-              <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground mb-4">Playlist vazia</p>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="rounded-lg border-2 border-dashed py-12 text-center">
+                <p className="mb-2 text-[var(--color-muted-foreground)]">
+                  Playlist vazia
+                </p>
+                <p className="mb-4 text-sm text-[var(--color-muted-foreground)]">
                   Adicione conteúdos para começar a construir esta playlist.
                 </p>
                 <Button variant="secondary" onClick={() => setIsPickerOpen(true)}>
@@ -515,6 +498,28 @@ export function PlaylistBuilder({
                 </SortableContext>
               </DndContext>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-5">
+          <CardHeader>
+            <CardTitle>Pré-visualização</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PlaylistTimedPreview
+              items={items.map((i) => ({
+                id: i.id,
+                title: i.content.title,
+                type: i.content.type,
+                durationMs: i.durationOverrideMs ?? i.content.durationMs,
+                transition: i.transition,
+                fitMode: i.fitMode,
+                payload: i.content.payload,
+                mediaUrl: i.content.mediaUrl,
+              }))}
+              selectedIndex={previewIndex}
+              onIndexChange={setPreviewIndex}
+            />
           </CardContent>
         </Card>
       </div>

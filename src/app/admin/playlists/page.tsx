@@ -2,6 +2,7 @@ import { AccessDenied } from "@/components/access-denied";
 import { requireAdminPage } from "@/lib/admin-access";
 import { listPlaylistsWithUsage } from "@/services/playlists";
 import { PlaylistManager } from "@/features/playlists/playlist-manager";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function PlaylistsPage() {
   const session = await requireAdminPage("manage_playlists");
@@ -10,18 +11,11 @@ export default async function PlaylistsPage() {
   const playlistsWithUsage = await listPlaylistsWithUsage(session.tenantId);
 
   return (
-    <div className="space-y-8">
-      <header className="admin-page-header flex flex-col pb-4 pt-4">
-        <h1
-          className="text-3xl font-semibold text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Playlists
-        </h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-          Sequências de reprodução — gerir e atribuir a devices
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-7xl space-y-8">
+      <PageHeader
+        title="Playlists"
+        description="Gestão e organização das sequências de reprodução"
+      />
       <PlaylistManager playlists={playlistsWithUsage} />
     </div>
   );

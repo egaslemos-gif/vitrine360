@@ -466,12 +466,10 @@ export function PlayerApp() {
   // Countdown + local expiry refresh (parity with public/tv.js)
   useEffect(() => {
     if (phase !== "pairing" || !expiresAt) {
-      setPairExpiryLabel("");
       return;
     }
     const expiresMs = Date.parse(expiresAt);
     if (!Number.isFinite(expiresMs)) {
-      setPairExpiryLabel("");
       return;
     }
 
@@ -484,17 +482,21 @@ export function PlayerApp() {
       }
       const m = Math.floor(diff / 60_000);
       const s = Math.floor((diff % 60_000) / 1000);
-      setPairExpiryLabel(
-        `Expira em ${m}:${s < 10 ? `0${s}` : s}`,
-      );
+      setPairExpiryLabel(`Expira em ${m}:${s < 10 ? `0${s}` : s}`);
       return true;
     };
 
-    if (!tick()) return;
     const id = window.setInterval(() => {
       if (!tick()) window.clearInterval(id);
     }, 1000);
-    return () => window.clearInterval(id);
+    // First tick deferred so effect does not sync-setState (lint).
+    const first = window.setTimeout(() => {
+      if (!tick()) window.clearInterval(id);
+    }, 0);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(first);
+    };
   }, [phase, expiresAt, refreshExpiredPairing]);
 
   const itemsRef = useRef(items);

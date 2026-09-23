@@ -4,7 +4,18 @@ import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { MetadataRow } from "@/components/ui/metadata-row";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { MonitorPlay, Search, X, Trash2 } from "lucide-react";
 import { LivePresence } from "@/features/devices/live-presence";
 import { DeviceActions } from "@/features/devices/device-actions";
@@ -220,22 +231,23 @@ export function DeviceListManager({
 
   return (
     <div className="space-y-6">
-      {/* Filters Toolbar */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center bg-white p-4 rounded-xl shadow-sm ring-1 ring-black/5">
+      <FilterBar>
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--color-muted-foreground)]" />
           <Input
             placeholder="Procurar ecrã (nome ou código)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 bg-[var(--color-secondary)]/30 border-[var(--color-border)]"
+            className="h-9 border-[var(--color-border)] bg-[var(--color-secondary)]/30 pl-9"
+            aria-label="Pesquisar ecrãs"
           />
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <select
             value={presenceFilter}
             onChange={(e) => setPresenceFilter(e.target.value)}
+            aria-label="Filtrar por estado"
             className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
           >
             <option value="ALL">Estado: Todos</option>
@@ -247,6 +259,7 @@ export function DeviceListManager({
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
+            aria-label="Filtrar por categoria"
             className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
           >
             <option value="ALL">Categoria: Todas</option>
@@ -262,6 +275,7 @@ export function DeviceListManager({
           <select
             value={groupFilter}
             onChange={(e) => setGroupFilter(e.target.value)}
+            aria-label="Filtrar por grupo"
             className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
           >
             <option value="ALL">Grupo: Todos</option>
@@ -275,6 +289,7 @@ export function DeviceListManager({
           <select
             value={playlistFilter}
             onChange={(e) => setPlaylistFilter(e.target.value)}
+            aria-label="Filtrar por playlist"
             className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
           >
             <option value="ALL">Playlist: Todas</option>
@@ -282,8 +297,13 @@ export function DeviceListManager({
             <option value="UNASSIGNED">Sem Playlist</option>
           </select>
 
-          {(search || presenceFilter !== "ALL" || categoryFilter !== "ALL" || groupFilter !== "ALL" || playlistFilter !== "ALL") && (
+          {(search ||
+            presenceFilter !== "ALL" ||
+            categoryFilter !== "ALL" ||
+            groupFilter !== "ALL" ||
+            playlistFilter !== "ALL") && (
             <button
+              type="button"
               onClick={() => {
                 setSearch("");
                 setPresenceFilter("ALL");
@@ -292,14 +312,14 @@ export function DeviceListManager({
                 setPlaylistFilter("ALL");
               }}
               title="Limpar todos os filtros"
-              className="h-9 px-3 flex items-center justify-center rounded-md border border-[var(--color-border)] text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+              className="flex h-9 items-center justify-center rounded-md border border-[var(--color-border)] px-3 text-sm text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]"
             >
-              <X className="h-4 w-4 mr-2" />
+              <X className="mr-2 h-4 w-4" />
               Limpar
             </button>
           )}
         </div>
-      </div>
+      </FilterBar>
 
       {/* Device Grid Header */}
       <div className="flex items-center justify-between mt-6">
@@ -315,74 +335,125 @@ export function DeviceListManager({
       </div>
       
       {filteredDevices.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center border rounded-xl border-dashed bg-white/40">
-          <p className="text-[var(--color-muted-foreground)]">Nenhum ecrã encontrado com os filtros atuais.</p>
-          <button 
-            onClick={() => {
-              setSearch("");
-              setPresenceFilter("ALL");
-              setCategoryFilter("ALL");
-              setGroupFilter("ALL");
-              setPlaylistFilter("ALL");
-            }}
-            className="mt-2 text-sm text-[var(--color-primary)] font-medium hover:underline"
-          >
-            Limpar Filtros
-          </button>
-        </div>
+        <EmptyState
+          title="Nenhum ecrã encontrado"
+          description="Ajuste os filtros ou registe um novo ecrã para começar."
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setPresenceFilter("ALL");
+                setCategoryFilter("ALL");
+                setGroupFilter("ALL");
+                setPlaylistFilter("ALL");
+              }}
+            >
+              Limpar filtros
+            </Button>
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {filteredDevices.map((d) => (
-            <Card key={d.id} className="overflow-hidden shadow-sm transition-all hover:shadow-md border-0 ring-1 ring-black/5 bg-white">
-              <CardHeader className="bg-[var(--color-secondary)]/30 border-b border-[var(--color-border)] px-4 py-4 flex flex-row items-center justify-between space-y-0">
-                <div className="flex items-center gap-3 truncate">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(d.id)}
-                    onChange={() => toggleSelection(d.id)}
-                    className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)] cursor-pointer"
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filteredDevices.map((d) => {
+            const live = liveMap[d.id];
+            const presence = live?.presence ?? d.presence;
+            const playlistName =
+              playlists.find((p) => p.id === d.currentPlaylistId)?.name ??
+              "—";
+            return (
+              <Card
+                key={d.id}
+                className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-elevated)]"
+              >
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(d.id)}
+                      onChange={() => toggleSelection(d.id)}
+                      aria-label={`Seleccionar ${d.name ?? d.deviceCode ?? d.id}`}
+                      className="h-4 w-4 cursor-pointer rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                    />
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[var(--color-muted)] text-[var(--color-primary)]">
+                      <MonitorPlay className="h-7 w-7" aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="mb-1">
+                        <StatusBadge status={presence} />
+                      </div>
+                      <CardTitle className="truncate text-base" title={d.name ?? ""}>
+                        <Link
+                          href={`/admin/devices/${d.id}`}
+                          className="hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+                        >
+                          {d.name ?? "Sem nome"}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription className="truncate font-mono text-xs">
+                        {d.deviceCode ?? "—"}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <DeviceActions
+                    device={{
+                      id: d.id,
+                      name: d.name ?? "",
+                      deviceCode: d.deviceCode ?? "",
+                      location: d.location,
+                    }}
                   />
-                  <div className="p-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-md shrink-0">
-                    <MonitorPlay className="w-5 h-5" />
+                </CardHeader>
+                <CardContent className="space-y-2.5 px-4 pb-3">
+                  <MetadataRow label="Localização">
+                    {d.location ?? "—"}
+                  </MetadataRow>
+                  <MetadataRow label="Último contacto">
+                    {(live?.lastSeenAt ?? d.lastSeenAt)
+                      ? new Date(
+                          (live?.lastSeenAt ?? d.lastSeenAt) as string,
+                        ).toLocaleString("pt-PT")
+                      : "—"}
+                  </MetadataRow>
+                  <MetadataRow label="Manifest">
+                    v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
+                  </MetadataRow>
+                  <MetadataRow label="Playlist">{playlistName}</MetadataRow>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <span className="rounded-md bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                      {d.displayType}
+                    </span>
+                    <span className="rounded-md bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-muted-foreground)]">
+                      v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
+                    </span>
                   </div>
-                  <div className="min-w-0">
-                    <CardTitle className="text-base truncate" title={d.name ?? ""}>
-                      <Link
-                        href={`/admin/devices/${d.id}`}
-                        className="hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
-                      >
-                        {d.name}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription className="text-xs truncate">
-                      {d.deviceCode} · {d.displayType} ·{" "}
-                      {d.location ?? "Sem localização"}
-                    </CardDescription>
+                  <div className="pt-1">
+                    <AssignPlaylistForm
+                      deviceId={d.id}
+                      playlists={playlists}
+                      currentPlaylistId={d.currentPlaylistId}
+                    />
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
+                </CardContent>
+                <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-muted)]/30 px-4 py-3">
+                  <Link
+                    href={`/admin/devices/${d.id}`}
+                    className="inline-flex h-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-xs font-medium hover:bg-[var(--color-muted)]"
+                  >
+                    Ver detalhes
+                  </Link>
                   <LivePresence
-                    presence={liveMap[d.id]?.presence ?? d.presence}
-                    version={
-                      liveMap[d.id]?.manifestVersion ?? d.manifestVersion ?? 0
-                    }
-                    lastSeenAt={liveMap[d.id]?.lastSeenAt ?? d.lastSeenAt}
-                    observability={liveMap[d.id]?.observability ?? null}
+                    presence={presence}
+                    version={live?.manifestVersion ?? d.manifestVersion ?? 0}
+                    lastSeenAt={live?.lastSeenAt ?? d.lastSeenAt}
+                    observability={live?.observability ?? null}
                   />
-                  <DeviceActions device={{ id: d.id, name: d.name ?? "", deviceCode: d.deviceCode ?? "", location: d.location }} />
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 bg-white">
-                <div className="pt-2">
-                  <AssignPlaylistForm
-                    deviceId={d.id}
-                    playlists={playlists}
-                    currentPlaylistId={d.currentPlaylistId}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       )}
 

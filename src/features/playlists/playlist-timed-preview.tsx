@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  PreviewViewport,
+  type PreviewAspect,
+} from "@/components/ui/preview-viewport";
+import { TypeBadge } from "@/components/ui/type-badge";
+import { Play, Pause, SkipBack, SkipForward, RotateCcw } from "lucide-react";
 
 export type PreviewItem = {
   id: string;
@@ -14,7 +21,12 @@ export type PreviewItem = {
   mediaUrl: string | null;
 };
 
-import { Play, Pause, SkipBack, SkipForward, RotateCcw } from "lucide-react";
+const ASPECT_OPTIONS: { value: PreviewAspect; label: string }[] = [
+  { value: "16/9", label: "16:9" },
+  { value: "4/3", label: "4:3" },
+  { value: "9/16", label: "9:16" },
+  { value: "1/1", label: "1:1" },
+];
 
 export function PlaylistTimedPreview({
   items,
@@ -27,6 +39,7 @@ export function PlaylistTimedPreview({
 }) {
   const [playing, setPlaying] = useState(false);
   const [tick, setTick] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState<PreviewAspect>("16/9");
   const startedRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -43,7 +56,6 @@ export function PlaylistTimedPreview({
     startedRef.current = Date.now();
     const resetId = window.setTimeout(() => setTick(0), 0);
 
-    // If it's a natural duration video, let the video element's onEnded handle the transition
     if (current.type === "VIDEO" && current.durationMs === 0) {
       return () => window.clearTimeout(resetId);
     }
@@ -85,10 +97,15 @@ export function PlaylistTimedPreview({
 
   if (!items.length) {
     return (
-      <div className="flex h-48 flex-col items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-muted)]/40 p-6 text-center">
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Adicione itens para pré-visualizar a sequência.
-        </p>
+      <div className="space-y-3">
+        <AspectSelector value={aspectRatio} onChange={setAspectRatio} />
+        <PreviewViewport aspectRatio={aspectRatio} label="Pré-visualização">
+          <div className="flex h-full w-full flex-col items-center justify-center bg-[var(--color-muted)]/40 p-6 text-center">
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Adicione itens para pré-visualizar a sequência.
+            </p>
+          </div>
+        </PreviewViewport>
       </div>
     );
   }
@@ -112,39 +129,36 @@ export function PlaylistTimedPreview({
 
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-[var(--color-border)] shadow-sm">
-      {/* Player Screen */}
-      <div className="relative aspect-video w-full bg-[#070b14] text-white">
-        <div className={`player-slide-${current?.transition || "fade"} h-full w-full`}>
-          <Slide item={current!} videoRef={videoRef} playing={playing} />
-        </div>
-        
-        {/* Overlay Badges */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-4 py-2 text-[11px] font-medium tracking-wider text-white">
-          <span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-md backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            PREVIEW {index + 1}/{items.length}
-          </span>
-          <span className="bg-black/40 px-2 py-1 rounded-md backdrop-blur-sm opacity-80 uppercase tracking-widest">
-            {current?.type}
-          </span>
-        </div>
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-muted)]/30 px-3 py-2">
+        <AspectSelector value={aspectRatio} onChange={setAspectRatio} />
+        <TypeBadge contentType={current?.type} />
       </div>
 
-      {/* Player Controls */}
-      <div className="flex flex-col bg-white">
-        {/* Progress Bar (YouTube style directly above controls) */}
-        <div className="group relative h-1 w-full bg-[var(--color-muted)] cursor-pointer">
+      <PreviewViewport aspectRatio={aspectRatio}>
+        <div className="relative h-full w-full text-white">
+          <div className={`player-slide-${current?.transition || "fade"} h-full w-full`}>
+            <Slide item={current!} videoRef={videoRef} playing={playing} />
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-4 py-2 text-[11px] font-medium tracking-wider text-white">
+            <span className="flex items-center gap-2 rounded-md bg-black/40 px-2 py-1 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+              PREVIEW {index + 1}/{items.length}
+            </span>
+          </div>
+        </div>
+      </PreviewViewport>
+
+      <div className="flex flex-col bg-[var(--color-card)]">
+        <div className="group relative h-1 w-full cursor-pointer bg-[var(--color-muted)]">
           <div
             className="absolute inset-y-0 left-0 bg-[var(--color-primary)] transition-[width] duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-2.5">
-          {/* Time & Title (Left) */}
-          <div className="flex flex-col w-1/3 min-w-0">
-            <span className="text-xs font-semibold text-[var(--color-foreground)] truncate pr-4">
+          <div className="flex w-1/3 min-w-0 flex-col">
+            <span className="truncate pr-4 text-xs font-semibold text-[var(--color-foreground)]">
               {current?.title || "Sem título"}
             </span>
             <span className="text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
@@ -152,22 +166,23 @@ export function PlaylistTimedPreview({
             </span>
           </div>
 
-          {/* Core Controls (Center) */}
-          <div className="flex items-center justify-center gap-1 w-1/3">
+          <div className="flex w-1/3 items-center justify-center gap-1">
             <Button
               type="button"
               size="icon"
               variant="ghost"
+              aria-label="Anterior"
               onClick={() => go(-1)}
               className="h-8 w-8 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             >
               <SkipBack className="h-4 w-4" fill="currentColor" />
             </Button>
-            
+
             <Button
               type="button"
               size="icon"
               variant={playing ? "default" : "secondary"}
+              aria-label={playing ? "Pausar" : "Reproduzir"}
               onClick={() => {
                 setTick(0);
                 setPlaying((p) => !p);
@@ -177,14 +192,15 @@ export function PlaylistTimedPreview({
               {playing ? (
                 <Pause className="h-4 w-4" fill="currentColor" />
               ) : (
-                <Play className="h-4 w-4 ml-0.5" fill="currentColor" />
+                <Play className="ml-0.5 h-4 w-4" fill="currentColor" />
               )}
             </Button>
-            
+
             <Button
               type="button"
               size="icon"
               variant="ghost"
+              aria-label="Seguinte"
               onClick={() => go(1)}
               className="h-8 w-8 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             >
@@ -192,8 +208,7 @@ export function PlaylistTimedPreview({
             </Button>
           </div>
 
-          {/* Secondary Controls (Right) */}
-          <div className="flex items-center justify-end w-1/3">
+          <div className="flex w-1/3 items-center justify-end">
             <Button
               type="button"
               size="sm"
@@ -203,14 +218,43 @@ export function PlaylistTimedPreview({
                 setTick(0);
                 onIndexChange(0);
               }}
-              className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] h-8"
+              className="h-8 text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
               Reiniciar
             </Button>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AspectSelector({
+  value,
+  onChange,
+}: {
+  value: PreviewAspect;
+  onChange: (v: PreviewAspect) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Label htmlFor="preview-aspect" className="text-xs whitespace-nowrap">
+        Aspecto
+      </Label>
+      <select
+        id="preview-aspect"
+        value={value}
+        onChange={(e) => onChange(e.target.value as PreviewAspect)}
+        className="h-8 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-xs"
+        aria-label="Proporção do viewport de pré-visualização"
+      >
+        {ASPECT_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -254,13 +298,6 @@ function Slide({
           playsInline
           loop={item.durationMs > 60_000}
           autoPlay={playing}
-          onTimeUpdate={(e) => {
-            // If natural video duration, update progress bar based on video time
-            if (item.durationMs === 0 && e.currentTarget.duration) {
-              // Note: Since we are in the Slide component, we don't have direct access to setTick.
-              // But we can let the native video playback handle itself.
-            }
-          }}
         />
       </div>
     );

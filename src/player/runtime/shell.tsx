@@ -103,7 +103,8 @@ function publishPolicyGlobals(
 
 /** Discrete enter/exit control — only when policy wants FULLSCREEN and API exists. */
 function FullscreenControlChrome() {
-  const [visible, setVisible] = useState(false);
+  const [policyVisible, setPolicyVisible] = useState(false);
+  const [chromeVisible, setChromeVisible] = useState(false);
   const [active, setActive] = useState(false);
   const [label, setLabel] = useState("Entrar em ecrã inteiro");
   const [orientHint, setOrientHint] = useState<string | null>(null);
@@ -121,7 +122,7 @@ function FullscreenControlChrome() {
       const apiOk = Boolean(snap?.apiAvailable);
       const isActive = Boolean(snap?.active);
       setActive(isActive);
-      setVisible(Boolean(wantsFs && apiOk));
+      setPolicyVisible(Boolean(wantsFs && apiOk));
       setLabel(isActive ? "Sair do ecrã inteiro" : "Entrar em ecrã inteiro");
       const or = getOrientationController()?.snapshot();
       if (
@@ -134,6 +135,10 @@ function FullscreenControlChrome() {
       } else {
         setOrientHint(null);
       }
+
+      // Reuse CursorIdleController via Runtime State — no second idle timer.
+      const cursorOn = getRuntimeStateStore().get().cursorVisible;
+      setChromeVisible(Boolean(cursorOn));
     };
     refresh();
     const unsub = subscribeRuntimeState(() => refresh());
@@ -144,67 +149,88 @@ function FullscreenControlChrome() {
     };
   }, []);
 
-  if (!visible && !orientHint) return null;
+  const showButton = policyVisible && chromeVisible;
+  const showHint = Boolean(orientHint) && chromeVisible;
+  if (!showButton && !showHint) return null;
 
   return (
     <div
       style={{
         position: "absolute",
-        right: 12,
-        bottom: 12,
+        left: 0,
+        right: 0,
+        bottom: 0,
         zIndex: 40,
         display: "flex",
         flexDirection: "column",
-        alignItems: "flex-end",
-        gap: 6,
-        maxWidth: 280,
+        alignItems: "stretch",
+        gap: 0,
+        opacity: chromeVisible ? 1 : 0,
+        pointerEvents: chromeVisible ? "auto" : "none",
+        transition: "opacity 180ms ease",
+        background:
+          "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 70%, transparent 100%)",
+        padding: "28px 16px 14px",
       }}
+      data-testid="v360-player-controls"
+      data-controls-visible={chromeVisible ? "true" : "false"}
     >
-      {orientHint ? (
+      {showHint && orientHint ? (
         <p
           data-testid="v360-orientation-fs-hint"
           style={{
-            margin: 0,
+            margin: "0 0 8px auto",
             padding: "6px 10px",
             fontSize: 11,
             fontFamily: "system-ui, sans-serif",
-            color: "rgba(255,255,255,0.8)",
-            background: "rgba(0,0,0,0.5)",
+            color: "rgba(255,255,255,0.85)",
+            background: "rgba(0,0,0,0.45)",
             border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: 4,
+            borderRadius: 6,
+            maxWidth: 280,
           }}
         >
           {orientHint}
         </p>
       ) : null}
-      {visible ? (
-        <button
-          type="button"
-          data-testid={active ? "v360-fullscreen-exit" : "v360-fullscreen-enter"}
-          aria-label={label}
-          onClick={() => {
-            const c = getFullscreenController();
-            if (!c) return;
-            if (active) {
-              void c.exit();
-            } else {
-              void c.request({ userActivation: true, source: "user" });
-            }
-          }}
+      {showButton ? (
+        <div
           style={{
-            padding: "8px 12px",
-            fontSize: 12,
-            fontFamily: "system-ui, sans-serif",
-            color: "rgba(255,255,255,0.85)",
-            background: "rgba(0,0,0,0.45)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 4,
-            cursor: "pointer",
-            opacity: 0.85,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 8,
           }}
         >
-          {label}
-        </button>
+          <button
+            type="button"
+            data-testid={active ? "v360-fullscreen-exit" : "v360-fullscreen-enter"}
+            aria-label={label}
+            title={label}
+            onClick={() => {
+              const c = getFullscreenController();
+              if (!c) return;
+              if (active) {
+                void c.exit();
+              } else {
+                void c.request({ userActivation: true, source: "user" });
+              }
+            }}
+            style={{
+              padding: "8px 14px",
+              fontSize: 12,
+              fontFamily: "system-ui, sans-serif",
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.95)",
+              background: "rgba(0,0,0,0.55)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              borderRadius: 8,
+              cursor: "pointer",
+            }}
+          >
+            {label}
+          </button>
+        </div>
       ) : null}
     </div>
   );

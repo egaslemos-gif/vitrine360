@@ -4,11 +4,16 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TypeBadge } from "@/components/ui/type-badge";
+import { PreviewViewport } from "@/components/ui/preview-viewport";
 import { useIsClient } from "@/lib/use-is-client";
+import { ImageIcon } from "lucide-react";
 import {
   filterMediaAssets,
   isGifMime,
@@ -43,7 +48,7 @@ function formatDate(iso: string) {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("pt-PT", {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
     year: "numeric",
   });
 }
@@ -102,38 +107,40 @@ function ImagePreview({ url, alt }: { url: string; alt: string }) {
       <img
         src={url}
         alt={alt}
-        className="aspect-video w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+        className="h-full w-full cursor-pointer object-contain transition-opacity hover:opacity-90"
         onClick={() => setOpen(true)}
       />
-      {mounted && open && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Pré-visualização: ${alt}`}
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setOpen(false);
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={url}
-            alt={alt}
-            className="max-h-[90vh] max-w-[90vw] object-contain shadow-2xl rounded-md"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            type="button"
-            aria-label="Fechar pré-visualização"
-            className="absolute top-4 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors"
+      {mounted &&
+        open &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Pré-visualização: ${alt}`}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
             onClick={() => setOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setOpen(false);
+            }}
           >
-            ✕
-          </button>
-        </div>,
-        document.body,
-      )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt={alt}
+              className="max-h-[90vh] max-w-[90vw] rounded-md object-contain shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              type="button"
+              aria-label="Fechar pré-visualização"
+              className="absolute top-4 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/80"
+              onClick={() => setOpen(false)}
+            >
+              ✕
+            </button>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
@@ -153,116 +160,83 @@ function AssetCard({
   const inUse = usage > 0;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-start justify-between gap-2 truncate text-base">
-          <span className="truncate">{asset.fileName}</span>
-          <span className="flex shrink-0 items-center gap-1">
-            {isGifMime(asset.mimeType) ? (
-              <span className="rounded bg-[var(--color-muted)] px-1.5 py-0.5 text-xs font-normal text-[var(--color-muted-foreground)]">
-                GIF
-              </span>
-            ) : null}
-            {asset.duplicateCount > 1 ? (
-              <span className="rounded bg-[var(--color-muted)] px-1.5 py-0.5 text-xs font-normal text-[var(--color-muted-foreground)]">
-                ×{asset.duplicateCount}
-              </span>
-            ) : null}
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {image ? (
-          <ImagePreview url={asset.url} alt={asset.fileName} />
-        ) : video ? (
-          <video
-            src={asset.url}
-            controls
-            preload="metadata"
-            className="aspect-video w-full object-cover bg-black rounded-md"
-            aria-label={`Vídeo ${asset.fileName}`}
-          />
-        ) : (
-          <div className="flex aspect-video items-center justify-center bg-[var(--color-muted)] text-sm rounded-md">
-            {asset.mimeType}
-          </div>
-        )}
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              {formatSize(asset.fileSize)} · {formatDate(asset.createdAt)}
-            </p>
-            {asset.usageCount !== undefined && (
-              <p className="text-xs font-medium text-[var(--color-primary)] mt-1">
-                Usado em {asset.usageCount} conteúdo
-                {asset.usageCount !== 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-          <Link href={`/admin/contents/new?mediaAssetId=${asset.id}`}>
-            <Button variant="outline" size="sm" type="button">
-              Usar em Conteúdo
-            </Button>
-          </Link>
-            {canDelete && !inUse ? (
-              <Button
-                variant="destructive"
-                size="sm"
-                type="button"
-                aria-label={`Eliminar ${asset.fileName}`}
-                onClick={() => onRequestDelete(asset)}
-              >
-                Eliminar
-              </Button>
-            ) : null}
-          </div>
+    <Card className="overflow-hidden shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md">
+      <div className="relative border-b border-[var(--color-border)]">
+        <PreviewViewport aspectRatio="16/9">
+          {image ? (
+            <ImagePreview url={asset.url} alt={asset.fileName} />
+          ) : video ? (
+            <video
+              src={asset.url}
+              controls
+              preload="metadata"
+              className="h-full w-full object-contain"
+              aria-label={`Vídeo ${asset.fileName}`}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-[var(--color-muted)] text-sm text-[var(--color-muted-foreground)]">
+              {asset.mimeType}
+            </div>
+          )}
+        </PreviewViewport>
+        <div className="pointer-events-none absolute top-2 right-2 z-10 flex items-center gap-1">
+          <TypeBadge mimeType={asset.mimeType} />
+          {asset.duplicateCount > 1 ? (
+            <span className="rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              ×{asset.duplicateCount}
+            </span>
+          ) : null}
         </div>
-      </CardContent>
+      </div>
+      <CardHeader className="space-y-1 pb-2 pt-3">
+        <CardTitle className="truncate text-sm" title={asset.fileName}>
+          {asset.fileName}
+        </CardTitle>
+        <p className="text-xs text-[var(--color-muted-foreground)]">
+          {formatSize(asset.fileSize)} · {formatDate(asset.createdAt)}
+        </p>
+        {asset.usageCount !== undefined ? (
+          <p className="text-xs font-medium text-[var(--color-primary)]">
+            Usado em {asset.usageCount} conteúdo
+            {asset.usageCount !== 1 ? "s" : ""}
+          </p>
+        ) : null}
+      </CardHeader>
+      <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-muted)]/20 py-3">
+        <Link href={`/admin/contents/new?mediaAssetId=${asset.id}`}>
+          <Button variant="outline" size="sm" type="button">
+            Usar em Conteúdo
+          </Button>
+        </Link>
+        {canDelete && !inUse ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            aria-label={`Eliminar ${asset.fileName}`}
+            className="text-[var(--color-destructive)]"
+            onClick={() => onRequestDelete(asset)}
+          >
+            Eliminar
+          </Button>
+        ) : null}
+      </CardFooter>
     </Card>
   );
 }
 
-function Section({
-  title,
-  items,
-  canDelete,
-  onRequestDelete,
-}: {
-  title: string;
-  items: DisplayItem[];
-  canDelete: boolean;
-  onRequestDelete: (asset: DisplayItem) => void;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-medium text-[var(--color-primary)]">
-        {title}{" "}
-        <span className="text-sm font-normal text-[var(--color-muted-foreground)]">
-          ({items.length})
-        </span>
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((a) => (
-          <AssetCard
-            key={a.id}
-            asset={a}
-            canDelete={canDelete}
-            onRequestDelete={onRequestDelete}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
+const TYPE_TABS: { id: MediaTypeFilter; label: string }[] = [
+  { id: "all", label: "Todos" },
+  { id: "image", label: "Imagens" },
+  { id: "video", label: "Vídeos" },
+  { id: "gif", label: "GIFs" },
+];
 
 export function MediaLibrary({
   assets,
   canDelete = true,
 }: {
   assets: MediaAssetItem[];
-  /** True when session has manage_contents (page gate). API remains authority. */
   canDelete?: boolean;
 }) {
   const router = useRouter();
@@ -278,31 +252,28 @@ export function MediaLibrary({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const mounted = useIsClient();
 
-  const { images, gifs, videos, filteredCount, collapsedCount } = useMemo(() => {
+  const counts = useMemo(() => {
+    const images = assets.filter((a) => isImageMime(a.mimeType)).length;
+    const videos = assets.filter((a) => isVideoMime(a.mimeType)).length;
+    const gifs = assets.filter((a) => isGifMime(a.mimeType)).length;
+    return {
+      all: assets.length,
+      image: images,
+      video: videos,
+      gif: gifs,
+      other: Math.max(0, assets.length - images - videos - gifs),
+    };
+  }, [assets]);
+
+  const { displayItems, filteredCount, collapsedCount } = useMemo(() => {
     const filtered = filterMediaAssets(assets, {
       query,
       typeFilter,
       usageFilter,
     });
-
     const collapsed = collapseDuplicates(filtered, showDuplicates);
-    const imageItems = sortItems(
-      collapsed.filter((a) => isImageMime(a.mimeType)),
-      sort,
-    );
-    const gifItems = sortItems(
-      collapsed.filter((a) => isGifMime(a.mimeType)),
-      sort,
-    );
-    const videoItems = sortItems(
-      collapsed.filter((a) => isVideoMime(a.mimeType)),
-      sort,
-    );
-
     return {
-      images: imageItems,
-      gifs: gifItems,
-      videos: videoItems,
+      displayItems: sortItems(collapsed, sort),
       filteredCount: filtered.length,
       collapsedCount: collapsed.length,
     };
@@ -310,8 +281,6 @@ export function MediaLibrary({
 
   const hiddenDupes = filteredCount - collapsedCount;
   const totalDupes = assets.length - collapseDuplicates(assets, false).length;
-  const emptyResults =
-    images.length === 0 && gifs.length === 0 && videos.length === 0;
 
   async function handleDeduplicate() {
     setIsDeduplicating(true);
@@ -333,14 +302,13 @@ export function MediaLibrary({
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/admin/media/${encodeURIComponent(deleteTarget.id)}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/admin/media/${encodeURIComponent(deleteTarget.id)}`,
+        { method: "DELETE" },
+      );
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setDeleteError(
-          data.error ?? "Não foi possível eliminar o ficheiro.",
-        );
+        setDeleteError(data.error ?? "Não foi possível eliminar o ficheiro.");
         return;
       }
       setDeleteTarget(null);
@@ -360,7 +328,44 @@ export function MediaLibrary({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <div
+        className="flex flex-wrap items-center gap-2"
+        role="tablist"
+        aria-label="Filtrar por tipo de media"
+      >
+        {TYPE_TABS.map((tab) => {
+          const count =
+            tab.id === "all"
+              ? counts.all
+              : tab.id === "image"
+                ? counts.image
+                : tab.id === "video"
+                  ? counts.video
+                  : counts.gif;
+          const active = typeFilter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setTypeFilter(tab.id)}
+              className={
+                active
+                  ? "rounded-lg bg-[var(--color-tab-active)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm"
+                  : "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3.5 py-2 text-sm font-medium text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+              }
+            >
+              {tab.label} ({count})
+            </button>
+          );
+        })}
+        <span className="rounded-lg border border-dashed border-[var(--color-border)] px-3 py-2 text-xs text-[var(--color-muted-foreground)]">
+          Outros ({counts.other})
+        </span>
+      </div>
+
+      <FilterBar>
         <div className="min-w-[200px] flex-1 space-y-1">
           <Label htmlFor="media-search">Pesquisar</Label>
           <Input
@@ -371,24 +376,10 @@ export function MediaLibrary({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="media-type">Tipo</Label>
-          <select
-            id="media-type"
-            className="flex h-9 w-full min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as MediaTypeFilter)}
-          >
-            <option value="all">Todos</option>
-            <option value="image">Imagens</option>
-            <option value="video">Vídeos</option>
-            <option value="gif">GIF</option>
-          </select>
-        </div>
-        <div className="space-y-1">
           <Label htmlFor="media-usage">Utilização</Label>
           <select
             id="media-usage"
-            className="flex h-9 w-full min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+            className="flex h-9 w-full min-w-[140px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
             value={usageFilter}
             onChange={(e) =>
               setUsageFilter(e.target.value as MediaUsageFilter)
@@ -400,10 +391,10 @@ export function MediaLibrary({
           </select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="media-sort">Ordenação</Label>
+          <Label htmlFor="media-sort">Ordenar</Label>
           <select
             id="media-sort"
-            className="flex h-9 w-full min-w-[160px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+            className="flex h-9 w-full min-w-[160px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
             value={sort}
             onChange={(e) => setSort(e.target.value as MediaSortMode)}
           >
@@ -412,27 +403,29 @@ export function MediaLibrary({
             <option value="size">Tamanho</option>
           </select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-end gap-2">
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => setShowDuplicates((v) => !v)}
           >
             {showDuplicates ? "Ocultar duplicados" : "Mostrar duplicados"}
           </Button>
-          {totalDupes > 0 && (
+          {totalDupes > 0 ? (
             <Button
               type="button"
               variant="destructive"
+              size="sm"
               onClick={() => setShowDedupeModal(true)}
               disabled={isDeduplicating}
               aria-label={`Remover ${totalDupes} duplicados`}
             >
               Remover {totalDupes} duplicado{totalDupes === 1 ? "" : "s"}
             </Button>
-          )}
+          ) : null}
         </div>
-      </div>
+      </FilterBar>
 
       {!showDuplicates && hiddenDupes > 0 ? (
         <p className="text-xs text-[var(--color-muted-foreground)]">
@@ -442,164 +435,169 @@ export function MediaLibrary({
       ) : null}
 
       {assets.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Sem assets. Faça upload em Contents (IMAGE/VIDEO).
-        </p>
-      ) : emptyResults ? (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Nenhum resultado para os filtros actuais.
-        </p>
+        <EmptyState
+          icon={<ImageIcon className="h-8 w-8" aria-hidden />}
+          title="Nenhum media registado"
+          description="Faça upload em Contents (IMAGE/VIDEO) para começar a biblioteca."
+          action={
+            <Link href="/admin/contents/new">
+              <Button type="button">Adicionar Conteúdo</Button>
+            </Link>
+          }
+        />
+      ) : displayItems.length === 0 ? (
+        <EmptyState
+          title="Nenhum resultado"
+          description="Ajuste a pesquisa ou os filtros actuais."
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setQuery("");
+                setTypeFilter("all");
+                setUsageFilter("all");
+              }}
+            >
+              Limpar filtros
+            </Button>
+          }
+        />
       ) : (
-        <div className="space-y-8">
-          {typeFilter === "all" || typeFilter === "image" ? (
-            <Section
-              title="Imagens"
-              items={images}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {displayItems.map((a) => (
+            <AssetCard
+              key={a.id}
+              asset={a}
               canDelete={canDelete}
               onRequestDelete={setDeleteTarget}
             />
-          ) : null}
-          {typeFilter === "all" || typeFilter === "gif" ? (
-            <Section
-              title="GIFs"
-              items={gifs}
-              canDelete={canDelete}
-              onRequestDelete={setDeleteTarget}
-            />
-          ) : null}
-          {typeFilter === "all" || typeFilter === "video" ? (
-            <Section
-              title="Vídeos"
-              items={videos}
-              canDelete={canDelete}
-              onRequestDelete={setDeleteTarget}
-            />
-          ) : null}
+          ))}
         </div>
       )}
 
-      {mounted && showDedupeModal && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dedupe-title"
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-        >
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl text-center relative animate-in fade-in zoom-in-95">
-            <h2
-              id="dedupe-title"
-              className="mb-2 text-xl font-bold text-[var(--color-foreground)]"
-            >
-              Remover {totalDupes} duplicado{totalDupes === 1 ? "" : "s"}?
-            </h2>
-            <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
-              Isto irá fundir os conteúdos duplicados (mesmo checksum ou nome),
-              eliminando do sistema as cópias excedentes de forma irreversível.
-              Os conteúdos da montra que utilizem ficheiros duplicados serão
-              atualizados para apontar para a cópia principal sem qualquer
-              impacto visual.
-            </p>
-            <div className="flex justify-center gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDedupeModal(false)}
-                disabled={isDeduplicating}
+      {mounted &&
+        showDedupeModal &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dedupe-title"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          >
+            <div className="relative w-full max-w-md rounded-xl bg-[var(--color-card)] p-6 text-center shadow-xl">
+              <h2
+                id="dedupe-title"
+                className="mb-2 text-xl font-bold text-[var(--color-foreground)]"
               >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDeduplicate}
-                disabled={isDeduplicating}
-              >
-                {isDeduplicating ? "A limpar..." : "Sim, remover duplicados"}
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
-
-      {mounted && deleteTarget && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-media-title"
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") closeDeleteModal();
-          }}
-        >
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl relative animate-in fade-in zoom-in-95">
-            <h2
-              id="delete-media-title"
-              className="mb-2 text-xl font-bold text-[var(--color-foreground)]"
-            >
-              Eliminar ficheiro?
-            </h2>
-            <dl className="mb-4 space-y-2 text-sm text-left">
-              <div>
-                <dt className="text-[var(--color-muted-foreground)]">Nome</dt>
-                <dd className="font-medium break-all">{deleteTarget.fileName}</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--color-muted-foreground)]">Estado</dt>
-                <dd className="font-medium">
-                  {(deleteTarget.usageCount ?? 0) > 0
-                    ? `Utilizado em ${deleteTarget.usageCount} conteúdo${(deleteTarget.usageCount ?? 0) !== 1 ? "s" : ""}`
-                    : "Não utilizado"}
-                </dd>
-              </div>
-            </dl>
-            {(deleteTarget.usageCount ?? 0) > 0 ? (
-              <p className="mb-6 text-sm text-[var(--color-muted-foreground)] text-left">
-                Este ficheiro está a ser utilizado por {deleteTarget.usageCount}{" "}
-                conteúdos. Não pode ser eliminado enquanto estiver associado a
-                conteúdos.
+                Remover {totalDupes} duplicado{totalDupes === 1 ? "" : "s"}?
+              </h2>
+              <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
+                Isto irá fundir os conteúdos duplicados (mesmo checksum ou nome),
+                eliminando do sistema as cópias excedentes de forma irreversível.
               </p>
-            ) : (
-              <p className="mb-6 text-sm text-[var(--color-muted-foreground)] text-left">
-                Esta operação remove o ficheiro da Media Library.
-              </p>
-            )}
-            {deleteError ? (
-              <p className="mb-4 text-sm text-[var(--color-destructive)]" role="alert">
-                {deleteError}
-              </p>
-            ) : null}
-            <div className="flex justify-end gap-3">
-              {(deleteTarget.usageCount ?? 0) > 0 ? (
-                <Button type="button" variant="outline" onClick={closeDeleteModal}>
-                  Fechar
+              <div className="flex justify-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowDedupeModal(false)}
+                  disabled={isDeduplicating}
+                >
+                  Cancelar
                 </Button>
-              ) : (
-                <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeDeleteModal}
-                    disabled={isDeleting}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={handleDeleteConfirm}
-                    disabled={isDeleting}
-                    aria-label={`Confirmar eliminação de ${deleteTarget.fileName}`}
-                  >
-                    {isDeleting ? "A eliminar…" : "Eliminar"}
-                  </Button>
-                </>
-              )}
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeduplicate}
+                  disabled={isDeduplicating}
+                >
+                  {isDeduplicating ? "A limpar..." : "Sim, remover duplicados"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+          </div>,
+          document.body,
+        )}
+
+      {mounted &&
+        deleteTarget &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-media-title"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") closeDeleteModal();
+            }}
+          >
+            <div className="relative w-full max-w-md rounded-xl bg-[var(--color-card)] p-6 shadow-xl">
+              <h2
+                id="delete-media-title"
+                className="mb-2 text-xl font-bold text-[var(--color-foreground)]"
+              >
+                Eliminar ficheiro?
+              </h2>
+              <dl className="mb-4 space-y-2 text-left text-sm">
+                <div>
+                  <dt className="text-[var(--color-muted-foreground)]">Nome</dt>
+                  <dd className="break-all font-medium">{deleteTarget.fileName}</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--color-muted-foreground)]">Tipo</dt>
+                  <dd>
+                    <TypeBadge mimeType={deleteTarget.mimeType} />
+                  </dd>
+                </div>
+              </dl>
+              {(deleteTarget.usageCount ?? 0) > 0 ? (
+                <p className="mb-6 text-left text-sm text-[var(--color-muted-foreground)]">
+                  Este ficheiro está em uso e não pode ser eliminado.
+                </p>
+              ) : (
+                <p className="mb-6 text-left text-sm text-[var(--color-muted-foreground)]">
+                  Esta operação remove o ficheiro da Media Library.
+                </p>
+              )}
+              {deleteError ? (
+                <p
+                  className="mb-4 text-sm text-[var(--color-destructive)]"
+                  role="alert"
+                >
+                  {deleteError}
+                </p>
+              ) : null}
+              <div className="flex justify-end gap-3">
+                {(deleteTarget.usageCount ?? 0) > 0 ? (
+                  <Button type="button" variant="outline" onClick={closeDeleteModal}>
+                    Fechar
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={closeDeleteModal}
+                      disabled={isDeleting}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleDeleteConfirm}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "A eliminar…" : "Eliminar"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

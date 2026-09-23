@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { AccessDenied } from "@/components/access-denied";
 import { requireAdminPage } from "@/lib/admin-access";
 import { listMediaAssetsWithUsage } from "@/services/contents";
 import { MediaLibrary } from "@/features/media/media-library";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function MediaPage() {
   const session = await requireAdminPage("manage_contents");
@@ -9,15 +11,19 @@ export default async function MediaPage() {
   const assets = await listMediaAssetsWithUsage(session.tenantId);
 
   return (
-    <div className="space-y-8">
-      <header className="admin-page-header flex flex-col pb-4 pt-4">
-        <h1
-          className="text-3xl font-semibold text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Media Library
-        </h1>
-      </header>
+    <div className="mx-auto w-full max-w-7xl space-y-8">
+      <PageHeader
+        title="Media Library"
+        description="Gestão centralizada dos recursos multimédia"
+        actions={
+          <Link
+            href="/admin/contents/new"
+            className="inline-flex h-9 items-center justify-center rounded-md bg-[var(--color-primary)] px-4 text-sm font-medium text-[var(--color-primary-foreground)] transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+          >
+            + Adicionar Media
+          </Link>
+        }
+      />
       <MediaLibrary
         canDelete
         assets={assets.map((a) => ({
