@@ -1,0 +1,11 @@
+{
+  "filename": "gif-011-animated.gif",
+  "mime": "image/gif",
+  "bytes": 6960,
+  "dimensions": "320x180",
+  "frames": 4,
+  "frameDurationMs": 400,
+  "slideDurationMs": 9000,
+  "checksum": "sha256:5ab846bd7cc300ac12b73f238f33150ea85d69b2257c5c3f03c554cc5176735d",
+  "magic": "GIF89a"
+}

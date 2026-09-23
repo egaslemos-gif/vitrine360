@@ -1,0 +1,15 @@
+{
+  "id": "9b5d1345-a1e4-47f8-acfc-c2b139c28c29",
+  "type": "IMAGE",
+  "title": "GIF-011 Hisense Validation",
+  "description": null,
+  "status": "ACTIVE",
+  "payload": "{}",
+  "durationMs": 9000,
+  "version": 1,
+  "validFrom": null,
+  "validTo": null,
+  "tenantId": "efc35203-e816-4681-ade3-8bb69ef5e154",
+  "createdAt": "2026-09-22 11:27:28",
+  "updatedAt": "2026-09-22 11:27:28"
+}

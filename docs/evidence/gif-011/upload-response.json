@@ -1,0 +1,8 @@
+{
+  "id": "b2fd7ea4-4a55-49e9-9aa3-30919009488a",
+  "storageKey": "tenants/efc35203-e816-4681-ade3-8bb69ef5e154/b2fd7ea4-4a55-49e9-9aa3-30919009488a.gif",
+  "url": "https://vitrine360.836b369b04e3f4e57ea183020cff915a.r2.cloudflarestorage.com/tenants/efc35203-e816-4681-ade3-8bb69ef5e154/b2fd7ea4-4a55-49e9-9aa3-30919009488a.gif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=4e725bb0445d041932d2e3564e424e95%2F20260922%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260922T112725Z&X-Amz-Expires=604800&X-Amz-Signature=6c6295fabb9856579fe66041c5c51ce7831ba2992cfb950563fa290385a9ebc9&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+  "checksum": "sha256:5ab846bd7cc300ac12b73f238f33150ea85d69b2257c5c3f03c554cc5176735d",
+  "fileSize": 6960,
+  "mimeType": "image/gif"
+}

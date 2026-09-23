@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: oklch(0.985 0.002 247);
+  --color-foreground: oklch(0.21 0.02 255);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.21 0.02 255);
+  --color-primary: oklch(0.37 0.08 250);
+  --color-primary-foreground: oklch(0.98 0 0);
+  --color-secondary: oklch(0.95 0.01 250);
+  --color-secondary-foreground: oklch(0.28 0.04 250);
+  --color-muted: oklch(0.96 0.005 250);
+  --color-muted-foreground: oklch(0.5 0.02 250);
+  --color-accent: oklch(0.94 0.02 230);
+  --color-accent-foreground: oklch(0.28 0.05 250);
+  --color-destructive: oklch(0.55 0.2 25);
+  --color-border: oklch(0.9 0.01 250);
+  --color-input: oklch(0.9 0.01 250);
+  --color-ring: oklch(0.45 0.1 250);
+  --color-success: oklch(0.55 0.14 150);
+  --color-warning: oklch(0.7 0.14 75);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+/* Passive Player Runtime — appliance / kiosk surface */
+html.player-runtime,
+html.player-runtime body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #070b14;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+html.player-runtime .player-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+  object-position: center center;
+  background: transparent;
+  pointer-events: none;
+}
+
+@keyframes vitrine-slide-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vitrine-slide-left {
+  from { opacity: 0; transform: translateX(4%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes vitrine-slide-zoom {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.player-slide-fade { animation: vitrine-slide-fade 420ms ease both; }
+.player-slide-slide-left { animation: vitrine-slide-left 420ms ease both; }
+.player-slide-zoom { animation: vitrine-slide-zoom 420ms ease both; }
+.player-slide-cut { animation: none; }
+
+/* Admin app shell — refined scrollbars (sidebar + main pane) */
+.admin-sidebar-nav,
+.admin-main-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-primary) 28%, transparent)
+    transparent;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar,
+.admin-main-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-track,
+.admin-main-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb,
+.admin-main-scroll::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--color-primary) 28%, transparent);
+  border-radius: 999px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb:hover,
+.admin-main-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+
+/* Page titles stick to the top of the main scroll pane */
+.admin-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+  background: color-mix(in oklab, white 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-border) 55%, transparent);
+}
+
+@media (min-width: 768px) {
+  .admin-page-header {
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
+  }
+}
+

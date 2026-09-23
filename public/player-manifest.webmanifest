@@ -1,0 +1,16 @@
+{
+  "name": "Vitrine360 Player",
+  "short_name": "Vitrine360",
+  "start_url": "/player",
+  "display": "fullscreen",
+  "background_color": "#070b14",
+  "theme_color": "#0b1220",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
