@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 
 export type ScheduleListItem = {
@@ -326,12 +327,19 @@ export function ScheduleListManager({
 
       {mounted && deleteItem
         ? createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            <ModalOverlay
+              onClose={() => {
+                if (!busy) {
+                  setDeleteItem(null);
+                  setErrorMsg(null);
+                }
+              }}
             >
-              <div className="relative w-full max-w-md rounded-xl bg-white p-6 text-center shadow-xl">
+              <ModalPanel
+                size="md"
+                onClick={(e) => e.stopPropagation()}
+                className="text-center"
+              >
                 <h2 className="mb-2 text-xl font-bold">Eliminar agendamento?</h2>
                 <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
                   Remover <strong>{deleteItem.name}</strong>? Os ecrãs alvo
@@ -345,7 +353,7 @@ export function ScheduleListManager({
                     {errorMsg}
                   </p>
                 ) : null}
-                <div className="flex justify-center gap-3">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
                   <Button
                     type="button"
                     variant="outline"
@@ -366,8 +374,8 @@ export function ScheduleListManager({
                     {busy ? "A eliminar…" : "Eliminar"}
                   </Button>
                 </div>
-              </div>
-            </div>,
+              </ModalPanel>
+            </ModalOverlay>,
             document.body,
           )
         : null}
@@ -461,15 +469,15 @@ function ScheduleEditDialog({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-    >
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+    <ModalOverlay onClose={() => !busy && onClose()}>
+      <ModalPanel
+        size="lg"
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] overflow-y-auto"
+      >
         <h2 className="mb-4 text-xl font-bold">Editar agendamento</h2>
         <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1 sm:col-span-2">
+          <div className="w-full min-w-0 space-y-2 sm:col-span-2">
             <Label>Nome</Label>
             <Input
               value={name}
@@ -478,7 +486,7 @@ function ScheduleEditDialog({
               disabled={busy}
             />
           </div>
-          <div className="space-y-1">
+          <div className="w-full min-w-0 space-y-2">
             <Label>Playlist</Label>
             <select
               className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
@@ -493,7 +501,7 @@ function ScheduleEditDialog({
               ))}
             </select>
           </div>
-          <div className="space-y-1">
+          <div className="w-full min-w-0 space-y-2">
             <Label>Prioridade</Label>
             {schedule.priority === "EMERGENCY" ? (
               <p className="flex h-9 items-center text-sm font-medium">EMERGENCY</p>
@@ -509,7 +517,7 @@ function ScheduleEditDialog({
               </select>
             )}
           </div>
-          <div className="space-y-1">
+          <div className="w-full min-w-0 space-y-2">
             <Label>Hora início</Label>
             <Input
               type="time"
@@ -519,7 +527,7 @@ function ScheduleEditDialog({
               disabled={busy}
             />
           </div>
-          <div className="space-y-1">
+          <div className="w-full min-w-0 space-y-2">
             <Label>Hora fim</Label>
             <Input
               type="time"
@@ -529,7 +537,7 @@ function ScheduleEditDialog({
               disabled={busy}
             />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="w-full min-w-0 space-y-2 sm:col-span-2">
             <Label>Target</Label>
             <div className="flex flex-wrap gap-3 text-sm">
               <label className="flex items-center gap-1.5">
@@ -600,7 +608,7 @@ function ScheduleEditDialog({
               </select>
             ) : null}
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="w-full min-w-0 space-y-2 sm:col-span-2">
             <Label>Dias</Label>
             <div className="flex flex-wrap gap-2">
               {WEEKDAYS.map((day) => {
@@ -646,7 +654,7 @@ function ScheduleEditDialog({
               {errorMsg}
             </p>
           ) : null}
-          <div className="flex justify-end gap-2 border-t border-[var(--color-border)] pt-4 sm:col-span-2">
+          <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)] pt-4 sm:col-span-2 sm:flex-row sm:justify-end sm:gap-3">
             <Button type="button" variant="outline" disabled={busy} onClick={onClose}>
               Cancelar
             </Button>
@@ -664,7 +672,7 @@ function ScheduleEditDialog({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </ModalPanel>
+    </ModalOverlay>
   );
 }

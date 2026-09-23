@@ -39,6 +39,7 @@ async function main() {
   const { sniffMime } = await import("../src/services/media");
   const {
     filterMediaAssets,
+    countMediaByType,
     isGifMime,
     isImageMime,
     isVideoMime,
@@ -91,6 +92,18 @@ async function main() {
   assert.equal(filterMediaAssets(sample, { typeFilter: "image" }).length, 1);
   assert.equal(filterMediaAssets(sample, { typeFilter: "video" }).length, 1);
   assert.equal(filterMediaAssets(sample, { typeFilter: "gif" }).length, 1);
+  assert.equal(filterMediaAssets(sample, { typeFilter: "other" }).length, 0);
+  assert.deepEqual(countMediaByType(sample), {
+    all: 3,
+    image: 1,
+    video: 1,
+    gif: 1,
+    other: 0,
+  });
+  assert.deepEqual(
+    countMediaByType([...sample, { mimeType: "audio/mpeg" }]),
+    { all: 4, image: 1, video: 1, gif: 1, other: 1 },
+  );
   assert.equal(filterMediaAssets(sample, { usageFilter: "used" }).length, 2);
   assert.equal(filterMediaAssets(sample, { usageFilter: "unused" }).length, 1);
   assert.equal(

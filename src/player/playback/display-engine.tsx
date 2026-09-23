@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { createObjectUrl, getConfig, putAssetBlob } from "@/player/cache/indexed-db";
+import { useLiveClock } from "@/features/contents/use-live-clock";
 
 export type PlaybackItem = {
   playlistItemId: string;
@@ -195,8 +196,6 @@ function Slide({ item, onNaturalEnd }: { item: PlaybackItem; onNaturalEnd?: () =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assetId]);
 
-  const clock = new Date();
-
   if (item.type === "IMAGE" && url) {
     return (
       <div style={{ ...stageStyle, background: "#000" }}>
@@ -232,41 +231,7 @@ function Slide({ item, onNaturalEnd }: { item: PlaybackItem; onNaturalEnd?: () =
   }
 
   if (item.type === "CLOCK") {
-    return (
-      <div
-        style={{
-          ...stageStyle,
-          flexDirection: "column",
-          background: "#0b1220",
-          textAlign: "center",
-          padding: "4vh 6vw",
-        }}
-      >
-        <p
-          style={{
-            margin: 0,
-            fontWeight: 700,
-            lineHeight: 1,
-            letterSpacing: "0.04em",
-            fontVariantNumeric: "tabular-nums",
-            fontFamily: "ui-monospace, Consolas, monospace",
-            fontSize: "clamp(120px, 32vh, 320px)",
-          }}
-        >
-          {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
-        <p
-          style={{
-            marginTop: "3vh",
-            opacity: 0.78,
-            fontWeight: 500,
-            fontSize: "clamp(40px, 7vh, 88px)",
-          }}
-        >
-          {clock.toLocaleDateString()}
-        </p>
-      </div>
-    );
+    return <LiveClockSlide payload={item.payload ?? {}} />;
   }
 
   // EXPERIENCE-09: typed Content reference only — no iframe / HTML / eval here.
@@ -367,3 +332,155 @@ function Slide({ item, onNaturalEnd }: { item: PlaybackItem; onNaturalEnd?: () =
     </div>
   );
 }
+
+/** Native CLOCK slide — ticks from device time; cleans up on unmount. */
+function LiveClockSlide({ payload }: { payload: Record<string, unknown> }) {
+  const showDate = payload.showDate !== false;
+  const showTime = payload.showTime !== false;
+  const showSeconds = payload.showSeconds === true;
+  const style = payload.style === "analog" ? "analog" : "digital";
+  const format = typeof payload.format === "string" ? payload.format : "24h";
+  const hour12 = format === "12h";
+  const now = useLiveClock(showSeconds || style === "analog");
+
+  if (style === "analog") {
+    const h = now.getHours() % 12;
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const hourDeg = h * 30 + m * 0.5;
+    const minDeg = m * 6 + s * 0.1;
+    const secDeg = s * 6;
+    return (
+      <div
+        style={{
+          ...stageStyle,
+          flexDirection: "column",
+          background: "#0b1220",
+          textAlign: "center",
+          padding: "4vh 6vw",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            width: "min(42vh, 280px)",
+            height: "min(42vh, 280px)",
+            borderRadius: "9999px",
+            border: "4px solid rgba(255,255,255,0.4)",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: 4,
+              height: "28%",
+              background: "#fff",
+              transformOrigin: "bottom center",
+              transform: `translate(-50%, -100%) rotate(${hourDeg}deg)`,
+              borderRadius: 2,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: 3,
+              height: "38%",
+              background: "rgba(255,255,255,0.9)",
+              transformOrigin: "bottom center",
+              transform: `translate(-50%, -100%) rotate(${minDeg}deg)`,
+              borderRadius: 2,
+            }}
+          />
+          {showSeconds ? (
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                width: 1,
+                height: "42%",
+                background: "#34d399",
+                transformOrigin: "bottom center",
+                transform: `translate(-50%, -100%) rotate(${secDeg}deg)`,
+              }}
+            />
+          ) : null}
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: 10,
+              height: 10,
+              borderRadius: "9999px",
+              background: "#fff",
+              transform: "translate(-50%, -50%)",
+            }}
+          />
+        </div>
+        {showDate ? (
+          <p
+            style={{
+              marginTop: "3vh",
+              opacity: 0.78,
+              fontWeight: 500,
+              fontSize: "clamp(40px, 7vh, 88px)",
+            }}
+          >
+            {now.toLocaleDateString()}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        ...stageStyle,
+        flexDirection: "column",
+        background: "#0b1220",
+        textAlign: "center",
+        padding: "4vh 6vw",
+      }}
+    >
+      {showTime ? (
+        <p
+          style={{
+            margin: 0,
+            fontWeight: 700,
+            lineHeight: 1,
+            letterSpacing: "0.04em",
+            fontVariantNumeric: "tabular-nums",
+            fontFamily: "ui-monospace, Consolas, monospace",
+            fontSize: "clamp(120px, 32vh, 320px)",
+          }}
+        >
+          {now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: showSeconds ? "2-digit" : undefined,
+            hour12,
+          })}
+        </p>
+      ) : null}
+      {showDate ? (
+        <p
+          style={{
+            marginTop: "3vh",
+            opacity: 0.78,
+            fontWeight: 500,
+            fontSize: "clamp(40px, 7vh, 88px)",
+          }}
+        >
+          {now.toLocaleDateString()}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+

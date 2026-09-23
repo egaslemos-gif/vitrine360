@@ -5,7 +5,7 @@
  */
 (function () {
   var LS_KEY = "v360-player-config";
-  var VERSION = "0.1.19-smarttv-static";
+  var VERSION = "0.1.20-smarttv-static";
   var root = document.getElementById("root");
   var claimTimer = null;
   var bootSec = 0;
@@ -901,7 +901,7 @@
     }
 
     if (type === "CLOCK") {
-      renderClock();
+      renderClock(item);
       return;
     }
 
@@ -1039,34 +1039,65 @@
     return "fade-in";
   }
 
-  function renderClock() {
+  function renderClock(item) {
     if (playState.clockTimer) clearInterval(playState.clockTimer);
+
+    var payload = (item && item.payload) || {};
+    var showSeconds = payload.showSeconds === true;
+    var showDate = payload.showDate !== false;
+    var showTime = payload.showTime !== false;
+    var hour12 = payload.format === "12h";
+
+    function pad2(n) {
+      var s = String(n);
+      return s.length < 2 ? "0" + s : s;
+    }
 
     function update() {
       var now = new Date();
-      var h = String(now.getHours());
-      var m = String(now.getMinutes());
-      if (h.length < 2) h = "0" + h;
-      if (m.length < 2) m = "0" + m;
+      var h = now.getHours();
+      var m = now.getMinutes();
+      var sec = now.getSeconds();
+      if (hour12) {
+        var ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12;
+        if (h === 0) h = 12;
+        var timeStr = pad2(h) + ":" + pad2(m) + (showSeconds ? ":" + pad2(sec) : "") + " " + ampm;
+      } else {
+        var timeStr2 = pad2(h) + ":" + pad2(m) + (showSeconds ? ":" + pad2(sec) : "");
+        timeStr = timeStr2;
+      }
       var dateStr = now.toLocaleDateString();
       var timePx = tvFontPx(0.32, 120, 320);
       var datePx = tvFontPx(0.07, 40, 88);
-      setHtml(
+      var html =
         '<div class="slide" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-          'height:100%;background:#0b1220;text-align:center;padding:4vh 6vw;box-sizing:border-box">' +
-          '<p style="font-size:' + timePx + 'px;font-weight:700;margin:0;line-height:1;letter-spacing:0.04em;' +
-            'font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace">' +
-            h + ":" + m +
-          '</p>' +
-          '<p style="font-size:' + datePx + 'px;margin-top:' + Math.round(datePx * 0.55) + 'px;opacity:0.78;font-weight:500">' +
-            dateStr +
-          '</p>' +
-        '</div>'
-      );
+        'height:100%;background:#0b1220;text-align:center;padding:4vh 6vw;box-sizing:border-box">';
+      if (showTime) {
+        html +=
+          '<p style="font-size:' +
+          timePx +
+          'px;font-weight:700;margin:0;line-height:1;letter-spacing:0.04em;' +
+          'font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace">' +
+          timeStr +
+          "</p>";
+      }
+      if (showDate) {
+        html +=
+          '<p style="font-size:' +
+          datePx +
+          "px;margin-top:" +
+          Math.round(datePx * 0.55) +
+          'px;opacity:0.78;font-weight:500">' +
+          dateStr +
+          "</p>";
+      }
+      html += "</div>";
+      setHtml(html);
     }
 
     update();
-    playState.clockTimer = setInterval(update, 5000);
+    playState.clockTimer = setInterval(update, showSeconds ? 1000 : 5000);
   }
 
   function renderNoContent() {

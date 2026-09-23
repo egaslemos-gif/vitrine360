@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 
 const COMMON_TIMEZONES = [
   "UTC",
@@ -15,6 +16,9 @@ const COMMON_TIMEZONES = [
   "America/Sao_Paulo",
   "America/New_York",
 ];
+
+const fieldSelectClass =
+  "box-border flex h-9 w-full min-w-0 max-w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
 export function WorkspaceSettingsForm({
   initialName,
@@ -55,41 +59,48 @@ export function WorkspaceSettingsForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-lg space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="ws-name">Nome do workspace</Label>
-        <Input
-          id="ws-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={120}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="ws-tz">Timezone</Label>
-        <select
-          id="ws-tz"
-          className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-        >
-          {zones.map((z) => (
-            <option key={z} value={z}>
-              {z}
-            </option>
-          ))}
-        </select>
-      </div>
-      <Button type="submit" disabled={pending}>
-        {pending ? "A guardar…" : "Guardar"}
-      </Button>
-      {saved ? (
-        <p className="text-sm text-emerald-700">Guardado.</p>
-      ) : null}
-      {error ? (
-        <p className="text-sm text-[var(--color-destructive)]">{error}</p>
-      ) : null}
-    </form>
+    <Card className="w-full max-w-xl border border-[var(--color-border)] shadow-[var(--shadow-subtle)]">
+      <CardContent className="p-6">
+        <form onSubmit={onSubmit} className="w-full min-w-0 space-y-5">
+          <div className="w-full min-w-0 space-y-2">
+            <Label htmlFor="ws-name">Nome do workspace</Label>
+            <Input
+              id="ws-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={120}
+              required
+              autoComplete="organization"
+            />
+          </div>
+          <div className="w-full min-w-0 space-y-2">
+            <Label htmlFor="ws-tz">Timezone</Label>
+            <select
+              id="ws-tz"
+              className={fieldSelectClass}
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+            >
+              {zones.map((z) => (
+                <option key={z} value={z}>
+                  {z}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <Button type="submit" disabled={pending}>
+              {pending ? "A guardar…" : "Guardar"}
+            </Button>
+            {saved ? (
+              <p className="text-sm text-[var(--color-success)]">Guardado.</p>
+            ) : null}
+            {error ? (
+              <p className="text-sm text-[var(--color-destructive)]">{error}</p>
+            ) : null}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

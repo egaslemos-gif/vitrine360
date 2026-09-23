@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil, Trash2, Check, X, Info } from "lucide-react";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 
 type Group = {
@@ -386,8 +387,8 @@ export function DeviceGroupsManager({
 
       {/* Edit Group Modal */}
       {mounted && isEditingGroup && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl relative animate-in fade-in zoom-in-95">
+        <ModalOverlay onClose={() => !busy && setIsEditingGroup(false)}>
+          <ModalPanel size="md" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setIsEditingGroup(false)}
               className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -396,11 +397,13 @@ export function DeviceGroupsManager({
               <X className="h-4 w-4" />
               <span className="sr-only">Fechar</span>
             </button>
-            
-            <h2 className="text-lg font-semibold leading-none tracking-tight mb-4 text-[var(--color-foreground)]">Editar Grupo</h2>
-            
+
+            <h2 className="mb-4 pr-8 text-lg font-semibold leading-none tracking-tight text-[var(--color-foreground)]">
+              Editar Grupo
+            </h2>
+
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="w-full min-w-0 space-y-2">
                 <Label htmlFor="group-name">Nome do Grupo</Label>
                 <Input
                   id="group-name"
@@ -411,8 +414,13 @@ export function DeviceGroupsManager({
                   className="bg-white"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="group-desc">Descrição <span className="text-[var(--color-muted-foreground)] font-normal text-xs">(Opcional)</span></Label>
+              <div className="w-full min-w-0 space-y-2">
+                <Label htmlFor="group-desc">
+                  Descrição{" "}
+                  <span className="text-[var(--color-muted-foreground)] font-normal text-xs">
+                    (Opcional)
+                  </span>
+                </Label>
                 <textarea
                   id="group-desc"
                   value={editDescValue}
@@ -425,7 +433,7 @@ export function DeviceGroupsManager({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button type="button" variant="outline" onClick={() => setIsEditingGroup(false)} disabled={busy}>
                 Cancelar
               </Button>
@@ -433,8 +441,8 @@ export function DeviceGroupsManager({
                 {busy ? "A guardar..." : "Guardar Alterações"}
               </Button>
             </div>
-          </div>
-        </div>,
+          </ModalPanel>
+        </ModalOverlay>,
         document.body
       )}
     </div>

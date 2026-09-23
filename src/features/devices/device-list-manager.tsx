@@ -22,6 +22,7 @@ import { DeviceActions } from "@/features/devices/device-actions";
 import { AssignPlaylistForm } from "@/features/devices/assign-playlist-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 import type { DeviceRuntimeObservability } from "@/domain/device-observability";
 import { deriveDeviceRuntimeObservability } from "@/domain/device-observability";
@@ -481,17 +482,21 @@ export function DeviceListManager({
 
       {/* Bulk Delete Confirmation Modal */}
       {mounted && bulkDeleteOpen && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl text-center relative animate-in fade-in zoom-in-95">
-             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
-               <Trash2 className="h-6 w-6 text-red-600" />
-             </div>
-            <h2 className="mb-2 text-xl font-bold text-[var(--color-foreground)]">Remover {selectedIds.size} ecrã{selectedIds.size > 1 ? "s" : ""}?</h2>
+        <ModalOverlay onClose={() => !isDeleting && setBulkDeleteOpen(false)}>
+          <ModalPanel size="md" onClick={(e) => e.stopPropagation()} className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-[var(--color-foreground)]">
+              Remover {selectedIds.size} ecrã{selectedIds.size > 1 ? "s" : ""}?
+            </h2>
             <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
               Vai remover permanentemente {selectedIds.size} ecrã{selectedIds.size > 1 ? "s" : ""}. Esta ação não pode ser desfeita e os ecrãs selecionados deixarão de receber atualizações do Vitrine360.
             </p>
-            {deleteError && <p className="text-sm text-[var(--color-destructive)] mb-4">{deleteError}</p>}
-            <div className="flex justify-center gap-3">
+            {deleteError && (
+              <p className="mb-4 text-sm text-[var(--color-destructive)]">{deleteError}</p>
+            )}
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button type="button" variant="outline" onClick={() => setBulkDeleteOpen(false)}>
                 Cancelar
               </Button>
@@ -499,8 +504,8 @@ export function DeviceListManager({
                 {isDeleting ? "A remover..." : "Sim, remover"}
               </Button>
             </div>
-          </div>
-        </div>,
+          </ModalPanel>
+        </ModalOverlay>,
         document.body
       )}
     </div>

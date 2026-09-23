@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { createPlaylistAction, duplicatePlaylistAction, deletePlaylistAction } from "@/app/admin/playlists/actions";
 import { MoreVertical, Edit, Copy, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 
 type Playlist = {
   id: string;
@@ -223,14 +224,18 @@ export function PlaylistManager({
 
       {/* Modal de Eliminação Singular */}
       {showDeleteModal && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl text-center relative animate-in fade-in zoom-in-95">
+        <ModalOverlay onClose={() => !isDeleting && setShowDeleteModal(null)}>
+          <ModalPanel
+            size="md"
+            onClick={(e) => e.stopPropagation()}
+            className="text-center"
+          >
             <h2 className="mb-2 text-xl font-bold">Apagar Playlist?</h2>
             <p className="mb-6 text-sm text-muted-foreground">
               Tem a certeza que deseja eliminar esta playlist?
               Apenas poderá apagar esta playlist se ela não estiver atribuída a nenhum dispositivo ou agendamento.
             </p>
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button variant="outline" onClick={() => setShowDeleteModal(null)} disabled={isDeleting}>
                 Cancelar
               </Button>
@@ -238,15 +243,19 @@ export function PlaylistManager({
                 {isDeleting ? "A apagar..." : "Sim, eliminar"}
               </Button>
             </div>
-          </div>
-        </div>,
+          </ModalPanel>
+        </ModalOverlay>,
         document.body
       )}
 
       {/* Modal de Eliminação Múltipla */}
       {multiDelete && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl text-center relative animate-in fade-in zoom-in-95">
+        <ModalOverlay onClose={() => !isDeleting && setMultiDelete(false)}>
+          <ModalPanel
+            size="md"
+            onClick={(e) => e.stopPropagation()}
+            className="text-center"
+          >
             <h2 className="mb-2 text-xl font-bold">Remover {selectedIds.size} Playlists?</h2>
             <p className="mb-6 text-sm text-muted-foreground">
               Tem a certeza que deseja remover {selectedIds.size} playlists selecionadas? Esta ação não pode ser desfeita.
@@ -258,7 +267,7 @@ export function PlaylistManager({
               </p>
             )}
 
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button variant="outline" onClick={() => setMultiDelete(false)} disabled={isDeleting}>
                 Cancelar
               </Button>
@@ -266,8 +275,8 @@ export function PlaylistManager({
                 {isDeleting ? "A remover..." : "Sim, remover"}
               </Button>
             </div>
-          </div>
-        </div>,
+          </ModalPanel>
+        </ModalOverlay>,
         document.body
       )}
     </div>

@@ -3,6 +3,8 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
+import { useIsClient } from "@/lib/use-is-client";
 
 /* ── Dialog Root ── */
 type DialogContextType = {
@@ -34,28 +36,26 @@ export function Dialog({
 export function DialogContent({
   children,
   className,
+  size = "md",
 }: {
   children: React.ReactNode;
   className?: string;
+  size?: "sm" | "md" | "lg" | "xl";
 }) {
   const { open, onOpenChange } = React.useContext(DialogCtx);
-  if (!open) return null;
+  const mounted = useIsClient();
+  if (!open || !mounted) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={() => onOpenChange(false)}
-    >
-      <div
-        className={cn(
-          "w-full max-w-lg rounded-xl bg-background p-6 shadow-xl animate-in fade-in zoom-in-95 relative",
-          className,
-        )}
+    <ModalOverlay onClose={() => onOpenChange(false)}>
+      <ModalPanel
+        size={size}
+        className={className}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
-      </div>
-    </div>,
+      </ModalPanel>
+    </ModalOverlay>,
     document.body,
   );
 }
@@ -68,9 +68,7 @@ export function DialogHeader({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div className={cn("mb-4", className)}>{children}</div>
-  );
+  return <div className={cn("mb-4 pr-8", className)}>{children}</div>;
 }
 
 export function DialogTitle({
@@ -81,6 +79,32 @@ export function DialogTitle({
   className?: string;
 }) {
   return (
-    <h2 className={cn("text-lg font-semibold", className)}>{children}</h2>
+    <h2
+      className={cn(
+        "text-lg font-semibold leading-snug text-[var(--color-foreground)]",
+        className,
+      )}
+    >
+      {children}
+    </h2>
+  );
+}
+
+export function DialogFooter({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }

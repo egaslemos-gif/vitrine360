@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/preview-viewport";
 import { TypeBadge } from "@/components/ui/type-badge";
 import { Play, Pause, SkipBack, SkipForward, RotateCcw } from "lucide-react";
+import { ContentVisual } from "@/features/contents/content-visual";
 
 export type PreviewItem = {
   id: string;
@@ -304,14 +305,18 @@ function Slide({
   }
 
   if (item.type === "CLOCK") {
-    const now = new Date();
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center bg-[#0b1220]">
-        <p className="text-5xl font-semibold tabular-nums md:text-6xl">
-          {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
-        <p className="mt-3 text-lg text-white/70">{now.toLocaleDateString()}</p>
-      </div>
+      <ContentVisual
+        content={{
+          id: item.id,
+          type: "CLOCK",
+          title: item.title,
+          durationMs: item.durationMs,
+          payload: item.payload ?? {},
+          mediaUrl: null,
+          mimeType: null,
+        }}
+      />
     );
   }
 

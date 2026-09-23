@@ -15,6 +15,7 @@ import {
   GIF_SLIDE_HINT_PT,
   isGifMime,
 } from "@/features/contents/gif-support";
+import { TemplateRegistry } from "@/domain/content-templates";
 
 export type StudioMode = "create" | "edit";
 
@@ -46,7 +47,22 @@ function payloadBody(type: string, payload: Record<string, unknown>): string {
 function resolveCreateSeed(
   existingAssets: MediaAssetItem[],
   mediaAssetId: string | null,
+  templateId: string | null,
 ): ContentStudioInitial {
+  if (templateId) {
+    const seed = TemplateRegistry.createContentSeed(templateId);
+    if (seed) {
+      return {
+        type: seed.type,
+        title: seed.title,
+        description: seed.description,
+        durationMs: seed.durationMs,
+        status: seed.status,
+        payload: seed.payload,
+        mediaAssetId: null,
+      };
+    }
+  }
   const asset = mediaAssetId
     ? existingAssets.find((a) => a.id === mediaAssetId)
     : undefined;
@@ -86,7 +102,11 @@ export function ContentStudioForm({
   const searchParams = useSearchParams();
   const seed =
     initial ??
-    resolveCreateSeed(existingAssets, searchParams.get("mediaAssetId"));
+    resolveCreateSeed(
+      existingAssets,
+      searchParams.get("mediaAssetId"),
+      searchParams.get("templateId"),
+    );
 
   const [type, setType] = useState(seed.type);
   const [title, setTitle] = useState(seed.title);
@@ -109,8 +129,27 @@ export function ContentStudioForm({
   const [qrSize, setQrSize] = useState(String(seed.payload?.size ?? "md"));
   const [showDate, setShowDate] = useState(seed.payload?.showDate !== false);
   const [showTime, setShowTime] = useState(seed.payload?.showTime !== false);
+  const [showSeconds, setShowSeconds] = useState(
+    seed.payload?.showSeconds === true,
+  );
+  const [clockStyle, setClockStyle] = useState(
+    String(seed.payload?.style ?? "digital"),
+  );
   const [clockFormat, setClockFormat] = useState(
     String(seed.payload?.format ?? "24h"),
+  );
+  const seedExp =
+    seed.payload?.experience && typeof seed.payload.experience === "object"
+      ? (seed.payload.experience as {
+          experienceId?: string;
+          version?: string;
+        })
+      : null;
+  const [experienceId, setExperienceId] = useState(
+    String(seedExp?.experienceId ?? seed.payload?.experienceId ?? ""),
+  );
+  const [experienceVersion, setExperienceVersion] = useState(
+    String(seedExp?.version ?? seed.payload?.version ?? ""),
   );
 
   // Media states
@@ -154,26 +193,84 @@ export function ContentStudioForm({
   }, [type, naturalVideo, durationMs]);
 
   function buildPayload(): Record<string, unknown> {
+    const audit =
+      typeof seed.payload?.createdFromTemplateId === "string"
+        ? {
+            createdFromTemplateId: seed.payload.createdFromTemplateId,
+            createdFromTemplateVersion:
+              seed.payload.createdFromTemplateVersion,
+          }
+        : {};
+
     if (type === "TEXT") {
-      return { body, align: "center", fontSize: "large" };
+      return {
+        body,
+        align: String(seed.payload?.align ?? "center"),
+        fontSize: String(seed.payload?.fontSize ?? "large"),
+        ...(typeof seed.payload?.emphasis === "string"
+          ? { emphasis: seed.payload.emphasis }
+          : {}),
+        ...audit,
+      };
     }
-    if (type === "NOTICE") return { message: body };
+    if (type === "NOTICE") {
+      return {
+        message: body,
+        ...(typeof seed.payload?.level === "string"
+          ? { level: seed.payload.level }
+          : {}),
+        ...(typeof seed.payload?.layout === "string"
+          ? { layout: seed.payload.layout }
+          : {}),
+        ...audit,
+      };
+    }
     if (type === "EVENT") {
       return {
         description: body,
         date: eventDate,
         time: eventTime,
         location: eventLocation,
+        ...audit,
       };
     }
-    if (type === "NEWS") return { body, source: newsSource };
+    if (type === "NEWS") return { body, source: newsSource, ...audit };
     if (type === "QR_CODE") {
-      return { url: body, label: qrLabel || title, size: qrSize };
+      return {
+        url: body,
+        label: qrLabel || title,
+        size: qrSize,
+        ...(typeof seed.payload?.align === "string"
+          ? { align: seed.payload.align }
+          : {}),
+        ...audit,
+      };
     }
     if (type === "CLOCK") {
-      return { showDate, showTime, format: clockFormat };
+      return {
+        showDate,
+        showTime,
+        showSeconds,
+        format: clockFormat,
+        style: clockStyle === "analog" ? "analog" : "digital",
+        ...(typeof seed.payload?.theme === "string"
+          ? { theme: seed.payload.theme }
+          : {}),
+        ...(typeof seed.payload?.align === "string"
+          ? { align: seed.payload.align }
+          : {}),
+        ...audit,
+      };
     }
-    return {};
+    if (type === "EXPERIENCE") {
+      return {
+        experience: {
+          experienceId: experienceId.trim(),
+          version: experienceVersion.trim(),
+        },
+      };
+    }
+    return { ...audit };
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -553,16 +650,68 @@ export function ContentStudioForm({
                 />
                 Mostrar hora
               </label>
-              <div className="space-y-2">
-                <Label>Formato</Label>
-                <select
-                  className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
-                  value={clockFormat}
-                  onChange={(e) => setClockFormat(e.target.value)}
-                >
-                  <option value="24h">24h</option>
-                  <option value="12h">12h</option>
-                </select>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showSeconds}
+                  onChange={(e) => setShowSeconds(e.target.checked)}
+                />
+                Mostrar segundos
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Estilo</Label>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+                    value={clockStyle}
+                    onChange={(e) => setClockStyle(e.target.value)}
+                  >
+                    <option value="digital">Digital</option>
+                    <option value="analog">Analógico</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Formato</Label>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+                    value={clockFormat}
+                    onChange={(e) => setClockFormat(e.target.value)}
+                  >
+                    <option value="24h">24h</option>
+                    <option value="12h">12h</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ) : type === "EXPERIENCE" ? (
+            <div className="space-y-4 sm:col-span-2">
+              <p className="text-xs text-[var(--color-muted-foreground)]">
+                Referência versionada (sem latest/current). A Experience deve
+                existir no Registry/store do tenant.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="exp-id">experienceId</Label>
+                  <Input
+                    id="exp-id"
+                    value={experienceId}
+                    onChange={(e) => setExperienceId(e.target.value)}
+                    placeholder="exp-weather-dashboard"
+                    required
+                    disabled={busy}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-ver">version (semver)</Label>
+                  <Input
+                    id="exp-ver"
+                    value={experienceVersion}
+                    onChange={(e) => setExperienceVersion(e.target.value)}
+                    placeholder="1.2.0"
+                    required
+                    disabled={busy}
+                  />
+                </div>
               </div>
             </div>
           ) : (

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Trash2 } from "lucide-react";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 import { CONTENT_TYPES, CONTENT_STATUSES } from "@/domain/types";
 import { isGifMime } from "@/features/contents/gif-support";
@@ -261,12 +262,19 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
       </Card>
 
       {mounted && deleteItem && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+        <ModalOverlay
+          onClose={() => {
+            if (!busy) {
+              setDeleteItem(null);
+              setErrorMsg(null);
+            }
+          }}
         >
-          <div className="relative w-full max-w-md rounded-xl bg-white p-6 text-center shadow-xl">
+          <ModalPanel
+            size="md"
+            onClick={(e) => e.stopPropagation()}
+            className="text-center"
+          >
             <h2 className="mb-2 text-xl font-bold">Remover conteúdo?</h2>
             <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
               Deseja remover <strong>{deleteItem.title}</strong>? O MediaAsset
@@ -277,7 +285,7 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
                 {errorMsg}
               </p>
             ) : null}
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -298,8 +306,8 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
                 {busy ? "A remover…" : "Eliminar"}
               </Button>
             </div>
-          </div>
-        </div>,
+          </ModalPanel>
+        </ModalOverlay>,
         document.body,
       )}
     </>

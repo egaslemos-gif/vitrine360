@@ -1,6 +1,6 @@
 /** Pure Media Library filter helpers — client + tests; MIME-based (not filename). */
 
-export type MediaTypeFilter = "all" | "image" | "video" | "gif";
+export type MediaTypeFilter = "all" | "image" | "video" | "gif" | "other";
 export type MediaUsageFilter = "all" | "used" | "unused";
 export type MediaSortMode = "name" | "recent" | "size";
 
@@ -25,6 +25,11 @@ export function isVideoMime(mime: string): boolean {
   return mime.startsWith("video/");
 }
 
+/** Audio, PDF, and anything outside image/video/gif buckets. */
+export function isOtherMime(mime: string): boolean {
+  return !isImageMime(mime) && !isVideoMime(mime) && !isGifMime(mime);
+}
+
 export function matchesTypeFilter(
   mime: string,
   typeFilter: MediaTypeFilter,
@@ -33,6 +38,7 @@ export function matchesTypeFilter(
   if (typeFilter === "gif") return isGifMime(mime);
   if (typeFilter === "image") return isImageMime(mime);
   if (typeFilter === "video") return isVideoMime(mime);
+  if (typeFilter === "other") return isOtherMime(mime);
   return true;
 }
 
@@ -64,4 +70,27 @@ export function filterMediaAssets<T extends FilterableMediaAsset>(
     if (!matchesUsageFilter(a.usageCount, usageFilter)) return false;
     return true;
   });
+}
+
+/** Counts per organization tab — SSoT for Media Library type chips. */
+export function countMediaByType(
+  assets: { mimeType: string }[],
+): Record<MediaTypeFilter, number> {
+  let image = 0;
+  let video = 0;
+  let gif = 0;
+  let other = 0;
+  for (const a of assets) {
+    if (isGifMime(a.mimeType)) gif += 1;
+    else if (isImageMime(a.mimeType)) image += 1;
+    else if (isVideoMime(a.mimeType)) video += 1;
+    else other += 1;
+  }
+  return {
+    all: assets.length,
+    image,
+    video,
+    gif,
+    other,
+  };
 }

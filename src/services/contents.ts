@@ -10,9 +10,53 @@ import {
 import { getMediaStorage, safeFileExtension, sniffMime } from "@/services/media";
 import { logActivity } from "@/services/activity-log";
 import { CONTENT_TYPES, type ContentType } from "@/domain/types";
+import {
+  buildExperienceContentPayload,
+  parseExperienceContentRef,
+  packageStoreExperienceLookup,
+  validateExperienceContentAgainstRegistry,
+} from "@/domain/experience-content-ref";
+import { getStoredExperiencePackage } from "@/services/experience-package-store";
 import type { ContentPreviewModel } from "@/features/contents/content-preview-types";
 import { z } from "zod";
 import crypto from "node:crypto";
+
+const experienceLookup = packageStoreExperienceLookup(getStoredExperiencePackage);
+
+function assertExperienceContentPayload(
+  type: ContentType | string,
+  payload: Record<string, unknown>,
+  tenantId: string,
+  mediaAssetId?: string,
+) {
+  if (type !== "EXPERIENCE") return;
+  if (mediaAssetId) {
+    throw new Error("EXPERIENCE content must not attach a MediaAsset");
+  }
+  const parsed = parseExperienceContentRef(payload);
+  if (!parsed.ok) {
+    throw new Error(`${parsed.code}: ${parsed.message}`);
+  }
+  const checked = validateExperienceContentAgainstRegistry(
+    tenantId,
+    parsed.ref,
+    experienceLookup,
+  );
+  if (!checked.ok) {
+    throw new Error(`${checked.code}: ${checked.message}`);
+  }
+}
+
+/** Normalize EXPERIENCE payload to canonical pinned ref only. */
+function normalizeContentPayload(
+  type: ContentType | string,
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
+  if (type !== "EXPERIENCE") return payload;
+  const parsed = parseExperienceContentRef(payload);
+  if (!parsed.ok) return payload;
+  return buildExperienceContentPayload(parsed.ref);
+}
 
 export type { ContentPreviewModel };
 export type ContentPreviewRow = ContentPreviewModel;
@@ -96,6 +140,23 @@ export const createContentSchema = contentFieldsSchema.superRefine(
         path: ["durationMs"],
         message: e instanceof Error ? e.message : "Invalid duration",
       });
+    }
+    if (data.type === "EXPERIENCE") {
+      const parsed = parseExperienceContentRef(data.payload);
+      if (!parsed.ok) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["payload"],
+          message: `${parsed.code}: ${parsed.message}`,
+        });
+      }
+      if (data.mediaAssetId) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["mediaAssetId"],
+          message: "EXPERIENCE content must not attach a MediaAsset",
+        });
+      }
     }
   },
 );
@@ -386,6 +447,13 @@ export async function createContent(
   userId?: string,
 ) {
   assertContentDuration(input.type, input.durationMs);
+  assertExperienceContentPayload(
+    input.type,
+    input.payload,
+    tenantId,
+    input.mediaAssetId,
+  );
+  const payload = normalizeContentPayload(input.type, input.payload);
 
   let asset: Awaited<ReturnType<typeof loadTenantMediaAsset>> | null = null;
   if (input.mediaAssetId) {
@@ -404,7 +472,7 @@ export async function createContent(
       title: input.title,
       description: input.description ?? null,
       durationMs: input.durationMs,
-      payload: JSON.stringify(input.payload),
+      payload: JSON.stringify(payload),
       status: input.status,
       validFrom: input.validFrom ?? null,
       validTo: input.validTo ?? null,
@@ -649,9 +717,17 @@ export function defaultPayloadForType(
     case "QR_CODE":
       return { url: "", label: "", size: "md" };
     case "CLOCK":
-      return { showDate: true, showTime: true, format: "24h" };
+      return {
+        showDate: true,
+        showTime: true,
+        showSeconds: false,
+        format: "24h",
+        style: "digital",
+      };
     case "NEWS":
       return { body: "", source: "" };
+    case "EXPERIENCE":
+      return { experience: { experienceId: "", version: "" } };
     default:
       return {};
   }
@@ -673,6 +749,29 @@ export async function updateContent(
     input.durationMs !== undefined ? input.durationMs : existing.durationMs;
   assertContentDuration(nextType, nextDuration);
 
+  let nextPayloadObj: Record<string, unknown> | undefined;
+  if (input.payload !== undefined) {
+    nextPayloadObj = input.payload;
+  } else if (nextType === "EXPERIENCE") {
+    try {
+      nextPayloadObj = JSON.parse(existing.payload || "{}") as Record<
+        string,
+        unknown
+      >;
+    } catch {
+      nextPayloadObj = {};
+    }
+  }
+  if (nextType === "EXPERIENCE" && nextPayloadObj) {
+    assertExperienceContentPayload(
+      nextType,
+      nextPayloadObj,
+      tenantId,
+      input.mediaAssetId,
+    );
+    nextPayloadObj = normalizeContentPayload(nextType, nextPayloadObj);
+  }
+
   let asset: Awaited<ReturnType<typeof loadTenantMediaAsset>> | null = null;
   if (input.mediaAssetId) {
     asset = await loadTenantMediaAsset(input.mediaAssetId, tenantId);
@@ -690,8 +789,8 @@ export async function updateContent(
             : existing.description,
         durationMs: nextDuration,
         payload:
-          input.payload !== undefined
-            ? JSON.stringify(input.payload)
+          nextPayloadObj !== undefined
+            ? JSON.stringify(nextPayloadObj)
             : existing.payload,
         status: input.status !== undefined ? input.status : existing.status,
         validFrom:

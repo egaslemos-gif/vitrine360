@@ -12,9 +12,11 @@ import { FilterBar } from "@/components/ui/filter-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TypeBadge } from "@/components/ui/type-badge";
 import { PreviewViewport } from "@/components/ui/preview-viewport";
+import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 import { ImageIcon } from "lucide-react";
 import {
+  countMediaByType,
   filterMediaAssets,
   isGifMime,
   isImageMime,
@@ -230,6 +232,7 @@ const TYPE_TABS: { id: MediaTypeFilter; label: string }[] = [
   { id: "image", label: "Imagens" },
   { id: "video", label: "Vídeos" },
   { id: "gif", label: "GIFs" },
+  { id: "other", label: "Outros" },
 ];
 
 export function MediaLibrary({
@@ -252,18 +255,7 @@ export function MediaLibrary({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const mounted = useIsClient();
 
-  const counts = useMemo(() => {
-    const images = assets.filter((a) => isImageMime(a.mimeType)).length;
-    const videos = assets.filter((a) => isVideoMime(a.mimeType)).length;
-    const gifs = assets.filter((a) => isGifMime(a.mimeType)).length;
-    return {
-      all: assets.length,
-      image: images,
-      video: videos,
-      gif: gifs,
-      other: Math.max(0, assets.length - images - videos - gifs),
-    };
-  }, [assets]);
+  const counts = useMemo(() => countMediaByType(assets), [assets]);
 
   const { displayItems, filteredCount, collapsedCount } = useMemo(() => {
     const filtered = filterMediaAssets(assets, {
@@ -331,17 +323,10 @@ export function MediaLibrary({
       <div
         className="flex flex-wrap items-center gap-2"
         role="tablist"
-        aria-label="Filtrar por tipo de media"
+        aria-label="Organizar por tipo de ficheiro"
       >
         {TYPE_TABS.map((tab) => {
-          const count =
-            tab.id === "all"
-              ? counts.all
-              : tab.id === "image"
-                ? counts.image
-                : tab.id === "video"
-                  ? counts.video
-                  : counts.gif;
+          const count = counts[tab.id];
           const active = typeFilter === tab.id;
           return (
             <button
@@ -360,9 +345,6 @@ export function MediaLibrary({
             </button>
           );
         })}
-        <span className="rounded-lg border border-dashed border-[var(--color-border)] px-3 py-2 text-xs text-[var(--color-muted-foreground)]">
-          Outros ({counts.other})
-        </span>
       </div>
 
       <FilterBar>
@@ -480,13 +462,14 @@ export function MediaLibrary({
       {mounted &&
         showDedupeModal &&
         createPortal(
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="dedupe-title"
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          <ModalOverlay
+            onClose={() => !isDeduplicating && setShowDedupeModal(false)}
           >
-            <div className="relative w-full max-w-md rounded-xl bg-[var(--color-card)] p-6 text-center shadow-xl">
+            <ModalPanel
+              size="md"
+              onClick={(e) => e.stopPropagation()}
+              className="text-center"
+            >
               <h2
                 id="dedupe-title"
                 className="mb-2 text-xl font-bold text-[var(--color-foreground)]"
@@ -497,7 +480,7 @@ export function MediaLibrary({
                 Isto irá fundir os conteúdos duplicados (mesmo checksum ou nome),
                 eliminando do sistema as cópias excedentes de forma irreversível.
               </p>
-              <div className="flex justify-center gap-3">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
                 <Button
                   type="button"
                   variant="outline"
@@ -515,24 +498,23 @@ export function MediaLibrary({
                   {isDeduplicating ? "A limpar..." : "Sim, remover duplicados"}
                 </Button>
               </div>
-            </div>
-          </div>,
+            </ModalPanel>
+          </ModalOverlay>,
           document.body,
         )}
 
       {mounted &&
         deleteTarget &&
         createPortal(
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-media-title"
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Escape") closeDeleteModal();
+          <ModalOverlay
+            onClose={() => {
+              if (!isDeleting) closeDeleteModal();
             }}
           >
-            <div className="relative w-full max-w-md rounded-xl bg-[var(--color-card)] p-6 shadow-xl">
+            <ModalPanel
+              size="md"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h2
                 id="delete-media-title"
                 className="mb-2 text-xl font-bold text-[var(--color-foreground)]"
@@ -568,7 +550,7 @@ export function MediaLibrary({
                   {deleteError}
                 </p>
               ) : null}
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
                 {(deleteTarget.usageCount ?? 0) > 0 ? (
                   <Button type="button" variant="outline" onClick={closeDeleteModal}>
                     Fechar
@@ -594,8 +576,8 @@ export function MediaLibrary({
                   </>
                 )}
               </div>
-            </div>
-          </div>,
+            </ModalPanel>
+          </ModalOverlay>,
           document.body,
         )}
     </div>

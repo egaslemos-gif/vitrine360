@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ContentPreviewModel } from "@/features/contents/content-preview-types";
+import { useLiveClock } from "@/features/contents/use-live-clock";
 
 export type ContentVisualProps = {
   content: Pick<
@@ -133,30 +134,71 @@ function VideoVisual({
 
 function ClockVisual({
   payload,
-  previewNow,
 }: {
   payload: Record<string, unknown>;
-  previewNow: Date;
+  previewNow?: Date;
 }) {
   const showDate = payload.showDate !== false;
   const showTime = payload.showTime !== false;
   const format = plain(payload.format) || "24h";
   const hour12 = format === "12h";
+  const showSeconds = payload.showSeconds === true;
+  const style = payload.style === "analog" ? "analog" : "digital";
+  const now = useLiveClock(showSeconds || style === "analog");
+
+  if (style === "analog") {
+    const h = now.getHours() % 12;
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const hourDeg = h * 30 + m * 0.5;
+    const minDeg = m * 6 + s * 0.1;
+    const secDeg = s * 6;
+    return (
+      <div className={stageClass}>
+        <div className="relative h-40 w-40 rounded-full border-4 border-white/40 md:h-48 md:w-48">
+          <div
+            className="absolute left-1/2 top-1/2 h-[28%] w-1 origin-bottom rounded bg-white"
+            style={{ transform: `translate(-50%, -100%) rotate(${hourDeg}deg)` }}
+            aria-hidden
+          />
+          <div
+            className="absolute left-1/2 top-1/2 h-[38%] w-0.5 origin-bottom rounded bg-white/90"
+            style={{ transform: `translate(-50%, -100%) rotate(${minDeg}deg)` }}
+            aria-hidden
+          />
+          {showSeconds ? (
+            <div
+              className="absolute left-1/2 top-1/2 h-[42%] w-px origin-bottom bg-[var(--color-primary)]"
+              style={{
+                transform: `translate(-50%, -100%) rotate(${secDeg}deg)`,
+              }}
+              aria-hidden
+            />
+          ) : null}
+          <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+        </div>
+        {showDate ? (
+          <p className="mt-4 text-lg text-white/70">{now.toLocaleDateString()}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  const timeStr = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: showSeconds ? "2-digit" : undefined,
+    hour12,
+  });
 
   return (
     <div className={stageClass}>
       {showTime ? (
-        <p className="text-5xl font-semibold tabular-nums md:text-6xl">
-          {previewNow.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12,
-          })}
-        </p>
+        <p className="text-5xl font-semibold tabular-nums md:text-6xl">{timeStr}</p>
       ) : null}
       {showDate ? (
         <p className={`text-lg text-white/70 ${showTime ? "mt-3" : ""}`}>
-          {previewNow.toLocaleDateString()}
+          {now.toLocaleDateString()}
         </p>
       ) : null}
       {!showDate && !showTime ? (
@@ -310,8 +352,8 @@ function TextLikeVisual({
  * No Player / IndexedDB / Device / Playlist dependencies.
  */
 export function ContentVisual({ content, previewNow }: ContentVisualProps) {
-  const now = previewNow ?? new Date();
   const { type, title, payload, mediaUrl, durationMs, mimeType } = content;
+  void previewNow;
 
   if (type === "IMAGE") {
     return (
@@ -324,7 +366,7 @@ export function ContentVisual({ content, previewNow }: ContentVisualProps) {
     );
   }
   if (type === "CLOCK") {
-    return <ClockVisual payload={payload} previewNow={now} />;
+    return <ClockVisual payload={payload} />;
   }
   if (type === "QR_CODE") {
     return <QrStubVisual title={title} payload={payload} />;

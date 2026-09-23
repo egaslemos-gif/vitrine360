@@ -28,7 +28,7 @@ export function CardTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={cn("text-lg font-semibold leading-none", className)} {...props} />
+    <h3 className={cn("text-lg font-semibold leading-snug", className)} {...props} />
   );
 }
 
