@@ -13,8 +13,17 @@ import type { Device } from "@/db/schema";
 import { resolveEffectivePlayback } from "@/domain/playback-resolver";
 import { effectivePlaybackKey } from "@/domain/effective-playback-key";
 import { parseTransition } from "@/domain/types";
+import {
+  isExperienceVersionPublished,
+  packageStoreExperienceLookup,
+  sanitizeExperienceManifestPayload,
+  validateExperienceContentAgainstRegistry,
+} from "@/domain/experience-content-ref";
+import { getStoredExperiencePackage } from "@/services/experience-package-store";
 import { ensureDefaultPlaylistAssigned } from "@/services/devices";
 import { getMediaStorage } from "@/services/media";
+
+const experienceLookup = packageStoreExperienceLookup(getStoredExperiencePackage);
 
 export type ManifestAsset = {
   id: string;
@@ -41,6 +50,12 @@ export type ManifestItem = {
   payload: Record<string, unknown>;
   version: number;
   assets: ManifestAsset[];
+  /**
+   * EXPERIENCE-09: when type===EXPERIENCE and version is not PUBLISHED,
+   * item is present but marked non-executable (Player shows safe fallback).
+   */
+  experienceExecutable?: boolean;
+  experienceBlockReason?: string;
 };
 
 export type DeviceManifest = {
@@ -159,6 +174,50 @@ export async function buildDeviceManifest(
   };
 }
 
+function finalizeManifestItem(
+  item: ManifestItem,
+  contentTenantId: string,
+): ManifestItem {
+  if (item.type !== "EXPERIENCE") return item;
+
+  const sanitized = sanitizeExperienceManifestPayload(item.payload);
+  if (!sanitized.ok) {
+    return {
+      ...item,
+      payload: {},
+      assets: [],
+      experienceExecutable: false,
+      experienceBlockReason: sanitized.code,
+    };
+  }
+
+  const checked = validateExperienceContentAgainstRegistry(
+    contentTenantId,
+    sanitized.payload.experience,
+    experienceLookup,
+  );
+  if (!checked.ok) {
+    return {
+      ...item,
+      payload: sanitized.payload,
+      assets: [],
+      experienceExecutable: false,
+      experienceBlockReason: checked.code,
+    };
+  }
+
+  const published = isExperienceVersionPublished(checked.record);
+  return {
+    ...item,
+    payload: sanitized.payload,
+    assets: [],
+    experienceExecutable: published,
+    experienceBlockReason: published
+      ? undefined
+      : "EXPERIENCE_NOT_EXECUTABLE",
+  };
+}
+
 async function buildContentManifestItem(
   contentId: string,
 ): Promise<ManifestItem | null> {
@@ -200,18 +259,21 @@ async function buildContentManifestItem(
     payload = {};
   }
 
-  return {
-    playlistItemId: `emergency-${content.id}`,
-    contentId: content.id,
-    type: content.type,
-    title: content.title,
-    durationMs: content.durationMs,
-    transition: "cut",
-    fitMode: "black",
-    payload,
-    version: content.version,
-    assets: itemAssets,
-  };
+  return finalizeManifestItem(
+    {
+      playlistItemId: `emergency-${content.id}`,
+      contentId: content.id,
+      type: content.type,
+      title: content.title,
+      durationMs: content.durationMs,
+      transition: "cut",
+      fitMode: "black",
+      payload,
+      version: content.version,
+      assets: content.type === "EXPERIENCE" ? [] : itemAssets,
+    },
+    content.tenantId,
+  );
 }
 
 async function buildPlaylistBlock(
@@ -238,7 +300,8 @@ async function buildPlaylistBlock(
       and(
         eq(playlistItems.playlistId, playlistId),
         eq(playlistItems.active, true),
-        eq(contents.status, "ACTIVE")
+        eq(contents.status, "ACTIVE"),
+        eq(contents.tenantId, playlist.tenantId),
       )
     )
     .orderBy(asc(playlistItems.position));
@@ -257,24 +320,27 @@ async function buildPlaylistBlock(
         payload = {};
       }
 
-      const manifestItem: ManifestItem = {
-        playlistItemId: item.id,
-        contentId: content.id,
-        type: content.type,
-        title: content.title,
-        durationMs: item.durationOverrideMs ?? content.durationMs,
-        transition: parseTransition(item.transition),
-        fitMode: item.fitMode,
-        payload,
-        version: content.version,
-        assets: [],
-      };
+      const manifestItem: ManifestItem = finalizeManifestItem(
+        {
+          playlistItemId: item.id,
+          contentId: content.id,
+          type: content.type,
+          title: content.title,
+          durationMs: item.durationOverrideMs ?? content.durationMs,
+          transition: parseTransition(item.transition),
+          fitMode: item.fitMode,
+          payload,
+          version: content.version,
+          assets: [],
+        },
+        content.tenantId,
+      );
       
       itemsMap.set(item.id, manifestItem);
       manifestItems.push(manifestItem);
     }
     
-    if (asset) {
+    if (asset && content.type !== "EXPERIENCE") {
       itemsMap.get(item.id)!.assets.push({
         id: asset.id,
         fileName: asset.fileName,

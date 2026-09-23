@@ -61,6 +61,7 @@ export const CONTENT_TYPES = [
   "NEWS",
   "QR_CODE",
   "CLOCK",
+  "EXPERIENCE",
 ] as const;
 export type ContentType = (typeof CONTENT_TYPES)[number];
 
