@@ -700,6 +700,22 @@
 
     var type = item.type || "";
 
+    if (type === "EXPERIENCE") {
+      /* EXPERIENCE-09: Legacy must NOT execute Experience packages. */
+      setHtml(
+        '<div class="slide ' + transitionClass(item.transition) + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+          'height:100%;padding:60px;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
+          '<p style="font-size:14px;letter-spacing:0.4em;opacity:0.4;margin:0">VITRINE360</p>' +
+          '<h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:600;margin:32px 0 0;max-width:900px;line-height:1.2">' +
+            escapeHtml(item.title || "Experience") +
+          '</h1>' +
+          '<p style="font-size:clamp(1rem,2.5vw,1.4rem);margin:28px 0 0;opacity:0.65">EXPERIENCE_UNSUPPORTED</p>' +
+        '</div>'
+      );
+      hold(slideDuration(item), generation);
+      return;
+    }
+
     if (type === "IMAGE") {
       var imgUrl = buildMediaUrl(item);
       if (!imgUrl) { renderNoContent(); return; }
@@ -1227,9 +1243,7 @@
       environment: {
         userAgent: ua,
         fragileSmartTv:
-          /Sraf|Web0S|Tizen|SmartTV|NetRange|HbbTV|Maple|Viera|Hisense|VIDAA/i.test(
-            ua,
-          ),
+          /Sraf|Web0S|Tizen|SmartTV|NetRange|HbbTV|Maple|Viera|Hisense|VIDAA/i.test(ua),
         secureContext: window.isSecureContext === true,
         language: navigator.language || "",
       },
