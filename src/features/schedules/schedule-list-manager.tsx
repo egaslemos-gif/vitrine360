@@ -489,7 +489,7 @@ function ScheduleEditDialog({
           <div className="w-full min-w-0 space-y-2">
             <Label>Playlist</Label>
             <select
-              className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+              className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
               value={playlistId}
               onChange={(e) => setPlaylistId(e.target.value)}
               disabled={busy}
@@ -507,7 +507,7 @@ function ScheduleEditDialog({
               <p className="flex h-9 items-center text-sm font-medium">EMERGENCY</p>
             ) : (
               <select
-                className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
                 disabled={busy}
@@ -583,7 +583,7 @@ function ScheduleEditDialog({
             ) : null}
             {targetType === "GROUP" ? (
               <select
-                className="mt-2 flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="mt-2 block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
               >
@@ -596,7 +596,7 @@ function ScheduleEditDialog({
             ) : null}
             {targetType === "DEVICE" ? (
               <select
-                className="mt-2 flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="mt-2 block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
               >

@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  fieldStackClass,
+  formShellClass,
+  nativeSelectClass,
+} from "@/components/ui/field";
 
 const COMMON_TIMEZONES = [
   "UTC",
@@ -16,9 +21,6 @@ const COMMON_TIMEZONES = [
   "America/Sao_Paulo",
   "America/New_York",
 ];
-
-const fieldSelectClass =
-  "box-border flex h-9 w-full min-w-0 max-w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
 export function WorkspaceSettingsForm({
   initialName,
@@ -59,10 +61,10 @@ export function WorkspaceSettingsForm({
   }
 
   return (
-    <Card className="w-full max-w-xl border border-[var(--color-border)] shadow-[var(--shadow-subtle)]">
-      <CardContent className="p-6">
-        <form onSubmit={onSubmit} className="w-full min-w-0 space-y-5">
-          <div className="w-full min-w-0 space-y-2">
+    <Card className={formShellClass}>
+      <CardContent className="block w-full p-6">
+        <form onSubmit={onSubmit} className="block w-full min-w-0 space-y-5">
+          <div className={fieldStackClass}>
             <Label htmlFor="ws-name">Nome do workspace</Label>
             <Input
               id="ws-name"
@@ -73,11 +75,11 @@ export function WorkspaceSettingsForm({
               autoComplete="organization"
             />
           </div>
-          <div className="w-full min-w-0 space-y-2">
+          <div className={fieldStackClass}>
             <Label htmlFor="ws-tz">Timezone</Label>
             <select
               id="ws-tz"
-              className={fieldSelectClass}
+              className={nativeSelectClass}
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >

@@ -362,7 +362,7 @@ export function MediaLibrary({
         <select
           id="media-usage"
           aria-label="Filtrar por utilização"
-          className="flex h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+          className="block h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
           value={usageFilter}
           onChange={(e) =>
             setUsageFilter(e.target.value as MediaUsageFilter)
@@ -375,7 +375,7 @@ export function MediaLibrary({
         <select
           id="media-sort"
           aria-label="Ordenar media"
-          className="flex h-9 min-w-[180px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+          className="block h-9 min-w-[180px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
           value={sort}
           onChange={(e) => setSort(e.target.value as MediaSortMode)}
         >

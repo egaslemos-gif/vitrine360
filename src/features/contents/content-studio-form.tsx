@@ -447,7 +447,7 @@ export function ContentStudioForm({
             <div className="flex flex-wrap items-center gap-2">
               <select
                 id="content-type"
-                className="flex h-9 min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm disabled:opacity-60"
+                className="h-9 min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm disabled:opacity-60"
                 value={type}
                 disabled={mode === "edit"}
                 onChange={(e) => {
@@ -487,7 +487,7 @@ export function ContentStudioForm({
             <Label htmlFor="content-status">Estado</Label>
             <select
               id="content-status"
-              className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+              className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -662,7 +662,7 @@ export function ContentStudioForm({
                 <div className="space-y-2">
                   <Label>Estilo</Label>
                   <select
-                    className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+                    className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
                     value={clockStyle}
                     onChange={(e) => setClockStyle(e.target.value)}
                   >
@@ -673,7 +673,7 @@ export function ContentStudioForm({
                 <div className="space-y-2">
                   <Label>Formato</Label>
                   <select
-                    className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+                    className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
                     value={clockFormat}
                     onChange={(e) => setClockFormat(e.target.value)}
                   >
@@ -778,7 +778,7 @@ export function ContentStudioForm({
                   <div className="space-y-2">
                     <Label>Tamanho</Label>
                     <select
-                      className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                      className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                       value={qrSize}
                       onChange={(e) => setQrSize(e.target.value)}
                     >

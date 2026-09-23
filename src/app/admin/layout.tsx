@@ -58,7 +58,7 @@ export default async function AdminLayout({
 
         <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl bg-white/40 shadow-sm ring-1 ring-black/5 backdrop-blur-xl">
           <div className="admin-main-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="mx-auto max-w-5xl px-4 py-4 md:px-6 md:py-5">
+            <div className="mx-auto w-full max-w-5xl px-4 py-4 md:px-6 md:py-5">
               {children}
             </div>
           </div>

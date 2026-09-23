@@ -56,7 +56,7 @@ export function ModalPanel({
       aria-modal="true"
       className={cn(
         // Critical: definite width — avoid w-full alone inside flex row (collapses).
-        "relative my-auto w-[min(100%,28rem)] shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-left shadow-[var(--shadow-modal)]",
+        "relative my-auto block w-[min(100%,28rem)] shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-left shadow-[var(--shadow-modal)]",
         size === "sm" && "w-[min(100%,24rem)]",
         size === "lg" && "w-[min(100%,42rem)]",
         size === "xl" && "w-[min(100%,48rem)]",

@@ -135,7 +135,7 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
               <Label htmlFor="content-type-filter">Tipo</Label>
               <select
                 id="content-type-filter"
-                className="flex h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="block h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
               >
@@ -151,7 +151,7 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
               <Label htmlFor="content-status-filter">Estado</Label>
               <select
                 id="content-status-filter"
-                className="flex h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="block h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >

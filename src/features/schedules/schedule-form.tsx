@@ -104,7 +104,7 @@ export function ScheduleForm({
           <div className="space-y-2">
             <Label>Playlist</Label>
             <select
-              className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+              className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
               value={playlistId}
               onChange={(e) => setPlaylistId(e.target.value)}
               disabled={busy}
@@ -119,7 +119,7 @@ export function ScheduleForm({
           <div className="space-y-2">
             <Label>Prioridade</Label>
             <select
-              className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+              className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
               disabled={busy}
@@ -188,7 +188,7 @@ export function ScheduleForm({
 
               {targetType === "GROUP" && (
                 <select
-                  className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                  className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                   value={targetId}
                   onChange={(e) => setTargetId(e.target.value)}
                   required
@@ -206,7 +206,7 @@ export function ScheduleForm({
 
               {targetType === "DEVICE" && (
                 <select
-                  className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                  className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                   value={targetId}
                   onChange={(e) => setTargetId(e.target.value)}
                   required

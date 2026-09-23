@@ -51,6 +51,32 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
   }
+
+  /*
+   * Native text fields must be block + full width.
+   * `display:flex` on <input>/<textarea> collapses width in nested flex contexts.
+   * Selects: force block only — keep intrinsic/min width for filter toolbars;
+   * full-width selects already use `w-full`.
+   */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="file"]
+    ):not([type="hidden"]):not([type="button"]):not([type="submit"]):not(
+      [type="reset"]
+    ):not([type="image"]):not([type="color"]),
+  textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  select {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
 }
 
 /* Passive Player Runtime — appliance / kiosk surface */

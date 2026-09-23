@@ -87,7 +87,7 @@ export function UsersManager({
             <div className="space-y-2">
               <Label>Role</Label>
               <select
-                className="flex h-9 w-full rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 value={role}
                 onChange={(e) =>
                   setRole(e.target.value as (typeof ROLES)[number])
