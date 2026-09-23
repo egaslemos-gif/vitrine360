@@ -6,7 +6,6 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,7 +13,7 @@ import { TypeBadge } from "@/components/ui/type-badge";
 import { PreviewViewport } from "@/components/ui/preview-viewport";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, LayoutGrid, List, Search } from "lucide-react";
 import {
   countMediaByType,
   filterMediaAssets,
@@ -247,6 +246,7 @@ export function MediaLibrary({
   const [typeFilter, setTypeFilter] = useState<MediaTypeFilter>("all");
   const [usageFilter, setUsageFilter] = useState<MediaUsageFilter>("all");
   const [sort, setSort] = useState<MediaSortMode>("recent");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [isDeduplicating, setIsDeduplicating] = useState(false);
   const [showDedupeModal, setShowDedupeModal] = useState(false);
@@ -348,44 +348,74 @@ export function MediaLibrary({
       </div>
 
       <FilterBar>
-        <div className="min-w-[200px] flex-1 space-y-1">
-          <Label htmlFor="media-search">Pesquisar</Label>
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--color-muted-foreground)]" />
           <Input
             id="media-search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nome do ficheiro…"
+            placeholder="Procurar por nome..."
+            className="h-9 pl-9"
+            aria-label="Pesquisar media"
           />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="media-usage">Utilização</Label>
-          <select
-            id="media-usage"
-            className="flex h-9 w-full min-w-[140px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
-            value={usageFilter}
-            onChange={(e) =>
-              setUsageFilter(e.target.value as MediaUsageFilter)
+        <select
+          id="media-usage"
+          aria-label="Filtrar por utilização"
+          className="flex h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+          value={usageFilter}
+          onChange={(e) =>
+            setUsageFilter(e.target.value as MediaUsageFilter)
+          }
+        >
+          <option value="all">Utilização: Todos</option>
+          <option value="used">Utilização: Utilizados</option>
+          <option value="unused">Utilização: Não utilizados</option>
+        </select>
+        <select
+          id="media-sort"
+          aria-label="Ordenar media"
+          className="flex h-9 min-w-[180px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as MediaSortMode)}
+        >
+          <option value="recent">Ordenar por: Mais recente</option>
+          <option value="name">Ordenar por: Nome A–Z</option>
+          <option value="size">Ordenar por: Tamanho</option>
+        </select>
+        <div
+          className="flex overflow-hidden rounded-md border border-[var(--color-border)]"
+          role="group"
+          aria-label="Modo de vista"
+        >
+          <button
+            type="button"
+            aria-pressed={viewMode === "grid"}
+            aria-label="Vista em grelha"
+            onClick={() => setViewMode("grid")}
+            className={
+              viewMode === "grid"
+                ? "bg-[var(--color-tab-active)] p-2 text-white"
+                : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
             }
           >
-            <option value="all">Todos</option>
-            <option value="used">Utilizados</option>
-            <option value="unused">Não utilizados</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="media-sort">Ordenar</Label>
-          <select
-            id="media-sort"
-            className="flex h-9 w-full min-w-[160px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as MediaSortMode)}
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-pressed={viewMode === "list"}
+            aria-label="Vista em lista"
+            onClick={() => setViewMode("list")}
+            className={
+              viewMode === "list"
+                ? "bg-[var(--color-tab-active)] p-2 text-white"
+                : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+            }
           >
-            <option value="name">Nome A–Z</option>
-            <option value="recent">Mais recentes</option>
-            <option value="size">Tamanho</option>
-          </select>
+            <List className="h-4 w-4" />
+          </button>
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
@@ -447,7 +477,13 @@ export function MediaLibrary({
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              : "flex flex-col gap-3"
+          }
+        >
           {displayItems.map((a) => (
             <AssetCard
               key={a.id}

@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MonitorPlay, Search, X, Trash2 } from "lucide-react";
+import { MonitorPlay, Search, X, Trash2, MapPin, LayoutGrid, List } from "lucide-react";
 import { LivePresence } from "@/features/devices/live-presence";
 import { DeviceActions } from "@/features/devices/device-actions";
 import { AssignPlaylistForm } from "@/features/devices/assign-playlist-form";
@@ -70,9 +70,10 @@ export function DeviceListManager({
 }) {
   const [search, setSearch] = useState("");
   const [presenceFilter, setPresenceFilter] = useState("ALL");
-  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [locationFilter, setLocationFilter] = useState("ALL");
   const [groupFilter, setGroupFilter] = useState("ALL");
   const [playlistFilter, setPlaylistFilter] = useState("ALL");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const mounted = useIsClient();
@@ -143,15 +144,20 @@ export function DeviceListManager({
     return () => window.clearInterval(id);
   }, []);
 
+  const locations = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of devices) {
+      if (d.location?.trim()) set.add(d.location.trim());
+    }
+    return [...set].sort((a, b) => a.localeCompare(b, "pt"));
+  }, [devices]);
+
   const filteredDevices = useMemo(() => {
     return devices.filter((d) => {
-      const q = search.toLowerCase();
-      if (
-        q &&
-        !d.name?.toLowerCase().includes(q) &&
-        !d.deviceCode?.toLowerCase().includes(q)
-      ) {
-        return false;
+      const q = search.toLowerCase().trim();
+      if (q) {
+        const hay = `${d.name ?? ""} ${d.deviceCode ?? ""} ${d.location ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
       }
 
       const livePresence = liveMap[d.id]?.presence ?? d.presence;
@@ -159,7 +165,7 @@ export function DeviceListManager({
         return false;
       }
 
-      if (categoryFilter !== "ALL" && d.displayType !== categoryFilter) {
+      if (locationFilter !== "ALL" && (d.location ?? "").trim() !== locationFilter) {
         return false;
       }
 
@@ -183,7 +189,7 @@ export function DeviceListManager({
     devices,
     search,
     presenceFilter,
-    categoryFilter,
+    locationFilter,
     groupFilter,
     playlistFilter,
     groups,
@@ -233,10 +239,10 @@ export function DeviceListManager({
   return (
     <div className="space-y-6">
       <FilterBar>
-        <div className="relative flex-1">
+        <div className="relative min-w-[200px] flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--color-muted-foreground)]" />
           <Input
-            placeholder="Procurar ecrã (nome ou código)..."
+            placeholder="Procurar por nome, código ou local..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-9 border-[var(--color-border)] bg-[var(--color-secondary)]/30 pl-9"
@@ -244,7 +250,7 @@ export function DeviceListManager({
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={presenceFilter}
             onChange={(e) => setPresenceFilter(e.target.value)}
@@ -255,22 +261,6 @@ export function DeviceListManager({
             <option value="ONLINE">Online</option>
             <option value="AWAY">Instáveis</option>
             <option value="OFFLINE">Offline</option>
-          </select>
-
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            aria-label="Filtrar por categoria"
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-          >
-            <option value="ALL">Categoria: Todas</option>
-            <option value="TV">TV</option>
-            <option value="TOUCH_DISPLAY">Touch Display</option>
-            <option value="LED">LED</option>
-            <option value="KIOSK">Kiosk</option>
-            <option value="VIDEO_WALL">Video Wall</option>
-            <option value="TABLET">Tablet</option>
-            <option value="OTHER">Outro</option>
           </select>
 
           <select
@@ -288,6 +278,20 @@ export function DeviceListManager({
           </select>
 
           <select
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            aria-label="Filtrar por local"
+            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+          >
+            <option value="ALL">Local: Todos</option>
+            {locations.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
+          </select>
+
+          <select
             value={playlistFilter}
             onChange={(e) => setPlaylistFilter(e.target.value)}
             aria-label="Filtrar por playlist"
@@ -298,9 +302,42 @@ export function DeviceListManager({
             <option value="UNASSIGNED">Sem Playlist</option>
           </select>
 
+          <div
+            className="ml-auto flex overflow-hidden rounded-md border border-[var(--color-border)]"
+            role="group"
+            aria-label="Modo de vista"
+          >
+            <button
+              type="button"
+              aria-pressed={viewMode === "grid"}
+              aria-label="Vista em grelha"
+              onClick={() => setViewMode("grid")}
+              className={
+                viewMode === "grid"
+                  ? "bg-[var(--color-tab-active)] p-2 text-white"
+                  : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+              }
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-pressed={viewMode === "list"}
+              aria-label="Vista em lista"
+              onClick={() => setViewMode("list")}
+              className={
+                viewMode === "list"
+                  ? "bg-[var(--color-tab-active)] p-2 text-white"
+                  : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+              }
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+
           {(search ||
             presenceFilter !== "ALL" ||
-            categoryFilter !== "ALL" ||
+            locationFilter !== "ALL" ||
             groupFilter !== "ALL" ||
             playlistFilter !== "ALL") && (
             <button
@@ -308,7 +345,7 @@ export function DeviceListManager({
               onClick={() => {
                 setSearch("");
                 setPresenceFilter("ALL");
-                setCategoryFilter("ALL");
+                setLocationFilter("ALL");
                 setGroupFilter("ALL");
                 setPlaylistFilter("ALL");
               }}
@@ -322,15 +359,19 @@ export function DeviceListManager({
         </div>
       </FilterBar>
 
-      {/* Device Grid Header */}
-      <div className="flex items-center justify-between mt-6">
-        <h2 className="text-xl font-semibold tracking-tight">Ecrãs Registados ({filteredDevices.length})</h2>
+      <div className="mt-2 flex items-center justify-between">
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          {filteredDevices.length} ecrã{filteredDevices.length === 1 ? "" : "s"}
+        </p>
         {filteredDevices.length > 0 && (
           <button
+            type="button"
             onClick={toggleAll}
             className="text-sm text-[var(--color-primary)] hover:underline"
           >
-            {selectedIds.size === filteredDevices.length ? "Desmarcar Todos" : "Selecionar Todos"}
+            {selectedIds.size === filteredDevices.length
+              ? "Desmarcar Todos"
+              : "Selecionar Todos"}
           </button>
         )}
       </div>
@@ -347,7 +388,7 @@ export function DeviceListManager({
               onClick={() => {
                 setSearch("");
                 setPresenceFilter("ALL");
-                setCategoryFilter("ALL");
+                setLocationFilter("ALL");
                 setGroupFilter("ALL");
                 setPlaylistFilter("ALL");
               }}
@@ -357,34 +398,50 @@ export function DeviceListManager({
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+              : "flex flex-col gap-3"
+          }
+        >
           {filteredDevices.map((d) => {
             const live = liveMap[d.id];
             const presence = live?.presence ?? d.presence;
             const playlistName =
               playlists.find((p) => p.id === d.currentPlaylistId)?.name ??
               "—";
+            const deviceData = {
+              id: d.id,
+              name: d.name ?? "",
+              deviceCode: d.deviceCode ?? "",
+              location: d.location,
+            };
             return (
               <Card
                 key={d.id}
-                className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-elevated)]"
+                className={
+                  viewMode === "list"
+                    ? "flex flex-col overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] sm:flex-row sm:items-stretch"
+                    : "overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-elevated)]"
+                }
               >
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-4">
-                  <div className="flex min-w-0 items-center gap-3">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-4 sm:min-w-0 sm:flex-1">
+                  <div className="flex min-w-0 items-start gap-3">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(d.id)}
                       onChange={() => toggleSelection(d.id)}
                       aria-label={`Seleccionar ${d.name ?? d.deviceCode ?? d.id}`}
-                      className="h-4 w-4 cursor-pointer rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                     />
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[var(--color-muted)] text-[var(--color-primary)]">
-                      <MonitorPlay className="h-7 w-7" aria-hidden />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="mb-1">
-                        <StatusBadge status={presence} />
+                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--color-muted)] text-[var(--color-primary)]">
+                      <MonitorPlay className="h-8 w-8" aria-hidden />
+                      <div className="absolute right-1 top-1">
+                        <StatusBadge status={presence} className="shadow-sm" />
                       </div>
+                    </div>
+                    <div className="min-w-0 pt-0.5">
                       <CardTitle className="truncate text-base" title={d.name ?? ""}>
                         <Link
                           href={`/admin/devices/${d.id}`}
@@ -396,21 +453,15 @@ export function DeviceListManager({
                       <CardDescription className="truncate font-mono text-xs">
                         {d.deviceCode ?? "—"}
                       </CardDescription>
+                      <p className="mt-1.5 flex items-center gap-1 truncate text-xs text-[var(--color-muted-foreground)]">
+                        <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                        <span className="truncate">{d.location ?? "—"}</span>
+                      </p>
                     </div>
                   </div>
-                  <DeviceActions
-                    device={{
-                      id: d.id,
-                      name: d.name ?? "",
-                      deviceCode: d.deviceCode ?? "",
-                      location: d.location,
-                    }}
-                  />
+                  <DeviceActions device={deviceData} variant="icon" />
                 </CardHeader>
-                <CardContent className="space-y-2.5 px-4 pb-3">
-                  <MetadataRow label="Localização">
-                    {d.location ?? "—"}
-                  </MetadataRow>
+                <CardContent className="space-y-2 px-4 pb-3 sm:flex-1">
                   <MetadataRow label="Último contacto">
                     {(live?.lastSeenAt ?? d.lastSeenAt)
                       ? new Date(
@@ -423,10 +474,10 @@ export function DeviceListManager({
                   </MetadataRow>
                   <MetadataRow label="Playlist">{playlistName}</MetadataRow>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    <span className="rounded-md bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                    <span className="rounded-full bg-[var(--color-muted)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
                       {d.displayType}
                     </span>
-                    <span className="rounded-md bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-muted-foreground)]">
+                    <span className="rounded-full bg-[var(--color-muted)] px-2.5 py-0.5 text-[10px] font-medium text-[var(--color-muted-foreground)]">
                       v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
                     </span>
                   </div>
@@ -438,19 +489,22 @@ export function DeviceListManager({
                     />
                   </div>
                 </CardContent>
-                <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-muted)]/30 px-4 py-3">
+                <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-muted)]/20 px-4 py-3 sm:w-48 sm:flex-col sm:items-stretch sm:justify-center sm:border-l sm:border-t-0">
                   <Link
                     href={`/admin/devices/${d.id}`}
-                    className="inline-flex h-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-xs font-medium hover:bg-[var(--color-muted)]"
+                    className="inline-flex h-8 flex-1 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-xs font-medium hover:bg-[var(--color-muted)] sm:flex-none"
                   >
-                    Ver detalhes
+                    Ver Detalhes
                   </Link>
-                  <LivePresence
-                    presence={presence}
-                    version={live?.manifestVersion ?? d.manifestVersion ?? 0}
-                    lastSeenAt={live?.lastSeenAt ?? d.lastSeenAt}
-                    observability={live?.observability ?? null}
-                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <LivePresence
+                      presence={presence}
+                      version={live?.manifestVersion ?? d.manifestVersion ?? 0}
+                      lastSeenAt={live?.lastSeenAt ?? d.lastSeenAt}
+                      observability={live?.observability ?? null}
+                    />
+                    <DeviceActions device={deviceData} variant="button" />
+                  </div>
                 </CardFooter>
               </Card>
             );

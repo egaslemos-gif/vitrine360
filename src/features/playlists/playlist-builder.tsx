@@ -74,11 +74,15 @@ type ContentPreview = {
 
 function SortableItem({
   item,
+  selected,
+  onSelect,
   onRemove,
   onUpdateDuration,
   onUpdatePresentation,
 }: {
   item: PlaylistItem;
+  selected: boolean;
+  onSelect: () => void;
   onRemove: (id: string) => void;
   onUpdateDuration: (id: string, duration: number | null) => Promise<void>;
   onUpdatePresentation: (id: string, transition: string, fitMode: string) => Promise<void>;
@@ -93,6 +97,10 @@ function SortableItem({
 
   const isNatural = item.durationOverrideMs === 0;
   const isFallback = item.durationOverrideMs === null;
+  const durationMs =
+    item.durationOverrideMs !== null && item.durationOverrideMs > 0
+      ? item.durationOverrideMs
+      : item.content.durationMs;
   const [durationSeconds, setDurationSeconds] = useState(
     item.durationOverrideMs !== null ? String(item.durationOverrideMs / 1000) : "",
   );
@@ -101,33 +109,67 @@ function SortableItem({
   const [selectedFitMode, setSelectedFitMode] = useState(item.fitMode || "black");
   const [isSavingPresentation, setIsSavingPresentation] = useState(false);
 
+  function formatDur(ms: number) {
+    const total = Math.max(0, Math.round(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 mb-2 bg-card border rounded-md shadow-sm group"
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={
+        selected
+          ? "group mb-2 flex cursor-pointer items-center gap-3 rounded-md border border-[var(--color-type-image)]/40 bg-[var(--color-type-image)]/10 p-3 shadow-sm"
+          : "group mb-2 flex cursor-pointer items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-sm"
+      }
     >
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab hover:text-primary text-muted-foreground"
+        onClick={(e) => e.stopPropagation()}
+        className="cursor-grab text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]"
       >
         <GripVertical className="h-5 w-5" />
       </div>
-      <div className="flex-1">
-        <p className="font-medium text-sm">{item.content.title}</p>
-        <p className="text-xs text-muted-foreground uppercase flex items-center gap-2">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--color-muted)]">
+        {item.content.mediaUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.content.mediaUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <TypeBadge contentType={item.content.type} className="scale-90" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{item.content.title}</p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
           <TypeBadge contentType={item.content.type} />
-          <span>
+          <span className="tabular-nums">
             {isNatural
               ? "Natural"
               : isFallback
-              ? `${item.content.durationMs / 1000}s (Content)`
-              : `${item.durationOverrideMs! / 1000}s (Override)`}
+                ? formatDur(item.content.durationMs)
+                : formatDur(durationMs)}
           </span>
         </p>
       </div>
 
+      <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -235,6 +277,7 @@ function SortableItem({
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+      </div>
     </div>
   );
 }
@@ -459,12 +502,26 @@ export function PlaylistBuilder({
         </Card>
 
         <Card className="border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-4">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="space-y-1 pb-3">
             <CardTitle>Itens da Playlist</CardTitle>
-            <Button size="sm" onClick={() => setIsPickerOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar
-            </Button>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              {items.length} item{items.length === 1 ? "" : "s"}
+              {items.length > 0
+                ? ` · Duração total: ${(() => {
+                    const totalMs = items.reduce((acc, i) => {
+                      const ms =
+                        i.durationOverrideMs !== null && i.durationOverrideMs > 0
+                          ? i.durationOverrideMs
+                          : i.content.durationMs;
+                      return acc + Math.max(0, ms);
+                    }, 0);
+                    const total = Math.round(totalMs / 1000);
+                    const m = Math.floor(total / 60);
+                    const s = total % 60;
+                    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+                  })()}`
+                : ""}
+            </p>
           </CardHeader>
           <CardContent>
             {items.length === 0 ? (
@@ -475,28 +532,42 @@ export function PlaylistBuilder({
                 <p className="mb-4 text-sm text-[var(--color-muted-foreground)]">
                   Adicione conteúdos para começar a construir esta playlist.
                 </p>
-                <Button variant="secondary" onClick={() => setIsPickerOpen(true)}>
-                  Adicionar conteúdo
+                <Button variant="outline" onClick={() => setIsPickerOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Conteúdo
                 </Button>
               </div>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={items} strategy={verticalListSortingStrategy}>
-                  {items.map((item) => (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      onRemove={handleRemoveItem}
-                      onUpdateDuration={handleUpdateDuration}
-                      onUpdatePresentation={handleUpdatePresentation}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
+              <>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={items} strategy={verticalListSortingStrategy}>
+                    {items.map((item, idx) => (
+                      <SortableItem
+                        key={item.id}
+                        item={item}
+                        selected={previewIndex === idx}
+                        onSelect={() => setPreviewIndex(idx)}
+                        onRemove={handleRemoveItem}
+                        onUpdateDuration={handleUpdateDuration}
+                        onUpdatePresentation={handleUpdatePresentation}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={() => setIsPickerOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Conteúdo
+                </Button>
+              </>
             )}
           </CardContent>
         </Card>

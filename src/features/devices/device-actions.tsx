@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Pencil, Trash2, X } from "lucide-react";
+import { ChevronDown, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,14 @@ type DeviceData = {
   location: string | null;
 };
 
-export function DeviceActions({ device }: { device: DeviceData }) {
+export function DeviceActions({
+  device,
+  variant = "icon",
+}: {
+  device: DeviceData;
+  /** icon = kebab; button = "Ações" dropdown (card footer) */
+  variant?: "icon" | "button";
+}) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -89,17 +96,30 @@ export function DeviceActions({ device }: { device: DeviceData }) {
   return (
     <>
       <div className="relative" ref={menuRef}>
-        <button
-          type="button"
-          aria-label="Acções do ecrã"
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="rounded-md p-1.5 text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-secondary)] hover:text-[var(--color-foreground)]"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
+        {variant === "button" ? (
+          <button
+            type="button"
+            aria-label="Acções do ecrã"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-xs font-medium text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+          >
+            Ações
+            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="Acções do ecrã"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="rounded-md p-1.5 text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-secondary)] hover:text-[var(--color-foreground)]"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        )}
 
         {menuOpen && (
-          <div className="absolute right-0 top-full z-10 mt-1 w-44 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-card)] shadow-md">
+          <div className="absolute right-0 bottom-full z-10 mb-1 w-44 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-card)] shadow-md sm:bottom-auto sm:top-full sm:mb-0 sm:mt-1">
             <button
               type="button"
               onClick={() => {

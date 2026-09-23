@@ -5,7 +5,7 @@
  */
 (function () {
   var LS_KEY = "v360-player-config";
-  var VERSION = "0.1.20-smarttv-static";
+  var VERSION = "0.1.21-smarttv-static";
   var root = document.getElementById("root");
   var claimTimer = null;
   var bootSec = 0;
@@ -1039,43 +1039,69 @@
     return "fade-in";
   }
 
-  function renderClock(item) {
-    if (playState.clockTimer) clearInterval(playState.clockTimer);
+  function clearClockTimer() {
+    if (playState.clockTimer) {
+      clearInterval(playState.clockTimer);
+      playState.clockTimer = null;
+    }
+  }
 
-    var payload = (item && item.payload) || {};
+  /** Hand angles from local Date — matches React Player (hour follows minutes). */
+  function clockHandAngles(now) {
+    var h = now.getHours() % 12;
+    var m = now.getMinutes();
+    var s = now.getSeconds();
+    return {
+      hour: h * 30 + m * 0.5,
+      minute: m * 6 + s * 0.1,
+      second: s * 6,
+    };
+  }
+
+  function pad2Clock(n) {
+    var s = String(n);
+    return s.length < 2 ? "0" + s : s;
+  }
+
+  function renderDigitalClockFace(payload) {
     var showSeconds = payload.showSeconds === true;
     var showDate = payload.showDate !== false;
     var showTime = payload.showTime !== false;
     var hour12 = payload.format === "12h";
-
-    function pad2(n) {
-      var s = String(n);
-      return s.length < 2 ? "0" + s : s;
-    }
 
     function update() {
       var now = new Date();
       var h = now.getHours();
       var m = now.getMinutes();
       var sec = now.getSeconds();
+      var timeStr;
       if (hour12) {
         var ampm = h >= 12 ? "PM" : "AM";
         h = h % 12;
         if (h === 0) h = 12;
-        var timeStr = pad2(h) + ":" + pad2(m) + (showSeconds ? ":" + pad2(sec) : "") + " " + ampm;
+        timeStr =
+          pad2Clock(h) +
+          ":" +
+          pad2Clock(m) +
+          (showSeconds ? ":" + pad2Clock(sec) : "") +
+          " " +
+          ampm;
       } else {
-        var timeStr2 = pad2(h) + ":" + pad2(m) + (showSeconds ? ":" + pad2(sec) : "");
-        timeStr = timeStr2;
+        timeStr =
+          pad2Clock(h) +
+          ":" +
+          pad2Clock(m) +
+          (showSeconds ? ":" + pad2Clock(sec) : "");
       }
       var dateStr = now.toLocaleDateString();
       var timePx = tvFontPx(0.32, 120, 320);
       var datePx = tvFontPx(0.07, 40, 88);
       var html =
-        '<div class="slide" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        '<div class="slide clock-digital" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
         'height:100%;background:#0b1220;text-align:center;padding:4vh 6vw;box-sizing:border-box">';
       if (showTime) {
         html +=
-          '<p style="font-size:' +
+          '<p id="v360-clock-time" style="font-size:' +
           timePx +
           'px;font-weight:700;margin:0;line-height:1;letter-spacing:0.04em;' +
           'font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace">' +
@@ -1084,7 +1110,7 @@
       }
       if (showDate) {
         html +=
-          '<p style="font-size:' +
+          '<p id="v360-clock-date" style="font-size:' +
           datePx +
           "px;margin-top:" +
           Math.round(datePx * 0.55) +
@@ -1097,7 +1123,101 @@
     }
 
     update();
-    playState.clockTimer = setInterval(update, showSeconds ? 1000 : 5000);
+    playState.clockTimer = setInterval(update, showSeconds ? 1000 : 30000);
+  }
+
+  function renderAnalogClockFace(payload) {
+    var showSeconds = payload.showSeconds === true;
+    var showDate = payload.showDate !== false;
+    var sizePx = Math.min(tvFontPx(0.42, 180, 320), Math.round((window.innerHeight || 720) * 0.42));
+    var datePx = tvFontPx(0.05, 28, 64);
+    /* Hands: bottom edge anchored at face centre, then rotate. */
+    var handCss =
+      "position:absolute;left:50%;bottom:50%;transform-origin:bottom center;" +
+      "-webkit-transform-origin:bottom center;border-radius:2px;";
+
+    var html =
+      '<div class="slide clock-analog" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'height:100%;background:#0b1220;text-align:center;padding:4vh 6vw;box-sizing:border-box">' +
+      '<div class="clock-analog-face" style="position:relative;width:' +
+      sizePx +
+      "px;height:" +
+      sizePx +
+      'px;border-radius:50%;border:4px solid rgba(255,255,255,0.4);box-sizing:border-box">' +
+      '<div id="v360-hour-hand" style="' +
+      handCss +
+      'width:4px;height:28%;margin-left:-2px;background:#fff"></div>' +
+      '<div id="v360-minute-hand" style="' +
+      handCss +
+      'width:3px;height:38%;margin-left:-1.5px;background:rgba(255,255,255,0.9)"></div>' +
+      (showSeconds
+        ? '<div id="v360-second-hand" style="' +
+          handCss +
+          'width:1px;height:42%;margin-left:-0.5px;background:#34d399"></div>'
+        : "") +
+      '<div style="position:absolute;left:50%;top:50%;width:10px;height:10px;margin-left:-5px;margin-top:-5px;' +
+      'border-radius:50%;background:#fff"></div>' +
+      "</div>";
+    if (showDate) {
+      html +=
+        '<p id="v360-clock-date" style="font-size:' +
+        datePx +
+        "px;margin-top:" +
+        Math.round(datePx * 0.7) +
+        'px;opacity:0.78;font-weight:500"></p>';
+    }
+    html += "</div>";
+    setHtml(html);
+
+    function applyHands() {
+      var now = new Date();
+      var angles = clockHandAngles(now);
+      var hourEl = document.getElementById("v360-hour-hand");
+      var minEl = document.getElementById("v360-minute-hand");
+      var secEl = document.getElementById("v360-second-hand");
+      var dateEl = document.getElementById("v360-clock-date");
+      var rot = function (el, deg) {
+        if (!el) return;
+        var t = "rotate(" + deg + "deg)";
+        el.style.transform = t;
+        el.style.webkitTransform = t;
+      };
+      rot(hourEl, angles.hour);
+      rot(minEl, angles.minute);
+      if (showSeconds) rot(secEl, angles.second);
+      if (dateEl) dateEl.textContent = now.toLocaleDateString();
+    }
+
+    applyHands();
+    playState.clockTimer = setInterval(
+      applyHands,
+      showSeconds ? 1000 : 30000,
+    );
+  }
+
+  function renderClock(item) {
+    clearClockTimer();
+    var payload = (item && item.payload) || {};
+    try {
+      var style = payload.style === "analog" ? "analog" : "digital";
+      if (style === "analog") {
+        renderAnalogClockFace(payload);
+      } else {
+        renderDigitalClockFace(payload);
+      }
+    } catch (e) {
+      /* Fail-safe: never crash the playlist on bad CLOCK payload. */
+      try {
+        renderDigitalClockFace({
+          showSeconds: true,
+          showDate: true,
+          showTime: true,
+          format: "24h",
+        });
+      } catch (e2) {
+        renderNoContent();
+      }
+    }
   }
 
   function renderNoContent() {
@@ -1114,7 +1234,7 @@
   }
 
   function advanceSlide() {
-    if (playState.clockTimer) { clearInterval(playState.clockTimer); playState.clockTimer = null; }
+    clearClockTimer();
     if (playState.slideTimer) { clearTimeout(playState.slideTimer); playState.slideTimer = null; }
     
     // Cleanup previous video listeners if any

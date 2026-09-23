@@ -12,6 +12,7 @@ import {
 import { CONTENT_TYPES } from "../src/domain/types";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runClockLegacyParityTests } from "./test-clock-legacy-parity";
 
 function main() {
   console.log("CONTENT-TEMPLATES-01");
@@ -111,10 +112,17 @@ function main() {
   assert.ok(eng.includes("useLiveClock"), "CLOCK player live");
   assert.ok(!eng.includes("eval("), "CLOCK-017");
 
-  // tv.js clock timer
+  // tv.js clock timer — digital + analog parity
   const tv = readFileSync(join(process.cwd(), "public/tv.js"), "utf8");
   assert.ok(tv.includes("showSeconds"), "tv.js respects showSeconds");
-  assert.ok(tv.includes("setInterval(update, showSeconds ? 1000 : 5000)"), "tv tick");
+  assert.ok(tv.includes("renderAnalogClockFace"), "tv.js analog live");
+  assert.ok(tv.includes("renderDigitalClockFace"), "tv.js digital live");
+  assert.ok(tv.includes("clearClockTimer"), "tv.js clock cleanup");
+  assert.ok(tv.includes("h * 30 + m * 0.5"), "tv.js hour hand follows minutes");
+  assert.ok(tv.includes("showSeconds ? 1000 : 30000"), "tv tick cadence");
+
+  // Nested CLOCK-LEGACY suite
+  runClockLegacyParityTests();
 
   console.log("CONTENT-TEMPLATES-01 PASS");
 }

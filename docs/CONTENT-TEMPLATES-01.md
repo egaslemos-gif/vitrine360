@@ -70,7 +70,14 @@ Chooser + TemplatePicker (Design System: PageHeader, Card, FilterBar, PreviewVie
 
 ## 13. CLOCK live
 
-CLOCK é dinâmico: `useLiveClock` (admin + React player), `tv.js` interval 1s/5s. Fonte = tempo local do dispositivo. Sem rede.
+CLOCK é dinâmico nos dois runtimes:
+
+| Estilo | React Player | Legacy `tv.js` |
+|--------|--------------|----------------|
+| Digital | LIVE (`useLiveClock`) | LIVE (`renderDigitalClockFace`) |
+| Analog | LIVE (ponteiros) | LIVE (`renderAnalogClockFace` + DOM/CSS) |
+
+Fonte temporal = `Date` local do dispositivo. Sem rede. Timer limpo em `advanceSlide` / unmount. Cadência: 1s com segundos, ~30s sem segundos.
 
 ## 14. Future Extensions
 
@@ -78,12 +85,16 @@ Workspace templates / marketplace / upload — **não** nesta fase.
 
 ## 15. Tests
 
-`npm run test:content-templates-01`
+`npm run test:content-templates-01` (inclui CLOCK-LEGACY-001…012)
 
 ## 16. Known Limitations
 
 - Catálogo estático (9 templates)
 - Sem CRUD admin de templates
 - Sem EXPERIENCE templates
-- Analog no Legacy tv.js continua digital (ponteiros só React path)
 - Provenance só em payload JSON
+- Hisense physical Analog Clock validation: **pending** (Legacy Chromium validated via source contracts + React Chromium)
+
+## 17. CLOCK RUNTIME PARITY
+
+Verdict target: **CONTENT-TEMPLATES-01 — CLOCK RUNTIME PARITY VALIDATED** when CLOCK-LEGACY suite + React regression pass. Hisense physical retest remains separate evidence.
