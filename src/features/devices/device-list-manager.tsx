@@ -11,7 +11,6 @@ import { MetadataRow } from "@/components/ui/metadata-row";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -401,8 +400,8 @@ export function DeviceListManager({
         <div
           className={
             viewMode === "grid"
-              ? "grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
-              : "flex flex-col gap-3"
+              ? "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+              : "flex flex-col gap-2"
           }
         >
           {filteredDevices.map((d) => {
@@ -426,42 +425,42 @@ export function DeviceListManager({
                     : "overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-elevated)]"
                 }
               >
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-4 sm:min-w-0 sm:flex-1">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-3 sm:min-w-0 sm:flex-1">
                   <div className="flex min-w-0 items-start gap-3">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(d.id)}
                       onChange={() => toggleSelection(d.id)}
                       aria-label={`Seleccionar ${d.name ?? d.deviceCode ?? d.id}`}
-                      className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      className="mt-1 h-4 w-4 cursor-pointer rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                     />
-                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--color-muted)] text-[var(--color-primary)]">
-                      <MonitorPlay className="h-8 w-8" aria-hidden />
-                      <div className="absolute right-1 top-1">
-                        <StatusBadge status={presence} className="shadow-sm" />
-                      </div>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-primary)]">
+                      <MonitorPlay className="h-5 w-5" aria-hidden />
                     </div>
-                    <div className="min-w-0 pt-0.5">
-                      <CardTitle className="truncate text-base" title={d.name ?? ""}>
-                        <Link
-                          href={`/admin/devices/${d.id}`}
-                          className="hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
-                        >
-                          {d.name ?? "Sem nome"}
-                        </Link>
-                      </CardTitle>
-                      <CardDescription className="truncate font-mono text-xs">
-                        {d.deviceCode ?? "—"}
-                      </CardDescription>
-                      <p className="mt-1.5 flex items-center gap-1 truncate text-xs text-[var(--color-muted-foreground)]">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CardTitle className="ui-card-title truncate" title={d.name ?? ""}>
+                          <Link
+                            href={`/admin/devices/${d.id}`}
+                            className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                          >
+                            {d.name ?? "Sem nome"}
+                          </Link>
+                        </CardTitle>
+                        <StatusBadge status={presence} />
+                      </div>
+                      <p className="ui-caption mt-1 flex items-center gap-1 truncate">
                         <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-                        <span className="truncate">{d.location ?? "—"}</span>
+                        <span className="truncate">
+                          {d.location ?? "—"}
+                          {d.deviceCode ? ` · ${d.deviceCode}` : ""}
+                        </span>
                       </p>
                     </div>
                   </div>
                   <DeviceActions device={deviceData} variant="icon" />
                 </CardHeader>
-                <CardContent className="space-y-2 px-4 pb-3 sm:flex-1">
+                <CardContent className="space-y-1.5 px-4 pb-2 sm:flex-1">
                   <MetadataRow label="Último contacto">
                     {(live?.lastSeenAt ?? d.lastSeenAt)
                       ? new Date(
@@ -473,37 +472,29 @@ export function DeviceListManager({
                     v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
                   </MetadataRow>
                   <MetadataRow label="Playlist">{playlistName}</MetadataRow>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    <span className="rounded-full bg-[var(--color-muted)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
-                      {d.displayType}
-                    </span>
-                    <span className="rounded-full bg-[var(--color-muted)] px-2.5 py-0.5 text-[10px] font-medium text-[var(--color-muted-foreground)]">
-                      v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
-                    </span>
-                  </div>
-                  <div className="pt-1">
+                  <div className="pt-1 opacity-80">
                     <AssignPlaylistForm
                       deviceId={d.id}
                       playlists={playlists}
                       currentPlaylistId={d.currentPlaylistId}
+                      compact
                     />
                   </div>
                 </CardContent>
-                <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-muted)]/20 px-4 py-3 sm:w-48 sm:flex-col sm:items-stretch sm:justify-center sm:border-l sm:border-t-0">
+                <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface-muted)]/40 px-4 py-2.5 sm:w-40 sm:flex-col sm:items-stretch sm:justify-center sm:border-l sm:border-t-0">
                   <Link
                     href={`/admin/devices/${d.id}`}
-                    className="inline-flex h-8 flex-1 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-xs font-medium hover:bg-[var(--color-muted)] sm:flex-none"
+                    className="inline-flex h-8 flex-1 items-center justify-center rounded-md bg-[var(--color-primary)] px-3 text-xs font-semibold text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] sm:flex-none"
                   >
-                    Ver Detalhes
+                    Ver detalhes
                   </Link>
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end">
                     <LivePresence
                       presence={presence}
                       version={live?.manifestVersion ?? d.manifestVersion ?? 0}
                       lastSeenAt={live?.lastSeenAt ?? d.lastSeenAt}
                       observability={live?.observability ?? null}
                     />
-                    <DeviceActions device={deviceData} variant="button" />
                   </div>
                 </CardFooter>
               </Card>

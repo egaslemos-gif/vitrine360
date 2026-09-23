@@ -14,6 +14,8 @@ import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 import { CONTENT_TYPES, CONTENT_STATUSES } from "@/domain/types";
 import { isGifMime } from "@/features/contents/gif-support";
+import { TypeBadge } from "@/components/ui/type-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type Content = {
   id: string;
@@ -175,42 +177,37 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/admin/contents/${c.id}`}
-                      className="font-medium hover:underline"
+                      className="ui-card-title hover:underline"
                     >
                       {c.title}
                     </Link>
-                    {c.type === "IMAGE" &&
-                    c.primaryMimeType &&
-                    isGifMime(c.primaryMimeType) ? (
-                      <Badge variant="muted" className="text-[10px] uppercase">
-                        GIF
-                      </Badge>
-                    ) : null}
+                    <TypeBadge
+                      contentType={
+                        c.type === "IMAGE" &&
+                        c.primaryMimeType &&
+                        isGifMime(c.primaryMimeType)
+                          ? "GIF"
+                          : c.type
+                      }
+                    />
                     {c.inUse ? (
                       <Badge variant="muted" className="text-[10px]">
                         EM USO
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">
-                    {c.type}
-                    {c.type === "IMAGE" &&
-                    c.primaryMimeType &&
-                    isGifMime(c.primaryMimeType)
-                      ? " · image/gif"
-                      : ""}{" "}
-                    ·{" "}
+                  <p className="ui-caption mt-0.5">
                     {c.type === "VIDEO" && c.durationMs === 0
                       ? "duração natural"
-                      : `${c.durationMs}ms`}{" "}
-                    · uso {c.usageCount ?? 0} · actualizado{" "}
+                      : `${c.durationMs}ms`}
+                    {" · uso "}
+                    {c.usageCount ?? 0}
+                    {" · "}
                     {formatDate(c.updatedAt)}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={c.status === "ACTIVE" ? "success" : "muted"}>
-                    {c.status}
-                  </Badge>
+                  <StatusBadge status={c.status} />
                   <Button
                     type="button"
                     size="sm"

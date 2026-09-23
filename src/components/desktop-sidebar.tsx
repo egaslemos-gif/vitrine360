@@ -19,7 +19,7 @@ import {
   UserRound,
   type LucideIcon,
 } from "lucide-react";
-import { navForRole } from "@/components/admin-nav";
+import { navGroupedForRole } from "@/components/admin-nav";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -96,30 +96,50 @@ export function DesktopSidebar({
       </div>
 
       <nav
-        className="admin-sidebar-nav mt-4 flex min-h-0 w-full flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-2"
+        className="admin-sidebar-nav mt-4 flex min-h-0 w-full flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-2"
         aria-label="Navegação principal"
       >
-        {navForRole(userRole).map((item) => {
-          const Icon = ICONS[item.href] ?? LayoutDashboard;
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={isCollapsed ? item.label : undefined}
-              className={`group flex shrink-0 items-center rounded-md py-2 font-medium transition-colors hover:bg-white hover:text-[var(--color-primary)] hover:shadow-sm ${
-                isActive
-                  ? "bg-white text-[var(--color-primary)] shadow-sm"
-                  : "text-[var(--color-foreground)]"
-              } ${isCollapsed ? "justify-center px-0" : "gap-3 px-3"}`}
-            >
-              <Icon
-                className={`h-5 w-5 ${isActive ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`}
+        {navGroupedForRole(userRole).map((group) => (
+          <div key={group.section} className="mb-2">
+            {!isCollapsed ? (
+              <p className="ui-sidebar-section" aria-hidden>
+                {group.label}
+              </p>
+            ) : (
+              <div
+                className="mx-auto mb-1 mt-2 h-px w-6 bg-[var(--color-border)]"
+                aria-hidden
               />
-              {!isCollapsed && <span className="text-sm">{item.label}</span>}
-            </Link>
-          );
-        })}
+            )}
+            {group.items.map((item) => {
+              const Icon = ICONS[item.href] ?? LayoutDashboard;
+              const isActive =
+                item.href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={isCollapsed ? item.label : undefined}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`group flex shrink-0 items-center rounded-md py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
+                    isActive
+                      ? "bg-white text-[var(--color-primary)] shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:bg-white hover:text-[var(--color-primary)]"
+                  } ${isCollapsed ? "justify-center px-0" : "gap-3 px-3"}`}
+                >
+                  <Icon
+                    className={`h-5 w-5 shrink-0 ${isActive ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`}
+                    aria-hidden
+                  />
+                  {!isCollapsed && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div

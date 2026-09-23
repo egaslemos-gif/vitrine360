@@ -33,7 +33,7 @@ export function PreviewViewport({
       ) : null}
       <div
         className={cn(
-          "relative w-full overflow-hidden rounded-lg border border-[var(--color-border)] bg-[#070b14]",
+          "relative w-full overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-preview-bg,oklch(0.14_0.02_250))]",
           ASPECT_CLASS[aspectRatio],
         )}
         data-preview-viewport={aspectRatio}

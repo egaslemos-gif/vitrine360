@@ -34,7 +34,7 @@ export default async function DevicesPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <PageHeader
-        title="Devices"
+        title="Ecrãs"
         description="Gestão e associação de ecrãs"
         actions={
           <a

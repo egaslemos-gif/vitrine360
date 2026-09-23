@@ -4,8 +4,13 @@ import { listDevicesWithPresence } from "@/services/devices";
 import { listContents } from "@/services/contents";
 import { listPlaylists } from "@/services/playlists";
 import { getTenantById } from "@/services/tenants";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Monitor, Wifi, WifiOff, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 export default async function AdminDashboardPage() {
   const session = await requireAdminPage("view_dashboard");
@@ -24,95 +29,91 @@ export default async function AdminDashboardPage() {
   const offlineCount = activeDevices.filter((d) => d.presence === "OFFLINE").length;
 
   return (
-    <div className="space-y-8">
-      <header className="admin-page-header flex flex-col pb-4 pt-4">
-        <h1
-          className="text-3xl font-semibold text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-          Workspace:{" "}
-          <span className="font-medium text-[var(--color-foreground)]">
-            {tenant?.name ?? session.activeTenantId.slice(0, 8)}
-          </span>
-          {" · "}
-          {session.role.replaceAll("_", " ")}
-        </p>
-        <p className="mt-0.5 text-sm text-[var(--color-muted-foreground)]">
-          Estado operacional dos ecrãs e conteúdos
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-7xl space-y-8">
+      <PageHeader
+        title="Dashboard"
+        description={`Workspace ${tenant?.name ?? session.activeTenantId.slice(0, 8)} · estado operacional`}
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat title="Total de Ecrãs" value={activeDevices.length} />
-        <Stat title="Online" value={onlineCount} />
-        <Stat title="Instáveis" value={awayCount} />
-        <Stat title="Offline" value={offlineCount} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Ecrãs"
+          value={activeDevices.length}
+          hint={`${contents.length} conteúdos · ${playlists.length} playlists`}
+          tone="neutral"
+          icon={<Monitor className="h-4 w-4" />}
+        />
+        <StatCard
+          title="Online"
+          value={onlineCount}
+          tone="success"
+          icon={<Wifi className="h-4 w-4" />}
+        />
+        <StatCard
+          title="Instáveis"
+          value={awayCount}
+          tone="warning"
+          icon={<AlertTriangle className="h-4 w-4" />}
+        />
+        <StatCard
+          title="Offline"
+          value={offlineCount}
+          tone="danger"
+          icon={<WifiOff className="h-4 w-4" />}
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ecrãs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="divide-y divide-[var(--color-border)]">
-            {activeDevices.length === 0 ? (
-              <p className="py-4 text-sm text-[var(--color-muted-foreground)]">
-                Nenhum ecrã activo. Associe um ecrã em Devices.
-              </p>
-            ) : (
-              activeDevices.map((d) => (
-                <div
-                  key={d.id}
-                  className="flex flex-wrap items-center justify-between gap-2 py-3"
-                >
-                  <div>
-                    <p className="font-medium">{d.name ?? d.deviceCode ?? d.id.slice(0, 8)}</p>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {d.location ?? "—"} · Last seen:{" "}
-                      {d.lastSeenAt
-                        ? new Date(d.lastSeenAt).toLocaleString()
-                        : "never"}{" "}
-                      · Manifest v {d.manifestVersion ?? "—"}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      d.presence === "ONLINE"
-                        ? "success"
-                        : d.presence === "AWAY"
-                          ? "warning"
-                          : "muted"
-                    }
+      <section className="space-y-3">
+        <SectionHeader
+          title="Ecrãs"
+          description="Presença e contacto recente"
+          actions={
+            <Link
+              href="/admin/devices"
+              className="ui-secondary hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            >
+              Ver todos
+            </Link>
+          }
+        />
+        <Card className="border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none">
+          <CardContent className="p-0">
+            <div className="divide-y divide-[var(--color-border)]">
+              {activeDevices.length === 0 ? (
+                <p className="ui-secondary px-4 py-6">
+                  Nenhum ecrã activo. Associe um ecrã em Ecrãs.
+                </p>
+              ) : (
+                activeDevices.map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                   >
-                    {d.presence}
-                  </Badge>
-                </div>
-              ))
-            )}
-          </div>
-          <p className="mt-4 text-sm text-[var(--color-muted-foreground)]">
-            Conteúdos na biblioteca: {contents.length} · Playlists: {playlists.length}
-          </p>
-        </CardContent>
-      </Card>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/admin/devices/${d.id}`}
+                        className="ui-card-title hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                      >
+                        {d.name ?? d.deviceCode ?? d.id.slice(0, 8)}
+                      </Link>
+                      <p className="ui-caption mt-0.5">
+                        {d.location ?? "—"}
+                        {" · "}
+                        {d.lastSeenAt
+                          ? new Date(d.lastSeenAt).toLocaleString("pt-PT")
+                          : "sem contacto"}
+                        {" · "}
+                        Manifest v{d.manifestVersion ?? "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={d.presence} />
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
-  );
-}
-
-function Stat({ title, value }: { title: string; value: number }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-3xl font-semibold text-[var(--color-primary)]">{value}</p>
-      </CardContent>
-    </Card>
   );
 }

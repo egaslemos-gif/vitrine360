@@ -161,7 +161,7 @@ function AssetCard({
   const inUse = usage > 0;
 
   return (
-    <Card className="overflow-hidden shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md">
+    <Card className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none transition-shadow hover:shadow-[var(--shadow-subtle)]">
       <div className="relative border-b border-[var(--color-border)]">
         <PreviewViewport aspectRatio="16/9">
           {image ? (

@@ -1,19 +1,104 @@
 import { hasPermission, type Permission, type UserRole } from "@/domain/types";
 
-export const ADMIN_NAV: { href: string; label: string; permission: Permission }[] = [
-  { href: "/admin", label: "Dashboard", permission: "view_dashboard" },
-  { href: "/admin/devices", label: "Devices", permission: "manage_devices" },
-  { href: "/admin/device-groups", label: "Device Groups", permission: "manage_devices" },
-  { href: "/admin/contents", label: "Contents", permission: "manage_contents" },
-  { href: "/admin/media", label: "Media", permission: "manage_contents" },
-  { href: "/admin/playlists", label: "Playlists", permission: "manage_playlists" },
-  { href: "/admin/schedules", label: "Schedules", permission: "manage_schedules" },
-  { href: "/admin/users", label: "Members", permission: "manage_users" },
-  { href: "/admin/logs", label: "Activity", permission: "view_logs" },
-  { href: "/admin/settings/workspace", label: "Workspace", permission: "manage_users" },
-  { href: "/admin/settings", label: "Settings", permission: "view_dashboard" },
+export type NavSection = "OVERVIEW" | "MANAGEMENT" | "SYSTEM";
+
+export const ADMIN_NAV: {
+  href: string;
+  label: string;
+  permission: Permission;
+  section: NavSection;
+}[] = [
+  {
+    href: "/admin",
+    label: "Dashboard",
+    permission: "view_dashboard",
+    section: "OVERVIEW",
+  },
+  {
+    href: "/admin/devices",
+    label: "Ecrãs",
+    permission: "manage_devices",
+    section: "MANAGEMENT",
+  },
+  {
+    href: "/admin/device-groups",
+    label: "Grupos",
+    permission: "manage_devices",
+    section: "MANAGEMENT",
+  },
+  {
+    href: "/admin/contents",
+    label: "Conteúdos",
+    permission: "manage_contents",
+    section: "MANAGEMENT",
+  },
+  {
+    href: "/admin/media",
+    label: "Media",
+    permission: "manage_contents",
+    section: "MANAGEMENT",
+  },
+  {
+    href: "/admin/playlists",
+    label: "Playlists",
+    permission: "manage_playlists",
+    section: "MANAGEMENT",
+  },
+  {
+    href: "/admin/schedules",
+    label: "Agendamentos",
+    permission: "manage_schedules",
+    section: "MANAGEMENT",
+  },
+  {
+    href: "/admin/users",
+    label: "Membros",
+    permission: "manage_users",
+    section: "SYSTEM",
+  },
+  {
+    href: "/admin/logs",
+    label: "Actividade",
+    permission: "view_logs",
+    section: "SYSTEM",
+  },
+  {
+    href: "/admin/settings/workspace",
+    label: "Workspace",
+    permission: "manage_users",
+    section: "SYSTEM",
+  },
+  {
+    href: "/admin/settings",
+    label: "Definições",
+    permission: "view_dashboard",
+    section: "SYSTEM",
+  },
 ];
 
+export const NAV_SECTION_ORDER: NavSection[] = [
+  "OVERVIEW",
+  "MANAGEMENT",
+  "SYSTEM",
+];
+
+export const NAV_SECTION_LABELS: Record<NavSection, string> = {
+  OVERVIEW: "Overview",
+  MANAGEMENT: "Management",
+  SYSTEM: "System",
+};
+
 export function navForRole(role: string) {
-  return ADMIN_NAV.filter((item) => hasPermission(role as UserRole, item.permission));
+  return ADMIN_NAV.filter((item) =>
+    hasPermission(role as UserRole, item.permission),
+  );
+}
+
+export function navGroupedForRole(role: string) {
+  const items = navForRole(role);
+  return NAV_SECTION_ORDER.map((section) => ({
+    section,
+    label: NAV_SECTION_LABELS[section],
+    items: items.filter((i) => i.section === section),
+  })).filter((g) => g.items.length > 0);
 }

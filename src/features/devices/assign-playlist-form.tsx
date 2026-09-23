@@ -3,15 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function AssignPlaylistForm({
   deviceId,
   playlists,
   currentPlaylistId,
+  compact = false,
 }: {
   deviceId: string;
   playlists: { id: string; name: string }[];
   currentPlaylistId: string | null;
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [playlistId, setPlaylistId] = useState(currentPlaylistId ?? "");
@@ -31,18 +34,28 @@ export function AssignPlaylistForm({
       setStatus(data.error ?? "Erro");
       return;
     }
-    setStatus(targetId ? "Playlist atribuída · manifest actualizado" : "Playlist removida · manifest actualizado");
+    setStatus(
+      targetId
+        ? "Playlist atribuída · manifest actualizado"
+        : "Playlist removida · manifest actualizado",
+    );
     router.refresh();
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className={cn("flex flex-wrap items-center gap-2", compact && "gap-1.5")}>
       <select
-        className="h-9 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+        className={cn(
+          "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-secondary)]",
+          compact ? "h-8 max-w-[11rem] px-1.5 text-xs" : "h-9 px-2",
+        )}
         value={playlistId}
         onChange={(e) => setPlaylistId(e.target.value)}
+        aria-label="Seleccionar playlist"
       >
-        <option value="" disabled>Seleccione uma playlist</option>
+        <option value="" disabled>
+          Seleccione uma playlist
+        </option>
         <option value="none">-- Nenhuma (Desatribuir) --</option>
         {playlists.map((p) => (
           <option key={p.id} value={p.id}>
@@ -50,13 +63,17 @@ export function AssignPlaylistForm({
           </option>
         ))}
       </select>
-      <Button type="button" size="sm" onClick={assign}>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className={compact ? "h-8 px-2 text-xs" : undefined}
+        onClick={assign}
+      >
         Atribuir
       </Button>
       {status ? (
-        <span className="text-xs text-[var(--color-muted-foreground)]">
-          {status}
-        </span>
+        <span className="ui-caption">{status}</span>
       ) : null}
     </div>
   );

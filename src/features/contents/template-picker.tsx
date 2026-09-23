@@ -4,17 +4,17 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   TemplateRegistry,
-  TEMPLATE_CATEGORIES,
   type TemplateCategory,
   type TemplateDefinition,
 } from "@/domain/content-templates";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { PreviewViewport } from "@/components/ui/preview-viewport";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
+import { TypeBadge } from "@/components/ui/type-badge";
 import { ContentVisual } from "@/features/contents/content-visual";
 import type { ContentPreviewModel } from "@/features/contents/content-preview-types";
 
@@ -55,9 +55,10 @@ function TemplateCard({
         <PreviewViewport aspectRatio="16/9">
           <ContentVisual content={templatePreviewModel(template)} />
         </PreviewViewport>
-        <div className="absolute top-2 left-2 z-10">
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+          <TypeBadge contentType={template.type} />
           <Badge variant="muted" className="text-[10px] uppercase">
-            {template.category}
+            Template
           </Badge>
         </div>
       </div>
