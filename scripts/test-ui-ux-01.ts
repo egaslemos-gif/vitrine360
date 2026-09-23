@@ -56,6 +56,18 @@ function main() {
   ]) {
     assert.ok(css.includes(cls), `UI-UX-001 typography ${cls}`);
   }
+  const titleBlock = css.slice(
+    css.indexOf(".ui-page-title"),
+    css.indexOf(".ui-section-title"),
+  );
+  assert.ok(
+    titleBlock.includes("--font-sans") || titleBlock.includes("font-sans"),
+    "UI-UX-001 page title uses Inter/sans",
+  );
+  assert.ok(
+    !titleBlock.includes("font-display"),
+    "UI-UX-001 page title not Fraunces",
+  );
   console.log("  UI-UX-001 PASS");
 
   // UI-UX-002 — StatusBadge SSoT
@@ -130,8 +142,16 @@ function main() {
   assert.ok(devicesPage.includes('title="Ecrãs"'), "UI-UX-006 PT title");
   const list = read("src/features/devices/device-list-manager.tsx");
   assert.ok(list.includes("StatusBadge"), "UI-UX-006 StatusBadge");
-  assert.ok(list.includes("compact"), "UI-UX-006 compact assign");
+  assert.ok(list.includes("ui-meta-grid"), "UI-UX-006 meta grid L2");
   assert.ok(list.includes("Ver detalhes"), "UI-UX-006 primary action");
+  assert.ok(
+    !list.includes("AssignPlaylistForm"),
+    "UI-UX-006 assign not on card surface",
+  );
+  assert.ok(
+    !list.includes("LivePresence"),
+    "UI-UX-006 diagnostics not on card",
+  );
   assert.ok(
     !list.includes("h-16 w-16"),
     "UI-UX-006 no oversized thumb",

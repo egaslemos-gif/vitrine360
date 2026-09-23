@@ -3,8 +3,9 @@ import { AccessDenied } from "@/components/access-denied";
 import { requireAdminPage } from "@/lib/admin-access";
 import { getDeviceObservability } from "@/services/devices";
 import { DeviceObservabilityPanel } from "@/features/devices/device-observability-panel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeader } from "@/components/ui/section-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MetadataRow } from "@/components/ui/metadata-row";
 
@@ -20,14 +21,9 @@ export default async function DeviceDetailPage({
   const result = await getDeviceObservability(id, session.tenantId);
   if (!result) {
     return (
-      <div className="mx-auto max-w-4xl space-y-4 px-4 py-6">
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Ecrã não encontrado neste workspace.
-        </p>
-        <Link
-          href="/admin/devices"
-          className="text-sm text-[var(--color-primary)] underline"
-        >
+      <div className="space-y-4">
+        <p className="ui-secondary">Ecrã não encontrado neste workspace.</p>
+        <Link href="/admin/devices" className="ui-secondary text-[var(--color-primary)] underline">
           Voltar à lista
         </Link>
       </div>
@@ -38,50 +34,46 @@ export default async function DeviceDetailPage({
   const presence = observability.presence?.status ?? "OFFLINE";
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-4xl space-y-8">
       <div className="space-y-1">
-        <Link
-          href="/admin/devices"
-          className="text-xs text-[var(--color-muted-foreground)] underline"
-        >
-          ← Devices
+        <Link href="/admin/devices" className="ui-caption hover:underline">
+          ← Ecrãs
         </Link>
         <PageHeader
           title={device.name ?? "Ecrã"}
-          description="Detalhe operacional — identificação, estado e diagnóstico"
+          description="Identidade, presença e diagnóstico"
           actions={<StatusBadge status={presence} />}
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Identificação</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2">
-          <MetadataRow label="Nome">{device.name ?? "—"}</MetadataRow>
-          <MetadataRow label="Código">{device.deviceCode ?? "—"}</MetadataRow>
-          <MetadataRow label="Tipo">{device.displayType}</MetadataRow>
-          <MetadataRow label="Local">{device.location ?? "—"}</MetadataRow>
-          <MetadataRow label="Device ID">
-            <span className="font-mono text-xs break-all">{device.id}</span>
-          </MetadataRow>
-          <MetadataRow label="Interacção">{device.interactionMode}</MetadataRow>
-          <MetadataRow label="Orientação">{device.orientation}</MetadataRow>
-        </CardContent>
-      </Card>
+      <section className="space-y-3">
+        <SectionHeader title="Identidade" />
+        <Card className="border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none">
+          <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
+            <MetadataRow label="Nome">{device.name ?? "—"}</MetadataRow>
+            <MetadataRow label="Código">{device.deviceCode ?? "—"}</MetadataRow>
+            <MetadataRow label="Tipo">{device.displayType}</MetadataRow>
+            <MetadataRow label="Local">{device.location ?? "—"}</MetadataRow>
+            <MetadataRow label="Device ID">
+              <span className="break-all font-mono text-xs">{device.id}</span>
+            </MetadataRow>
+            <MetadataRow label="Interacção">{device.interactionMode}</MetadataRow>
+            <MetadataRow label="Orientação">{device.orientation}</MetadataRow>
+          </CardContent>
+        </Card>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Estado & Runtime</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-[var(--color-muted-foreground)]">
-            Presence, playback, sync, network, browser e policy — nível
-            operacional e técnico.
-          </p>
-          <DeviceObservabilityPanel obs={observability} />
-        </CardContent>
-      </Card>
+      <section className="space-y-3">
+        <SectionHeader
+          title="Runtime & diagnósticos"
+          description="Presence, playback, sync, network, policy e observabilidade"
+        />
+        <Card className="border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none">
+          <CardContent className="p-4">
+            <DeviceObservabilityPanel obs={observability} />
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

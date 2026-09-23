@@ -11,7 +11,6 @@ import { DeviceListManager } from "@/features/devices/device-list-manager";
 import { DeviceConfigurationHelp } from "@/features/devices/device-configuration-help";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
-import { Monitor, Wifi, WifiOff, ListVideo } from "lucide-react";
 
 export default async function DevicesPage() {
   const session = await requireAdminPage("manage_devices");
@@ -35,42 +34,22 @@ export default async function DevicesPage() {
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <PageHeader
         title="Ecrãs"
-        description="Gestão e associação de ecrãs"
+        description="Gerencie os dispositivos que apresentam as suas experiências."
         actions={
           <a
             href="#registar-ecra"
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-sm font-semibold text-[var(--color-primary-foreground)] shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-sm font-semibold text-[var(--color-primary-foreground)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           >
             + Registar Ecrã
           </a>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Ecrãs registados"
-          value={activeDevices.length}
-          tone="info"
-          icon={<Monitor className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Online"
-          value={onlineCount}
-          tone="success"
-          icon={<Wifi className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Offline"
-          value={offlineCount}
-          tone="danger"
-          icon={<WifiOff className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Playlists activas"
-          value={withPlaylist}
-          tone="accent"
-          icon={<ListVideo className="h-5 w-5" />}
-        />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Ecrãs" value={activeDevices.length} hint="registados" />
+        <StatCard title="Online" value={onlineCount} hint="activos agora" />
+        <StatCard title="Offline" value={offlineCount} hint="sem contacto" />
+        <StatCard title="Com playlist" value={withPlaylist} hint="atribuídas" />
       </div>
 
       <section className="scroll-mt-24 space-y-3" id="registar-ecra">

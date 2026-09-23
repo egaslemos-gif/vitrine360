@@ -14,7 +14,7 @@ export default async function AdminLayout({
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#e8eef7_0%,_#f7f8fb_45%,_#eef1f6_100%)] text-[var(--color-foreground)] font-sans">
+      <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)] font-sans">
         {children}
       </div>
     );
@@ -35,7 +35,7 @@ export default async function AdminLayout({
   const tenantName = tenant?.name ?? session.activeTenantId.slice(0, 8);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[radial-gradient(ellipse_at_top,_#e8eef7_0%,_#f7f8fb_45%,_#eef1f6_100%)] text-[var(--color-foreground)] font-sans">
+    <div className="flex h-dvh flex-col overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] font-sans">
       <MobileNav
         userName={session.name}
         userRole={session.role}
@@ -45,7 +45,7 @@ export default async function AdminLayout({
         workspaces={workspaces}
       />
 
-      <div className="flex min-h-0 flex-1 gap-4 p-3 md:gap-6 md:p-4 md:pl-2 md:pr-4">
+      <div className="flex min-h-0 flex-1 gap-3 p-3 md:gap-4 md:p-4 md:pl-2 md:pr-4">
         <DesktopSidebar
           userName={session.name}
           userEmail={session.email}
@@ -56,9 +56,9 @@ export default async function AdminLayout({
           workspaces={workspaces}
         />
 
-        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl bg-[var(--color-surface)]/70 shadow-[var(--shadow-subtle)] ring-1 ring-[var(--color-border)] backdrop-blur-xl">
+        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none">
           <div className="admin-main-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="mx-auto w-full max-w-7xl px-4 py-4 md:px-6 md:py-5">
+            <div className="ui-content-canvas mx-auto w-full max-w-7xl px-4 py-5 md:px-8 md:py-6">
               {children}
             </div>
           </div>

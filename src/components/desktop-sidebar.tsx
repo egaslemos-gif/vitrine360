@@ -124,10 +124,10 @@ export function DesktopSidebar({
                   href={item.href}
                   title={isCollapsed ? item.label : undefined}
                   aria-current={isActive ? "page" : undefined}
-                  className={`group flex shrink-0 items-center rounded-md py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
+                  className={`group flex shrink-0 items-center rounded-lg py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
                     isActive
-                      ? "bg-white text-[var(--color-primary)] shadow-sm"
-                      : "text-[var(--color-text-secondary)] hover:bg-white hover:text-[var(--color-primary)]"
+                      ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]/80 hover:text-[var(--color-text-primary)]"
                   } ${isCollapsed ? "justify-center px-0" : "gap-3 px-3"}`}
                 >
                   <Icon

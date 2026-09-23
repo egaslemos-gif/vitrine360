@@ -9,7 +9,6 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Monitor, Wifi, WifiOff, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminDashboardPage() {
@@ -29,10 +28,10 @@ export default async function AdminDashboardPage() {
   const offlineCount = activeDevices.filter((d) => d.presence === "OFFLINE").length;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="space-y-8">
       <PageHeader
         title="Dashboard"
-        description={`Workspace ${tenant?.name ?? session.activeTenantId.slice(0, 8)} · estado operacional`}
+        description={`${tenant?.name ?? "Workspace"} · vista operacional`}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -40,30 +39,13 @@ export default async function AdminDashboardPage() {
           title="Ecrãs"
           value={activeDevices.length}
           hint={`${contents.length} conteúdos · ${playlists.length} playlists`}
-          tone="neutral"
-          icon={<Monitor className="h-4 w-4" />}
         />
-        <StatCard
-          title="Online"
-          value={onlineCount}
-          tone="success"
-          icon={<Wifi className="h-4 w-4" />}
-        />
-        <StatCard
-          title="Instáveis"
-          value={awayCount}
-          tone="warning"
-          icon={<AlertTriangle className="h-4 w-4" />}
-        />
-        <StatCard
-          title="Offline"
-          value={offlineCount}
-          tone="danger"
-          icon={<WifiOff className="h-4 w-4" />}
-        />
+        <StatCard title="Online" value={onlineCount} hint="em contacto" />
+        <StatCard title="Instáveis" value={awayCount} hint="atenção" />
+        <StatCard title="Offline" value={offlineCount} hint="sem contacto" />
       </div>
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <SectionHeader
           title="Ecrãs"
           description="Presença e contacto recente"
@@ -85,29 +67,27 @@ export default async function AdminDashboardPage() {
                 </p>
               ) : (
                 activeDevices.map((d) => (
-                  <div
+                  <Link
                     key={d.id}
-                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                    href={`/admin/devices/${d.id}`}
+                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-muted)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ring)]"
                   >
                     <div className="min-w-0">
-                      <Link
-                        href={`/admin/devices/${d.id}`}
-                        className="ui-card-title hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-                      >
+                      <p className="ui-card-title truncate">
                         {d.name ?? d.deviceCode ?? d.id.slice(0, 8)}
-                      </Link>
+                      </p>
                       <p className="ui-caption mt-0.5">
                         {d.location ?? "—"}
+                        {" · Manifest v"}
+                        {d.manifestVersion ?? "—"}
                         {" · "}
                         {d.lastSeenAt
-                          ? new Date(d.lastSeenAt).toLocaleString("pt-PT")
+                          ? new Date(d.lastSeenAt).toLocaleTimeString("pt-PT")
                           : "sem contacto"}
-                        {" · "}
-                        Manifest v{d.manifestVersion ?? "—"}
                       </p>
                     </div>
                     <StatusBadge status={d.presence} />
-                  </div>
+                  </Link>
                 ))
               )}
             </div>

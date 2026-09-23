@@ -7,24 +7,20 @@ import { useRouter } from "next/navigation";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { MetadataRow } from "@/components/ui/metadata-row";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { MonitorPlay, Search, X, Trash2, MapPin, LayoutGrid, List } from "lucide-react";
-import { LivePresence } from "@/features/devices/live-presence";
 import { DeviceActions } from "@/features/devices/device-actions";
-import { AssignPlaylistForm } from "@/features/devices/assign-playlist-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 import type { DeviceRuntimeObservability } from "@/domain/device-observability";
 import { deriveDeviceRuntimeObservability } from "@/domain/device-observability";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type Device = {
   id: string;
@@ -421,11 +417,11 @@ export function DeviceListManager({
                 key={d.id}
                 className={
                   viewMode === "list"
-                    ? "flex flex-col overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] sm:flex-row sm:items-stretch"
-                    : "overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-elevated)]"
+                    ? "border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none"
+                    : "border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none transition-colors hover:border-[var(--color-primary)]/30"
                 }
               >
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-3 sm:min-w-0 sm:flex-1">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <input
                       type="checkbox"
@@ -434,8 +430,8 @@ export function DeviceListManager({
                       aria-label={`Seleccionar ${d.name ?? d.deviceCode ?? d.id}`}
                       className="mt-1 h-4 w-4 cursor-pointer rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                     />
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-primary)]">
-                      <MonitorPlay className="h-5 w-5" aria-hidden />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-text-secondary)]">
+                      <MonitorPlay className="h-4 w-4" aria-hidden />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -452,51 +448,50 @@ export function DeviceListManager({
                       <p className="ui-caption mt-1 flex items-center gap-1 truncate">
                         <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
                         <span className="truncate">
-                          {d.location ?? "—"}
-                          {d.deviceCode ? ` · ${d.deviceCode}` : ""}
+                          {d.displayType}
+                          {d.location ? ` · ${d.location}` : ""}
                         </span>
                       </p>
                     </div>
                   </div>
-                  <DeviceActions device={deviceData} variant="icon" />
+                  <DeviceActions
+                    device={deviceData}
+                    playlists={playlists}
+                    currentPlaylistId={d.currentPlaylistId}
+                  />
                 </CardHeader>
-                <CardContent className="space-y-1.5 px-4 pb-2 sm:flex-1">
-                  <MetadataRow label="Último contacto">
-                    {(live?.lastSeenAt ?? d.lastSeenAt)
-                      ? new Date(
-                          (live?.lastSeenAt ?? d.lastSeenAt) as string,
-                        ).toLocaleString("pt-PT")
-                      : "—"}
-                  </MetadataRow>
-                  <MetadataRow label="Manifest">
-                    v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
-                  </MetadataRow>
-                  <MetadataRow label="Playlist">{playlistName}</MetadataRow>
-                  <div className="pt-1 opacity-80">
-                    <AssignPlaylistForm
-                      deviceId={d.id}
-                      playlists={playlists}
-                      currentPlaylistId={d.currentPlaylistId}
-                      compact
-                    />
+                <CardContent className="space-y-3 px-4 pb-3">
+                  <div className="ui-meta-grid">
+                    <div>
+                      <p className="ui-caption">Último contacto</p>
+                      <p className="ui-secondary mt-0.5 tabular-nums">
+                        {(live?.lastSeenAt ?? d.lastSeenAt)
+                          ? new Date(
+                              (live?.lastSeenAt ?? d.lastSeenAt) as string,
+                            ).toLocaleString("pt-PT")
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="ui-caption">Manifest</p>
+                      <p className="ui-secondary mt-0.5">
+                        v{live?.manifestVersion ?? d.manifestVersion ?? "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="ui-caption">Playlist</p>
+                    <p className="ui-secondary mt-0.5 truncate">{playlistName}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <Link
+                      href={`/admin/devices/${d.id}`}
+                      className="inline-flex h-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-xs font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                    >
+                      Ver detalhes
+                    </Link>
                   </div>
                 </CardContent>
-                <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface-muted)]/40 px-4 py-2.5 sm:w-40 sm:flex-col sm:items-stretch sm:justify-center sm:border-l sm:border-t-0">
-                  <Link
-                    href={`/admin/devices/${d.id}`}
-                    className="inline-flex h-8 flex-1 items-center justify-center rounded-md bg-[var(--color-primary)] px-3 text-xs font-semibold text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] sm:flex-none"
-                  >
-                    Ver detalhes
-                  </Link>
-                  <div className="flex items-center justify-end">
-                    <LivePresence
-                      presence={presence}
-                      version={live?.manifestVersion ?? d.manifestVersion ?? 0}
-                      lastSeenAt={live?.lastSeenAt ?? d.lastSeenAt}
-                      observability={live?.observability ?? null}
-                    />
-                  </div>
-                </CardFooter>
               </Card>
             );
           })}

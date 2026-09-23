@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, MoreVertical, Pencil, Trash2, X } from "lucide-react";
+import { ListVideo, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
+import { AssignPlaylistForm } from "@/features/devices/assign-playlist-form";
 
 type DeviceData = {
   id: string;
@@ -19,16 +20,18 @@ type DeviceData = {
 
 export function DeviceActions({
   device,
-  variant = "icon",
+  playlists,
+  currentPlaylistId,
 }: {
   device: DeviceData;
-  /** icon = kebab; button = "Ações" dropdown (card footer) */
-  variant?: "icon" | "button";
+  playlists?: { id: string; name: string }[];
+  currentPlaylistId?: string | null;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const mounted = useIsClient();
@@ -96,40 +99,41 @@ export function DeviceActions({
   return (
     <>
       <div className="relative" ref={menuRef}>
-        {variant === "button" ? (
-          <button
-            type="button"
-            aria-label="Acções do ecrã"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-xs font-medium text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
-          >
-            Ações
-            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            aria-label="Acções do ecrã"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-md p-1.5 text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-secondary)] hover:text-[var(--color-foreground)]"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        )}
+        <button
+          type="button"
+          aria-label="Acções do ecrã"
+          title="Mais acções"
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="rounded-md p-1.5 text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
 
         {menuOpen && (
-          <div className="absolute right-0 bottom-full z-10 mb-1 w-44 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-card)] shadow-md sm:bottom-auto sm:top-full sm:mb-0 sm:mt-1">
+          <div className="absolute right-0 top-full z-20 mt-1 w-48 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-elevated)]">
+            {playlists ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setAssignOpen(true);
+                  setMenuOpen(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-muted)]"
+              >
+                <ListVideo className="h-3.5 w-3.5 opacity-70" />
+                Atribuir playlist
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => {
                 setEditOpen(true);
                 setMenuOpen(false);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-secondary)]"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-muted)]"
             >
               <Pencil className="h-3.5 w-3.5 opacity-70" />
-              Editar Ecrã
+              Editar
             </button>
             <button
               type="button"
@@ -137,23 +141,48 @@ export function DeviceActions({
                 setDeleteOpen(true);
                 setMenuOpen(false);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-destructive)] transition-colors hover:bg-[var(--color-secondary)]"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-destructive)] transition-colors hover:bg-[var(--color-muted)]"
             >
               <Trash2 className="h-3.5 w-3.5 opacity-70" />
-              Remover Ecrã
+              Remover
             </button>
           </div>
         )}
       </div>
 
       {mounted &&
+        assignOpen &&
+        playlists &&
+        createPortal(
+          <ModalOverlay onClose={() => setAssignOpen(false)}>
+            <ModalPanel size="md" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                aria-label="Fechar"
+                onClick={() => setAssignOpen(false)}
+                className="absolute right-4 top-4 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h2 className="mb-1 pr-8 text-lg font-semibold text-[var(--color-text-primary)]">
+                Atribuir playlist
+              </h2>
+              <p className="ui-secondary mb-4">{device.name}</p>
+              <AssignPlaylistForm
+                deviceId={device.id}
+                playlists={playlists}
+                currentPlaylistId={currentPlaylistId ?? null}
+              />
+            </ModalPanel>
+          </ModalOverlay>,
+          document.body,
+        )}
+
+      {mounted &&
         editOpen &&
         createPortal(
           <ModalOverlay onClose={() => !loading && setEditOpen(false)}>
-            <ModalPanel
-              size="md"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <ModalPanel size="md" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 aria-label="Fechar"
@@ -162,12 +191,12 @@ export function DeviceActions({
               >
                 <X className="h-5 w-5" />
               </button>
-              <h2 className="mb-4 pr-8 text-xl font-bold text-[var(--color-foreground)]">
+              <h2 className="mb-4 pr-8 text-lg font-semibold text-[var(--color-text-primary)]">
                 Editar Ecrã
               </h2>
               <form onSubmit={handleEdit} className="w-full min-w-0 space-y-4">
                 <div className="w-full min-w-0 space-y-2">
-                  <Label htmlFor="edit-name">Nome Descritivo</Label>
+                  <Label htmlFor="edit-name">Nome</Label>
                   <Input
                     id="edit-name"
                     value={name}
@@ -176,7 +205,7 @@ export function DeviceActions({
                   />
                 </div>
                 <div className="w-full min-w-0 space-y-2">
-                  <Label htmlFor="edit-code">Código (ID)</Label>
+                  <Label htmlFor="edit-code">Código</Label>
                   <Input
                     id="edit-code"
                     value={deviceCode}
@@ -185,7 +214,7 @@ export function DeviceActions({
                   />
                 </div>
                 <div className="w-full min-w-0 space-y-2">
-                  <Label htmlFor="edit-location">Localização Física</Label>
+                  <Label htmlFor="edit-location">Localização</Label>
                   <Input
                     id="edit-location"
                     value={location}
@@ -204,7 +233,7 @@ export function DeviceActions({
                     Cancelar
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading ? "A Guardar..." : "Guardar Alterações"}
+                    {loading ? "A Guardar..." : "Guardar"}
                   </Button>
                 </div>
               </form>
@@ -218,16 +247,14 @@ export function DeviceActions({
         createPortal(
           <ModalOverlay onClose={() => !loading && setDeleteOpen(false)}>
             <ModalPanel size="md" onClick={(e) => e.stopPropagation()}>
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <Trash2 className="h-6 w-6 text-red-600" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-danger)]/10">
+                <Trash2 className="h-6 w-6 text-[var(--color-danger)]" />
               </div>
-              <h2 className="mb-2 text-center text-xl font-bold text-[var(--color-foreground)]">
-                Tem a certeza?
+              <h2 className="mb-2 text-center text-lg font-semibold text-[var(--color-text-primary)]">
+                Remover ecrã?
               </h2>
               <p className="mb-6 text-center text-sm text-[var(--color-muted-foreground)]">
-                Vai remover permanentemente o ecrã{" "}
-                <strong>{device.name}</strong>. Esta ação não pode ser
-                desfeita.
+                Vai remover permanentemente <strong>{device.name}</strong>.
               </p>
               {error ? (
                 <p className="mb-4 text-center text-sm text-[var(--color-destructive)]">
@@ -248,7 +275,7 @@ export function DeviceActions({
                   onClick={handleDelete}
                   disabled={loading}
                 >
-                  {loading ? "A remover..." : "Sim, remover ecrã"}
+                  {loading ? "A remover..." : "Remover"}
                 </Button>
               </div>
             </ModalPanel>

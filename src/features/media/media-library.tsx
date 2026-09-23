@@ -161,7 +161,7 @@ function AssetCard({
   const inUse = usage > 0;
 
   return (
-    <Card className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none transition-shadow hover:shadow-[var(--shadow-subtle)]">
+    <Card className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none transition-colors hover:border-[var(--color-primary)]/25">
       <div className="relative border-b border-[var(--color-border)]">
         <PreviewViewport aspectRatio="16/9">
           {image ? (
@@ -175,7 +175,7 @@ function AssetCard({
               aria-label={`Vídeo ${asset.fileName}`}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[var(--color-muted)] text-sm text-[var(--color-muted-foreground)]">
+            <div className="flex h-full w-full items-center justify-center bg-[var(--color-surface-muted)] text-sm text-[var(--color-muted-foreground)]">
               {asset.mimeType}
             </div>
           )}
@@ -189,24 +189,24 @@ function AssetCard({
           ) : null}
         </div>
       </div>
-      <CardHeader className="space-y-1 pb-2 pt-3">
-        <CardTitle className="truncate text-sm" title={asset.fileName}>
+      <CardHeader className="space-y-1 px-3 pb-2 pt-3">
+        <CardTitle className="ui-card-title truncate" title={asset.fileName}>
           {asset.fileName}
         </CardTitle>
-        <p className="text-xs text-[var(--color-muted-foreground)]">
+        <p className="ui-caption">
           {formatSize(asset.fileSize)} · {formatDate(asset.createdAt)}
         </p>
         {asset.usageCount !== undefined ? (
-          <p className="text-xs font-medium text-[var(--color-primary)]">
+          <p className="ui-caption text-[var(--color-text-secondary)]">
             Usado em {asset.usageCount} conteúdo
             {asset.usageCount !== 1 ? "s" : ""}
           </p>
         ) : null}
       </CardHeader>
-      <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-muted)]/20 py-3">
+      <CardFooter className="justify-between gap-2 border-t border-[var(--color-border)] px-3 py-2.5">
         <Link href={`/admin/contents/new?mediaAssetId=${asset.id}`}>
           <Button variant="outline" size="sm" type="button">
-            Usar em Conteúdo
+            Usar
           </Button>
         </Link>
         {canDelete && !inUse ? (
@@ -215,6 +215,7 @@ function AssetCard({
             size="sm"
             type="button"
             aria-label={`Eliminar ${asset.fileName}`}
+            title="Eliminar"
             className="text-[var(--color-destructive)]"
             onClick={() => onRequestDelete(asset)}
           >

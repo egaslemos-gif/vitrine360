@@ -10,6 +10,7 @@ import { listDeviceGroups } from "@/services/device-groups";
 import { getTenantById } from "@/services/tenants";
 import { ScheduleForm } from "@/features/schedules/schedule-form";
 import { ScheduleListManager } from "@/features/schedules/schedule-list-manager";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function SchedulesPage() {
   const session = await requireAdminPage("manage_schedules");
@@ -37,19 +38,10 @@ export default async function SchedulesPage() {
 
   return (
     <div className="space-y-8">
-      <header className="admin-page-header flex flex-col pb-4 pt-4">
-        <h1
-          className="text-3xl font-semibold text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Schedules
-        </h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-          Criar, editar, activar/desactivar e eliminar. A execução efectiva
-          aplica-se no Sync (~60s) — não altera a playlist atribuída no Devices.
-          Timezone efectiva: Device → Tenant ({tenantTimezone}) → UTC.
-        </p>
-      </header>
+      <PageHeader
+        title="Agendamentos"
+        description={`Janelas de reprodução · timezone ${tenantTimezone}.`}
+      />
 
       <ScheduleForm
         playlists={playlistOpts}

@@ -3,6 +3,7 @@ import { AccessDenied } from "@/components/access-denied";
 import { requireAdminPage } from "@/lib/admin-access";
 import { db } from "@/db";
 import { activityLogs } from "@/db/schema";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function LogsPage() {
   const session = await requireAdminPage("view_logs");
@@ -16,39 +17,36 @@ export default async function LogsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="admin-page-header pb-4 pt-4">
-        <h1
-          className="text-3xl font-semibold text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Activity Logs
-        </h1>
-      </header>
-      <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
+      <PageHeader
+        title="Actividade"
+        description="Eventos recentes do workspace."
+      />
+      <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
         <table className="w-full text-left text-sm">
-          <thead className="bg-[var(--color-muted)] text-xs uppercase tracking-wide">
+          <thead className="bg-[var(--color-surface-muted)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <tr>
-              <th className="px-3 py-2">Quando</th>
-              <th className="px-3 py-2">Acção</th>
-              <th className="px-3 py-2">Recurso</th>
+              <th className="px-3 py-2.5 font-medium">Quando</th>
+              <th className="px-3 py-2.5 font-medium">Acção</th>
+              <th className="px-3 py-2.5 font-medium">Recurso</th>
             </tr>
           </thead>
           <tbody>
             {logs.map((l) => (
               <tr key={l.id} className="border-t border-[var(--color-border)]">
-                <td className="px-3 py-2 whitespace-nowrap">{l.createdAt}</td>
-                <td className="px-3 py-2">{l.action}</td>
-                <td className="px-3 py-2">
-                  {l.resource} {l.resourceId ? `· ${l.resourceId.slice(0, 8)}` : ""}
+                <td className="px-3 py-2.5 whitespace-nowrap tabular-nums ui-secondary">
+                  {l.createdAt}
+                </td>
+                <td className="px-3 py-2.5">{l.action}</td>
+                <td className="px-3 py-2.5 ui-secondary">
+                  {l.resource}{" "}
+                  {l.resourceId ? `· ${l.resourceId.slice(0, 8)}` : ""}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         {logs.length === 0 ? (
-          <p className="p-4 text-sm text-[var(--color-muted-foreground)]">
-            Sem eventos ainda.
-          </p>
+          <p className="ui-secondary p-4">Sem eventos ainda.</p>
         ) : null}
       </div>
     </div>

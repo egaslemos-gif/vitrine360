@@ -13,14 +13,14 @@ export default async function MediaPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <PageHeader
-        title="Media Library"
-        description="Gestão centralizada dos recursos multimédia"
+        title="Media"
+        description="Biblioteca de ficheiros multimédia."
         actions={
           <Link
             href="/admin/contents/new"
-            className="inline-flex h-9 items-center justify-center rounded-md bg-[var(--color-primary)] px-4 text-sm font-medium text-[var(--color-primary-foreground)] transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-sm font-semibold text-[var(--color-primary-foreground)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           >
-            + Adicionar Media
+            + Usar em Conteúdo
           </Link>
         }
       />
