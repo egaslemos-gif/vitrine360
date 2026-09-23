@@ -68,16 +68,26 @@ Sem eval / Function / HTML arbitrário / URLs como código. Templates = dados co
 
 Chooser + TemplatePicker (Design System: PageHeader, Card, FilterBar, PreviewViewport, Badge, Button, EmptyState).
 
-## 13. CLOCK live
+## 13. CLOCK live (native Content Runtime)
 
-CLOCK é dinâmico nos dois runtimes:
+CLOCK é Content nativo (não Image / GIF / Video / Experience / HTML_APP). Live nos dois runtimes:
 
-| Estilo | React Player | Legacy `tv.js` |
-|--------|--------------|----------------|
-| Digital | LIVE (`useLiveClock`) | LIVE (`renderDigitalClockFace`) |
-| Analog | LIVE (ponteiros) | LIVE (`renderAnalogClockFace` + DOM/CSS) |
+| Behaviour | React | tv.js |
+|-----------|-------|-------|
+| Digital | PASS | PASS |
+| Analog | PASS | PASS |
+| Seconds | PASS | PASS |
+| Hour fraction (`h*30 + m*0.5`) | PASS | PASS |
+| Timezone (device local `Date`) | PASS | PASS |
+| Offline (no network) | PASS | PASS |
+| Transition cleanup | PASS | PASS |
+| Timer cleanup | PASS | PASS |
 
-Fonte temporal = `Date` local do dispositivo. Sem rede. Timer limpo em `advanceSlide` / unmount. Cadência: 1s com segundos, ~30s sem segundos.
+- React: `useLiveClock` + `LiveClockSlide` (display-engine / ContentVisual)
+- Legacy: `renderDigitalClockFace` / `renderAnalogClockFace` (DOM + CSS `transform`, ES5)
+- Shell: `tv.js` **0.1.22-smarttv-static**, cache-bust `?v=050`
+- Cadência: 1s com segundos; ~30s (legacy) / minute-align (React) sem segundos
+- Cleanup: `clearClockTimer` em `renderClock` / `advanceSlide` / React `useEffect` unmount
 
 ## 14. Future Extensions
 
@@ -85,7 +95,7 @@ Workspace templates / marketplace / upload — **não** nesta fase.
 
 ## 15. Tests
 
-`npm run test:content-templates-01` (inclui CLOCK-LEGACY-001…012)
+`npm run test:content-templates-01` (inclui **CLOCK-LEGACY-001…016**)
 
 ## 16. Known Limitations
 
@@ -93,8 +103,10 @@ Workspace templates / marketplace / upload — **não** nesta fase.
 - Sem CRUD admin de templates
 - Sem EXPERIENCE templates
 - Provenance só em payload JSON
-- Hisense physical Analog Clock validation: **pending** (Legacy Chromium validated via source contracts + React Chromium)
+- **PHYSICAL VALIDATION — NOT AVAILABLE** (Hisense/VIDAA): ver `docs/evidence/content-templates-01-clock/CLOCK-HISENSE-VALIDATION.md`
 
-## 17. CLOCK RUNTIME PARITY
+## 17. CLOCK RUNTIME PARITY — Verdict
 
-Verdict target: **CONTENT-TEMPLATES-01 — CLOCK RUNTIME PARITY VALIDATED** when CLOCK-LEGACY suite + React regression pass. Hisense physical retest remains separate evidence.
+**CONTENT-TEMPLATES-01 — CLOCK RUNTIME PARITY — VALIDATED**
+
+(Chromium / source contracts / automated suite. Physical Hisense: NOT AVAILABLE — not inferred as PASS.)

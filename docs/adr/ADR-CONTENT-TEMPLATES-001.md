@@ -18,12 +18,14 @@ Operators need faster creation of frequent TEXT / CLOCK / NOTICE / EVENT / QR co
 6. **No Workspace Templates** in this phase.
 7. Optional audit fields live in `payload.createdFromTemplateId` / `createdFromTemplateVersion` without schema migration.
 8. **CLOCK** remains a native Content type with live device-time rendering (not Experience).
+9. **CLOCK runtime parity** — Digital and Analog must behave equivalently in React Player and legacy `tv.js` (DOM+CSS hands; shared angle math; device-local `Date`; timer cleanup on slide/playlist change). Physical Hisense validation is separate evidence and must not be inferred.
 
 ## Consequences
 
 - Small catalog (9) validates UX with low complexity.
 - Extensible later to WORKSPACE catalogs without changing Content runtime.
-- Renderers must honour CLOCK payload (`showSeconds`, `style`) where implemented.
+- Renderers must honour CLOCK payload (`showSeconds`, `style`) on both React and legacy paths.
+- Analog is not React-only; legacy ships `renderAnalogClockFace` with ES5-compatible transforms.
 
 ## Non-Goals
 

@@ -1,6 +1,6 @@
 # CONTENT-TEMPLATES-01 — Validation Checklist
 
-Date: 2026-09-23 (CLOCK runtime parity update)
+Date: 2026-09-23 (CLOCK RUNTIME PARITY HARDENING)
 
 ## Acceptance
 
@@ -19,13 +19,15 @@ Date: 2026-09-23 (CLOCK runtime parity update)
 - [x] CLOCK Digital Legacy LIVE
 - [x] CLOCK Analog React LIVE
 - [x] CLOCK Analog Legacy LIVE (`tv.js` DOM+CSS hands)
-- [x] Timer cleanup / no duplicate timers (source contracts CLOCK-LEGACY-007…011)
+- [x] Timer cleanup / no duplicate timers (CLOCK-LEGACY-010…013, 016)
+- [x] Cardinal angles 12/3/6/9 + hour fraction (CLOCK-LEGACY-005…009)
+- [x] Offline / timezone contracts (CLOCK-LEGACY-014…015)
 - [x] Docs + ADR
-- [x] `test:content-templates-01` + CLOCK-LEGACY-001…012
-- [ ] Full `npm test` / lint / build — see REGRESSION-RESULTS.md
-- [ ] Hisense physical Analog Clock — **pending** (do not claim VALIDATED on device)
+- [x] `test:content-templates-01` + CLOCK-LEGACY-001…016
+- [x] Full gate: `npm test` / typecheck / lint / build — see REGRESSION-RESULTS.md
+- [ ] Hisense physical — **PHYSICAL VALIDATION — NOT AVAILABLE** (do not claim device PASS)
 
-## Manual UI
+## Manual UI (optional operator)
 
 - [ ] Novo → Começar do zero
 - [ ] Novo → Usar template → filtrar categoria → Usar → editor com defaults
