@@ -5,7 +5,7 @@
  */
 (function () {
   var LS_KEY = "v360-player-config";
-  var VERSION = "0.1.17-smarttv-static";
+  var VERSION = "0.1.18-smarttv-static";
   var root = document.getElementById("root");
   var claimTimer = null;
   var bootSec = 0;
@@ -631,6 +631,164 @@
     return 8000;
   }
 
+  function isGifItem(item) {
+    var asset = item && item.assets && item.assets[0];
+    var mime = asset && asset.mimeType ? String(asset.mimeType) : "";
+    var name = asset && asset.fileName ? String(asset.fileName) : "";
+    var url = buildMediaUrl(item) || "";
+    if (/image\/gif/i.test(mime)) return true;
+    if (/\.gif(\?|#|$)/i.test(name)) return true;
+    if (/\.gif(\?|#|$)/i.test(url)) return true;
+    return false;
+  }
+
+  /**
+   * Animated GIF decode can stall Sraf/Hisense so setTimeout never arms if
+   * hold() runs after inserting <img src="…gif">. Always arm the timer first.
+   * Prefer a static first frame (canvas) — never keep an animated GIF in the DOM.
+   */
+  function renderGifTitleCard(item) {
+    setHtml(
+      '<div class="slide ' +
+        transitionClass(item.transition) +
+        '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'height:100%;padding:60px;background:#0b1220;text-align:center">' +
+        '<p style="font-size:14px;letter-spacing:0.4em;opacity:0.4;margin:0">VITRINE360</p>' +
+        '<h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:600;margin:32px 0 0;max-width:900px;line-height:1.2">' +
+        escapeHtml(item.title || "GIF") +
+        "</h1>" +
+        '<p style="font-size:16px;margin-top:24px;opacity:0.55">GIF (frame estático · Smart TV)</p>' +
+        "</div>"
+    );
+  }
+
+  function renderImageSlide(item, generation) {
+    var imgUrl = buildMediaUrl(item);
+    if (!imgUrl) {
+      renderNoContent();
+      return;
+    }
+    var duration = slideDuration(item);
+    // Arm advance BEFORE any GIF decode / DOM work.
+    hold(duration, generation);
+
+    if (!isGifItem(item)) {
+      setHtml(
+        '<div class="slide ' +
+          transitionClass(item.transition) +
+          '" style="background:#000;display:flex;align-items:center;justify-content:center">' +
+          '<img src="' +
+          escapeHtml(imgUrl) +
+          '" alt="' +
+          escapeHtml(item.title) +
+          '"' +
+          ' style="position:relative;width:100%;height:100%;object-fit:contain" />' +
+          "</div>"
+      );
+      return;
+    }
+
+    var asset0 = item.assets && item.assets[0];
+    var fetchUrl =
+      asset0 && asset0.offlineUrl ? String(asset0.offlineUrl) : imgUrl;
+
+    function paintStaticFromBlob(blob) {
+      if (playState.generation !== generation) return;
+      var blobUrl = null;
+      try {
+        blobUrl =
+          (window.URL && URL.createObjectURL)
+            ? URL.createObjectURL(blob)
+            : null;
+      } catch (eBlob) {
+        blobUrl = null;
+      }
+      if (!blobUrl) {
+        renderGifTitleCard(item);
+        return;
+      }
+      var loader = new Image();
+      loader.onload = function () {
+        if (playState.generation !== generation) {
+          try {
+            URL.revokeObjectURL(blobUrl);
+          } catch (eRev) {
+            /* ignore */
+          }
+          return;
+        }
+        var staticUrl = null;
+        try {
+          var canvas = document.createElement("canvas");
+          var w = loader.naturalWidth || loader.width || 1;
+          var h = loader.naturalHeight || loader.height || 1;
+          // Cap decode cost on low-end TVs
+          var maxEdge = 1280;
+          if (w > maxEdge || h > maxEdge) {
+            var scale = Math.min(maxEdge / w, maxEdge / h);
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
+          }
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(loader, 0, 0, w, h);
+            staticUrl = canvas.toDataURL("image/jpeg", 0.8);
+          }
+        } catch (eCanvas) {
+          staticUrl = null;
+        }
+        try {
+          URL.revokeObjectURL(blobUrl);
+        } catch (eRev2) {
+          /* ignore */
+        }
+        if (staticUrl) {
+          setHtml(
+            '<div class="slide ' +
+              transitionClass(item.transition) +
+              '" style="background:#000;display:flex;align-items:center;justify-content:center">' +
+              '<img src="' +
+              staticUrl +
+              '" alt="' +
+              escapeHtml(item.title) +
+              '"' +
+              ' style="position:relative;width:100%;height:100%;object-fit:contain" />' +
+              "</div>"
+          );
+          return;
+        }
+        renderGifTitleCard(item);
+      };
+      loader.onerror = function () {
+        try {
+          URL.revokeObjectURL(blobUrl);
+        } catch (eRev3) {
+          /* ignore */
+        }
+        if (playState.generation !== generation) return;
+        renderGifTitleCard(item);
+      };
+      loader.src = blobUrl;
+    }
+
+    loadAssetBlob(fetchUrl)
+      .then(paintStaticFromBlob)
+      .catch(function () {
+        // Fallback: try remote URL once; if that also stalls, hold() still advances.
+        if (fetchUrl === imgUrl) {
+          if (playState.generation === generation) renderGifTitleCard(item);
+          return;
+        }
+        loadAssetBlob(imgUrl)
+          .then(paintStaticFromBlob)
+          .catch(function () {
+            if (playState.generation === generation) renderGifTitleCard(item);
+          });
+      });
+  }
+
   function playlistFingerprint(items) {
     var parts = [];
     var i;
@@ -717,15 +875,7 @@
     }
 
     if (type === "IMAGE") {
-      var imgUrl = buildMediaUrl(item);
-      if (!imgUrl) { renderNoContent(); return; }
-      setHtml(
-        '<div class="slide ' + transitionClass(item.transition) + '" style="background:#000;display:flex;align-items:center;justify-content:center">' +
-          '<img src="' + escapeHtml(imgUrl) + '" alt="' + escapeHtml(item.title) + '"' +
-          ' style="position:relative;width:100%;height:100%;object-fit:contain" />' +
-        '</div>'
-      );
-      hold(slideDuration(item), generation);
+      renderImageSlide(item, generation);
       return;
     }
 
