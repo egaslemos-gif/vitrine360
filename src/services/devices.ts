@@ -359,9 +359,21 @@ export async function bootstrapClaim(deviceId: string, pairingSecret: string) {
     return { status: "FORBIDDEN" as const };
   }
   if (device.status === "PENDING") {
+    const exp = device.activationExpiresAt
+      ? Date.parse(device.activationExpiresAt)
+      : NaN;
+    if (Number.isFinite(exp) && exp <= Date.now()) {
+      return {
+        status: "EXPIRED" as const,
+        deviceId,
+        expiresAt: device.activationExpiresAt,
+        deviceConfig: toPublicDeviceConfigSlice(device),
+      };
+    }
     return {
       status: "PENDING" as const,
       deviceId,
+      expiresAt: device.activationExpiresAt,
       deviceConfig: toPublicDeviceConfigSlice(device),
     };
   }

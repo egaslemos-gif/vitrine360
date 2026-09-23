@@ -116,8 +116,11 @@ async function fetchJson(
 export function PlayerApp() {
   const [phase, setPhase] = useState<Phase>("boot");
   const [activationCode, setActivationCode] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [pairExpiryLabel, setPairExpiryLabel] = useState<string>("");
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [pairingSecret, setPairingSecret] = useState<string | null>(null);
+  const refreshingPairRef = useRef(false);
   const [items, setItems] = useState<PlaybackItem[]>([]);
   const [manifestVersion, setManifestVersion] = useState(0);
   const [currentContentId, setCurrentContentId] = useState<string | undefined>();
@@ -222,6 +225,7 @@ export function PlayerApp() {
 
   const startPairing = useCallback(async (cancelled: () => boolean) => {
     setBootHint("A pedir código de activação…");
+    setPairExpiryLabel("");
     const identity = getPairingIdentity();
     const res = await fetchJson(
       "/api/device/bootstrap",
@@ -237,24 +241,53 @@ export function PlayerApp() {
       deviceId: string;
       activationCode: string;
       pairingSecret?: string;
+      expiresAt?: string | null;
     };
     if (!data.pairingSecret) {
       throw new Error("pair_start missing pairingSecret");
     }
     if (cancelled()) return;
+    const nextExpires =
+      data.expiresAt ??
+      new Date(Date.now() + 15 * 60 * 1000).toISOString();
     setDeviceId(data.deviceId);
     setActivationCode(data.activationCode);
     setPairingSecret(data.pairingSecret);
+    setExpiresAt(nextExpires);
     await saveConfig({
       deviceId: data.deviceId,
       deviceToken: "",
       clientId: identity.clientId,
       activationCode: data.activationCode,
       pairingSecret: data.pairingSecret,
+      expiresAt: nextExpires,
     });
     bootedRef.current = true;
+    refreshingPairRef.current = false;
     setPhase("pairing");
   }, []);
+
+  const refreshExpiredPairing = useCallback(async () => {
+    if (refreshingPairRef.current) return;
+    refreshingPairRef.current = true;
+    setPairExpiryLabel("O código expirou. A gerar novo código…");
+    try {
+      await saveConfig(null);
+      setActivationCode(null);
+      setExpiresAt(null);
+      setPairingSecret(null);
+      setDeviceId(null);
+      await startPairing(() => false);
+    } catch (e) {
+      refreshingPairRef.current = false;
+      setBootHint(
+        e instanceof Error
+          ? `Falha ao renovar código: ${e.message}`
+          : "Falha ao renovar código",
+      );
+      setPhase("error");
+    }
+  }, [startPairing]);
 
   useEffect(() => {
     let cancelled = false;
@@ -317,10 +350,20 @@ export function PlayerApp() {
         }
 
         if (config?.deviceId && config.pairingSecret && !config.deviceToken) {
+          const expMs = config.expiresAt
+            ? Date.parse(config.expiresAt)
+            : NaN;
+          // Missing or past expiry → request a fresh (or still-valid reused) code
+          if (!Number.isFinite(expMs) || expMs <= Date.now()) {
+            await saveConfig(null);
+            await startPairing(() => cancelled || bootedRef.current);
+            return;
+          }
           bootedRef.current = true;
           setDeviceId(config.deviceId);
           setPairingSecret(config.pairingSecret);
           setActivationCode(config.activationCode ?? null);
+          setExpiresAt(config.expiresAt ?? null);
           setPhase("pairing");
           return;
         }
@@ -367,6 +410,7 @@ export function PlayerApp() {
           status: string;
           deviceToken?: string;
           deviceCode?: string | null;
+          expiresAt?: string | null;
           deviceConfig?: {
             tenantId: string | null;
             deviceId: string;
@@ -377,6 +421,10 @@ export function PlayerApp() {
             status: string;
           };
         };
+        if (data.status === "EXPIRED") {
+          void refreshExpiredPairing();
+          return;
+        }
         if (data.status === "ACTIVE" && data.deviceToken) {
           const next: LocalConfig = withServerDeviceConfig(
             {
@@ -393,6 +441,7 @@ export function PlayerApp() {
             /* ignore */
           }
           setPairingSecret(null);
+          setExpiresAt(null);
           setPhase("playing");
           await syncAndShow();
         } else if (data.status === "ACTIVE_NO_TOKEN" || data.status === "FORBIDDEN") {
@@ -412,7 +461,41 @@ export function PlayerApp() {
       }
     }, 2500);
     return () => window.clearInterval(id);
-  }, [phase, deviceId, pairingSecret, syncAndShow]);
+  }, [phase, deviceId, pairingSecret, syncAndShow, refreshExpiredPairing]);
+
+  // Countdown + local expiry refresh (parity with public/tv.js)
+  useEffect(() => {
+    if (phase !== "pairing" || !expiresAt) {
+      setPairExpiryLabel("");
+      return;
+    }
+    const expiresMs = Date.parse(expiresAt);
+    if (!Number.isFinite(expiresMs)) {
+      setPairExpiryLabel("");
+      return;
+    }
+
+    const tick = () => {
+      const diff = expiresMs - Date.now();
+      if (diff <= 0) {
+        setPairExpiryLabel("O código expirou. A gerar novo código…");
+        void refreshExpiredPairing();
+        return false;
+      }
+      const m = Math.floor(diff / 60_000);
+      const s = Math.floor((diff % 60_000) / 1000);
+      setPairExpiryLabel(
+        `Expira em ${m}:${s < 10 ? `0${s}` : s}`,
+      );
+      return true;
+    };
+
+    if (!tick()) return;
+    const id = window.setInterval(() => {
+      if (!tick()) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [phase, expiresAt, refreshExpiredPairing]);
 
   const itemsRef = useRef(items);
   const contentIdRef = useRef(currentContentId);
@@ -602,6 +685,20 @@ export function PlayerApp() {
         >
           {activationCode}
         </p>
+        {pairExpiryLabel ? (
+          <p
+            style={{
+              marginTop: 16,
+              color: pairExpiryLabel.includes("expirou")
+                ? "#ff6b6b"
+                : "rgba(255,255,255,0.75)",
+              fontSize: 18,
+              fontWeight: 600,
+            }}
+          >
+            {pairExpiryLabel}
+          </p>
+        ) : null}
         <p
           style={{
             marginTop: 40,

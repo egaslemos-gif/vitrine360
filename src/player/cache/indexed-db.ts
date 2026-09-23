@@ -14,6 +14,8 @@ export type LocalConfig = {
   deviceCode?: string | null;
   clientId?: string;
   activationCode?: string;
+  /** ISO expiry from pair_start — player must refresh when past this. */
+  expiresAt?: string | null;
   /** Ephemeral secret from pair_start; cleared after successful claim */
   pairingSecret?: string;
   /** Tenant scope from server Device row (policy enrichment). */
