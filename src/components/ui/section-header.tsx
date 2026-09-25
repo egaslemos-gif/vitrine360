@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Section heading inside an admin page. */
+/** Enhanced section heading — slightly larger, with flex alignment for badge-style actions. */
 export function SectionHeader({
   title,
   description,
@@ -21,9 +21,13 @@ export function SectionHeader({
       )}
     >
       <div className="min-w-0">
-        <h2 className="ui-section-title">{title}</h2>
+        <h2 className="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">
+          {title}
+        </h2>
         {description ? (
-          <p className="ui-secondary mt-0.5">{description}</p>
+          <p className="mt-0.5 text-[13px] text-[var(--color-text-muted)]">
+            {description}
+          </p>
         ) : null}
       </div>
       {actions ? (

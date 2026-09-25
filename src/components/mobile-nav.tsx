@@ -71,10 +71,13 @@ export function MobileNav({
 
   return (
     <>
-      <header className="z-40 flex h-14 w-full shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 shadow-sm backdrop-blur-md md:hidden">
-        <div className="flex items-center gap-2">
+      <header className="z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-[var(--color-border-subtle)] bg-[var(--color-surface)]/90 px-4 shadow-[var(--shadow-subtle)] backdrop-blur-xl md:hidden">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-primary)] shadow-sm">
+            <span className="text-xs font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
+          </div>
           <p
-            className="text-xl font-bold tracking-tight text-[var(--color-primary)]"
+            className="text-lg font-bold tracking-tight text-[var(--color-primary)]"
             style={{ fontFamily: "var(--font-fraunces), serif" }}
           >
             Vitrine360
@@ -82,10 +85,10 @@ export function MobileNav({
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-md text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           aria-label="Abrir menu"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </button>
       </header>
 
@@ -97,17 +100,25 @@ export function MobileNav({
       )}
 
       <div
-        className={`fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] transform flex-col bg-[var(--color-surface)] shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-72 max-w-[85vw] transform flex-col shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{
+          background: "linear-gradient(180deg, var(--color-surface) 0%, color-mix(in oklab, var(--color-surface) 95%, var(--color-primary-soft)) 100%)",
+        }}
       >
-        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
-          <p
-            className="text-xl font-bold tracking-tight text-[var(--color-primary)]"
-            style={{ fontFamily: "var(--font-fraunces), serif" }}
-          >
-            Navegação
-          </p>
+        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-5 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-primary)]">
+              <span className="text-[10px] font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
+            </div>
+            <p
+              className="text-base font-bold tracking-tight text-[var(--color-primary)]"
+              style={{ fontFamily: "var(--font-fraunces), serif" }}
+            >
+              Navegação
+            </p>
+          </div>
           <button
             onClick={() => setOpen(false)}
             className="rounded-full p-2 hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
@@ -117,9 +128,9 @@ export function MobileNav({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-4" aria-label="Navegação móvel">
+        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Navegação móvel">
           {navGroupedForRole(userRole).map((group) => (
-            <div key={group.section} className="mb-4">
+            <div key={group.section} className="mb-3">
               <p className="ui-sidebar-section px-2">{group.label}</p>
               <div className="flex flex-col gap-1">
                 {group.items.map((item) => {
@@ -134,10 +145,10 @@ export function MobileNav({
                       key={item.href}
                       href={item.href}
                       aria-current={isActive ? "page" : undefined}
-                      className={`group flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
+                      className={`group flex items-center gap-3.5 rounded-[var(--radius-md)] px-3.5 py-3 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
                         isActive
-                          ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                          : "text-[var(--color-text-secondary)] hover:bg-[var(--color-secondary)]/50 hover:text-[var(--color-primary)]"
+                          ? "bg-[var(--color-primary)] text-white shadow-md"
+                          : "text-[var(--color-text-secondary)] hover:bg-white/50 hover:text-[var(--color-primary)]"
                       }`}
                     >
                       <Icon
@@ -153,11 +164,15 @@ export function MobileNav({
           ))}
         </nav>
 
-        <div className="space-y-3 border-t border-[var(--color-border)] px-4 py-4">
-          <div>
-            <p className="text-sm font-semibold">{userName}</p>
-            <p className="ui-caption">{userRole.replaceAll("_", " ")}</p>
-            <p className="ui-caption mt-1">{tenantName}</p>
+        <div className="space-y-3 border-t border-[var(--color-border-subtle)] px-4 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] text-sm font-bold text-white shadow-sm">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{userName}</p>
+              <p className="ui-caption">{userRole.replaceAll("_", " ")}</p>
+            </div>
           </div>
           <WorkspaceSwitcher
             activeTenantId={activeTenantId}

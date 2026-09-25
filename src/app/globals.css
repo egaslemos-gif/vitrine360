@@ -1,18 +1,27 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* UI/UX-02C — Soft Glass Media SaaS */
-  --color-background: #f6f3ff;
-  --color-background-secondary: #f1eefa;
+  /* UI/UX-03 — Application surface hierarchy */
+  /* L0 App background */
+  --color-background: #f4f1fa;
+  --color-app-bg: var(--color-background);
+  /* L1 Workspace + sidebar */
+  --color-workspace: #f9f8fc;
+  --color-workspace-bg: var(--color-workspace);
+  --color-sidebar: #f1eefa;
+  --color-background-secondary: var(--color-sidebar);
   --color-foreground: #18181b;
+  /* L2 Surface / card */
   --color-card: #ffffff;
   --color-card-foreground: #18181b;
   --color-surface: var(--color-card);
-  --color-surface-muted: #eee9ff;
+  --color-surface-muted: #f3f0f9;
+  --color-surface-elevated: #ffffff;
   --color-primary: #6d4aff;
   --color-primary-foreground: #ffffff;
   --color-primary-hover: #5136c9;
   --color-primary-soft: #eee9ff;
+  --color-primary-strong: #5136c9;
   --color-primary-light: #8b6ff7;
   --color-secondary: #f1eefa;
   --color-secondary-foreground: #3f3f46;
@@ -21,14 +30,19 @@
   --color-accent: #eee9ff;
   --color-accent-foreground: #5136c9;
   --color-destructive: #ef4444;
-  --color-border: #e8e4f0;
-  --color-input: #e8e4f0;
+  --color-border-subtle: #ede9f4;
+  --color-border: #e6e1ef;
+  --color-border-default: var(--color-border);
+  --color-border-strong: #d4cde3;
+  --color-input: #e6e1ef;
   --color-ring: #6d4aff;
   --color-success: #22a06b;
   --color-warning: #f59e0b;
   --color-danger: var(--color-destructive);
   --color-info: #3b82f6;
   --color-neutral: #666672;
+  --color-row-hover: #f6f3fb;
+  --color-row-selected: #eee9ff;
   --color-text-primary: var(--color-foreground);
   --color-text-secondary: #666672;
   --color-text-muted: var(--color-muted-foreground);
@@ -58,14 +72,15 @@
   --radius-sm: 0.625rem; /* 10 */
   --radius-md: 0.875rem; /* 14 */
   --radius-lg: 1.125rem; /* 18 */
-  --radius-xl: 1.5rem; /* 24 */
-  --radius-2xl: 1.75rem; /* 28 */
-  --shadow-subtle: 0 1px 2px rgba(24, 24, 27, 0.04),
-    0 1px 3px rgba(24, 24, 27, 0.03);
-  --shadow-elevated: 0 4px 16px rgba(24, 24, 27, 0.06),
-    0 1px 3px rgba(24, 24, 27, 0.04);
-  --shadow-modal: 0 18px 48px rgba(24, 24, 27, 0.12),
-    0 4px 12px rgba(24, 24, 27, 0.06);
+  --radius-xl: 1.25rem; /* 20 — application cards */
+  --radius-2xl: 1.5rem; /* 24 — large media / dialogs */
+  --shadow-subtle: 0 1px 2px rgba(30, 20, 60, 0.03),
+    0 1px 3px rgba(30, 20, 60, 0.02);
+  --shadow-card: 0 2px 10px rgba(30, 20, 60, 0.04);
+  --shadow-elevated: 0 8px 30px rgba(30, 20, 60, 0.08);
+  --shadow-floating: 0 12px 40px rgba(30, 20, 60, 0.1);
+  --shadow-modal: 0 18px 48px rgba(30, 20, 60, 0.12),
+    0 4px 12px rgba(30, 20, 60, 0.06);
   --shadow-glass: 0 8px 32px rgba(81, 54, 201, 0.08),
     0 2px 8px rgba(24, 24, 27, 0.04);
   /*
@@ -97,6 +112,13 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+    background: linear-gradient(135deg, #f4f1fa 0%, #ece7f6 30%, #f0edf8 60%, #f4f1fa 100%);
+    background-attachment: fixed;
+  }
+
+  /* Smooth transition on all interactive elements */
+  a, button, [role="button"] {
+    transition: all 200ms ease;
   }
 
   /*
@@ -211,10 +233,11 @@ html.player-runtime .player-media {
   z-index: 30;
   margin-inline: -0.75rem;
   padding-inline: 0.75rem;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid color-mix(in oklab, var(--color-border) 55%, transparent);
+  padding-bottom: 1rem;
+  background: color-mix(in oklab, var(--color-workspace) 92%, white);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 @media (min-width: 640px) {
@@ -234,11 +257,18 @@ html.player-runtime .player-media {
 /* UI/UX-01 typography — operational Inter; brand display only for logo */
 .ui-page-title {
   font-family: var(--font-sans);
-  font-size: 1.5rem;
-  line-height: 2rem;
+  font-size: 1.75rem; /* ~28px — operational; scales up on md */
+  line-height: 2.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
+}
+
+@media (min-width: 768px) {
+  .ui-page-title {
+    font-size: 2rem; /* 32px */
+    line-height: 2.5rem;
+  }
 }
 
 .ui-section-title {
@@ -290,7 +320,96 @@ html.player-runtime .player-media {
 .ui-content-canvas {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
+}
+
+/* UI/UX-03 — Surface utilities */
+.ui-app-bg {
+  background: var(--color-app-bg);
+}
+
+.ui-workspace {
+  background: var(--color-workspace);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-subtle);
+}
+
+.ui-sidebar-panel {
+  background: var(--color-sidebar);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-subtle);
+}
+
+.ui-surface-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.ui-toolbar {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.ui-list-shell {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.ui-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.25rem; /* 68px */
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  transition: background-color 120ms ease;
+}
+
+.ui-list-row:last-child {
+  border-bottom: none;
+}
+
+.ui-list-row:hover {
+  background: var(--color-row-hover);
+}
+
+.ui-list-row[aria-selected="true"],
+.ui-list-row[data-selected="true"] {
+  background: var(--color-row-selected);
+}
+
+.ui-list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ui-info-banner {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklab, var(--color-info) 28%, var(--color-border));
+  background: color-mix(in oklab, var(--color-info) 8%, white);
+  color: var(--color-text-primary);
 }
 
 .ui-meta-grid {
@@ -395,34 +514,30 @@ html.dark .admin-page-header {
  * Core layout remains usable without backdrop-filter.
  */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: var(--shadow-glass);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  background: var(--color-workspace);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-elevated);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: var(--shadow-elevated);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
 .glass-control {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-subtle);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .glass-overlay {
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: color-mix(in oklab, var(--color-surface) 78%, transparent);
+  border: 1px solid var(--color-border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .glass-player-controls {
@@ -430,9 +545,21 @@ html.dark .admin-page-header {
   border: 1px solid var(--color-player-border);
   box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   color: var(--color-player-text);
+}
+
+/* Soft glass application frame for Landing InteractivePlayerDemo */
+.ui-demo-app-shell {
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 24px 60px rgba(88, 80, 160, 0.16),
+    0 2px 0 rgba(255, 255, 255, 0.65) inset,
+    0 0 0 1px rgba(109, 74, 255, 0.06);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
 }
 
 html.dark .glass-panel,
@@ -447,7 +574,7 @@ html.dark .glass-overlay {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: box-shadow 160ms ease, transform 160ms ease,
     border-color 160ms ease;
@@ -455,7 +582,7 @@ html.dark .glass-overlay {
 
 .ui-media-card:hover {
   box-shadow: var(--shadow-elevated);
-  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-border));
+  border-color: var(--color-border-strong);
 }
 
 .ui-icon-btn {
