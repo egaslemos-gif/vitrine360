@@ -21,8 +21,8 @@ export default async function LogsPage() {
         title="Actividade"
         description="Eventos recentes do workspace."
       />
-      <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <table className="w-full min-w-[28rem] text-left text-sm">
           <thead className="bg-[var(--color-surface-muted)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <tr>
               <th className="px-3 py-2.5 font-medium">Quando</th>

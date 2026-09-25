@@ -15,8 +15,9 @@ const display = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Vitrine360",
-  description: "Digital Signage Platform",
+  title: "Vitrine360 — Digital Display & Presentation Platform",
+  description:
+    "Create, distribute, play and control digital content across displays and interactive devices.",
 };
 
 export default function RootLayout({

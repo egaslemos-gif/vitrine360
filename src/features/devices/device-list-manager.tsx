@@ -234,7 +234,7 @@ export function DeviceListManager({
   return (
     <div className="space-y-6">
       <FilterBar>
-        <div className="relative min-w-[200px] flex-1">
+        <div className="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--color-muted-foreground)]" />
           <Input
             placeholder="Procurar por nome, código ou local..."
@@ -245,12 +245,12 @@ export function DeviceListManager({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 w-full flex-wrap items-center gap-2 md:w-auto">
           <select
             value={presenceFilter}
             onChange={(e) => setPresenceFilter(e.target.value)}
             aria-label="Filtrar por estado"
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            className="h-9 min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 sm:flex-none"
           >
             <option value="ALL">Estado: Todos</option>
             <option value="ONLINE">Online</option>
@@ -262,7 +262,7 @@ export function DeviceListManager({
             value={groupFilter}
             onChange={(e) => setGroupFilter(e.target.value)}
             aria-label="Filtrar por grupo"
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            className="h-9 min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 sm:flex-none"
           >
             <option value="ALL">Grupo: Todos</option>
             {groups.map((g) => (
@@ -276,7 +276,7 @@ export function DeviceListManager({
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
             aria-label="Filtrar por local"
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            className="h-9 min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 sm:flex-none"
           >
             <option value="ALL">Local: Todos</option>
             {locations.map((loc) => (
@@ -290,7 +290,7 @@ export function DeviceListManager({
             value={playlistFilter}
             onChange={(e) => setPlaylistFilter(e.target.value)}
             aria-label="Filtrar por playlist"
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+            className="h-9 min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 sm:flex-none"
           >
             <option value="ALL">Playlist: Todas</option>
             <option value="ASSIGNED">Com Playlist</option>

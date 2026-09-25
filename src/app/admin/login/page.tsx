@@ -1,7 +1,9 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -65,8 +67,15 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-[min(100%,28rem)] shrink-0 border-0 bg-white/80 shadow-lg backdrop-blur">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-4 px-4 py-10">
+      <Link
+        href="/"
+        className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] sm:left-6 sm:top-6"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Página inicial
+      </Link>
+      <Card className="w-[min(100%,28rem)] shrink-0 border border-[var(--color-border)] bg-[var(--color-surface)]/90 shadow-lg backdrop-blur">
         <CardHeader>
           <CardTitle
             className="text-3xl text-[var(--color-primary)]"
@@ -75,12 +84,12 @@ function LoginForm() {
             Vitrine360
           </CardTitle>
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            Admin Console — autenticação
+            Digital Display & Presentation — sign in
           </p>
           {showDevHint ? (
-            <p className="mt-2 text-xs text-amber-700/90">
+            <p className="mt-2 text-xs text-[var(--color-warning)]">
               Desenvolvimento: após{" "}
-              <code className="rounded bg-black/5 px-1">npm run db:seed</code> use
+              <code className="rounded bg-[var(--color-muted)] px-1">npm run db:seed</code> use
               as credenciais indicadas no output do seed (nunca para produção).
             </p>
           ) : null}
@@ -123,6 +132,14 @@ function LoginForm() {
           >
             Continuar com Google
           </a>
+          <p className="mt-4 text-center text-sm text-[var(--color-muted-foreground)]">
+            <Link
+              href="/"
+              className="font-medium text-[var(--color-primary)] underline-offset-2 hover:underline"
+            >
+              Voltar à página inicial
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

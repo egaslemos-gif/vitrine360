@@ -146,6 +146,41 @@ function ImagePreview({ url, alt }: { url: string; alt: string }) {
   );
 }
 
+function isAudioMime(mime: string): boolean {
+  return mime.startsWith("audio/");
+}
+
+function mediaAccentVar(mime: string): string {
+  if (isGifMime(mime)) return "var(--color-type-gif)";
+  if (isImageMime(mime)) return "var(--color-type-image)";
+  if (isVideoMime(mime)) return "var(--color-type-video)";
+  if (isAudioMime(mime)) return "var(--color-type-audio)";
+  return "var(--color-type-text)";
+}
+
+function AudioWaveformPlaceholder() {
+  const bars = [28, 52, 36, 68, 44, 58, 32, 62, 40, 48, 30, 55];
+  return (
+    <div
+      className="relative flex h-full w-full flex-col items-center justify-end gap-3 bg-[linear-gradient(160deg,color-mix(in_oklab,var(--color-type-audio)_22%,transparent),color-mix(in_oklab,var(--color-primary-soft)_70%,white))] px-6 pb-5 pt-6"
+      aria-hidden
+    >
+      <div className="flex h-[55%] w-full items-end justify-center gap-1">
+        {bars.map((h, i) => (
+          <span
+            key={i}
+            className="w-1.5 rounded-full bg-[var(--color-type-audio)]/75"
+            style={{ height: `${h}%` }}
+          />
+        ))}
+      </div>
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-type-audio)] text-white shadow-md">
+        ▶
+      </span>
+    </div>
+  );
+}
+
 function AssetCard({
   asset,
   canDelete,
@@ -155,35 +190,54 @@ function AssetCard({
   canDelete: boolean;
   onRequestDelete: (asset: DisplayItem) => void;
 }) {
-  const image = isImageMime(asset.mimeType) || isGifMime(asset.mimeType);
+  const gif = isGifMime(asset.mimeType);
+  const image = isImageMime(asset.mimeType);
   const video = isVideoMime(asset.mimeType);
+  const audio = isAudioMime(asset.mimeType);
   const usage = asset.usageCount ?? 0;
   const inUse = usage > 0;
+  const accent = mediaAccentVar(asset.mimeType);
 
   return (
-    <Card className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none transition-colors hover:border-[var(--color-primary)]/25">
-      <div className="relative border-b border-[var(--color-border)]">
+    <Card
+      className="ui-media-card border-0 shadow-none ring-1 ring-[var(--color-border)] transition-[box-shadow,transform,border-color] hover:ring-[var(--color-primary)]/30"
+      style={{ borderTop: `3px solid ${accent}` }}
+    >
+      <div className="relative">
         <PreviewViewport aspectRatio="16/9">
-          {image ? (
+          {image || gif ? (
             <ImagePreview url={asset.url} alt={asset.fileName} />
           ) : video ? (
-            <video
-              src={asset.url}
-              controls
-              preload="metadata"
-              className="h-full w-full object-contain"
-              aria-label={`Vídeo ${asset.fileName}`}
-            />
+            <div className="relative h-full w-full bg-[var(--color-player)]">
+              <video
+                src={asset.url}
+                preload="metadata"
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+                aria-label={`Vídeo ${asset.fileName}`}
+              />
+              <span
+                className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                aria-hidden
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white shadow-md ring-1 ring-white/25 backdrop-blur-sm">
+                  ▶
+                </span>
+              </span>
+            </div>
+          ) : audio ? (
+            <AudioWaveformPlaceholder />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-[var(--color-surface-muted)] text-sm text-[var(--color-muted-foreground)]">
               {asset.mimeType}
             </div>
           )}
         </PreviewViewport>
-        <div className="pointer-events-none absolute top-2 right-2 z-10 flex items-center gap-1">
+        <div className="pointer-events-none absolute top-2.5 right-2.5 z-10 flex items-center gap-1">
           <TypeBadge mimeType={asset.mimeType} />
           {asset.duplicateCount > 1 ? (
-            <span className="rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            <span className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
               ×{asset.duplicateCount}
             </span>
           ) : null}
@@ -349,7 +403,7 @@ export function MediaLibrary({
       </div>
 
       <FilterBar>
-        <div className="relative min-w-[200px] flex-1">
+        <div className="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[var(--color-muted-foreground)]" />
           <Input
             id="media-search"
@@ -363,7 +417,7 @@ export function MediaLibrary({
         <select
           id="media-usage"
           aria-label="Filtrar por utilização"
-          className="block h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+          className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm sm:w-auto sm:min-w-[10rem]"
           value={usageFilter}
           onChange={(e) =>
             setUsageFilter(e.target.value as MediaUsageFilter)
@@ -376,7 +430,7 @@ export function MediaLibrary({
         <select
           id="media-sort"
           aria-label="Ordenar media"
-          className="block h-9 min-w-[180px] rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm"
+          className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-sm sm:w-auto sm:min-w-[12rem]"
           value={sort}
           onChange={(e) => setSort(e.target.value as MediaSortMode)}
         >

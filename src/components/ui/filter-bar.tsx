@@ -12,7 +12,7 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-xl bg-[var(--color-card)] p-4 shadow-sm ring-1 ring-black/5 md:flex-row md:items-center",
+        "flex flex-col gap-3 rounded-xl bg-[var(--color-card)] p-3 shadow-sm ring-1 ring-black/5 sm:p-4 md:flex-row md:flex-wrap md:items-center",
         className,
       )}
     >

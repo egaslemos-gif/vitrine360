@@ -1,4 +1,5 @@
 import { AccessDenied } from "@/components/access-denied";
+import { PageHeader } from "@/components/ui/page-header";
 import { requireAdminPage } from "@/lib/admin-access";
 import { listDeviceGroups } from "@/services/device-groups";
 import { listDevicesWithPresence } from "@/services/devices";
@@ -16,18 +17,11 @@ export default async function DeviceGroupsPage() {
   ]);
 
   return (
-    <div className="space-y-8">
-      <header className="admin-page-header flex flex-col pb-4 pt-4">
-        <h1
-          className="text-3xl font-semibold text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Device Groups
-        </h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-          Agrupar ecrãs para atribuição de playlists em escala
-        </p>
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        title="Grupos"
+        description="Agrupar ecrãs para atribuição de playlists em escala"
+      />
       <DeviceGroupsManager
         groups={groups}
         devices={devices

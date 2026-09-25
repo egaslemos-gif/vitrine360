@@ -430,21 +430,21 @@ export function PlaylistBuilder({
 
   return (
     <div className="space-y-6">
-      <header className="admin-page-header flex items-center justify-between pb-4 pt-4">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/playlists" className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-[var(--color-border)] bg-transparent hover:bg-[var(--color-muted)] transition-colors">
+      <header className="admin-page-header flex flex-col gap-3 pb-4 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <Link href="/admin/playlists" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-transparent transition-colors hover:bg-[var(--color-muted)]">
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Editor de Playlist</h1>
+          <h1 className="min-w-0 text-xl font-bold tracking-tight sm:text-3xl">Editor de Playlist</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           {hasUnsavedChanges && (
-            <span className="text-sm text-amber-500 font-medium">
+            <span className="text-sm font-medium text-amber-500">
               Alterações não guardadas
             </span>
           )}
           {saveMessage?.type === "error" ? (
-            <span role="alert" className="text-sm font-medium text-destructive">
+            <span role="alert" className="text-sm font-medium break-words text-destructive">
               {saveMessage.text}
             </span>
           ) : null}
@@ -453,8 +453,8 @@ export function PlaylistBuilder({
             disabled={isSaving || !name.trim()}
             className={
               justSaved
-                ? "bg-green-600 text-white hover:bg-green-600"
-                : undefined
+                ? "w-full bg-[var(--color-success)] text-white hover:bg-[var(--color-success)] sm:w-auto"
+                : "w-full sm:w-auto"
             }
           >
             {isSaving ? (

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-label="Digital experiences">
+  <defs>
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#g2)"/>
+  <g opacity="0.9">
+    <rect x="120" y="100" width="220" height="140" rx="20" fill="#3b82f6"/>
+    <rect x="370" y="100" width="220" height="140" rx="20" fill="#6366f1"/>
+    <rect x="620" y="100" width="220" height="140" rx="20" fill="#8b5cf6"/>
+    <rect x="120" y="280" width="220" height="140" rx="20" fill="#06b6d4"/>
+    <rect x="370" y="280" width="220" height="140" rx="20" fill="#ec4899"/>
+    <rect x="620" y="280" width="220" height="140" rx="20" fill="#f59e0b"/>
+  </g>
+  <text x="480" y="500" text-anchor="middle" fill="rgba(255,255,255,0.92)" font-family="system-ui,sans-serif" font-size="28" font-weight="600">Digital Experiences</text>
+</svg>

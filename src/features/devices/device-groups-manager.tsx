@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2, Check, X, Info } from "lucide-react";
+import { Pencil, Trash2, X } from "lucide-react";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
 
@@ -206,50 +206,60 @@ export function DeviceGroupsManager({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-      {/* Esquerda: Master List (Grupos) */}
-      <Card className="shadow-sm ring-1 ring-black/5 border-0">
-        <CardHeader className="pb-3 border-b border-[var(--color-border)] bg-[var(--color-secondary)]/10">
+    <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-2 lg:items-start">
+      {/* Master list */}
+      <Card className="min-w-0 border-0 shadow-sm ring-1 ring-black/5">
+        <CardHeader className="border-b border-[var(--color-border)] bg-[var(--color-secondary)]/10 pb-3">
           <CardTitle>Grupos</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <form onSubmit={createGroup} className="flex gap-2">
+        <CardContent className="min-w-0 space-y-4 pt-4">
+          <form
+            onSubmit={createGroup}
+            className="flex min-w-0 flex-col gap-2 sm:flex-row"
+          >
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome do novo grupo..."
               required
               disabled={busy}
-              className="bg-[var(--color-secondary)]/30 h-9"
+              className="h-9 min-w-0 flex-1 bg-[var(--color-secondary)]/30"
             />
-            <Button type="submit" disabled={busy} className="h-9">
+            <Button
+              type="submit"
+              disabled={busy}
+              className="h-9 w-full shrink-0 sm:w-auto"
+            >
               Criar
             </Button>
           </form>
 
           {!hasGroups ? (
-            <div className="flex flex-col items-center justify-center p-6 text-center border rounded-lg border-dashed bg-white/40">
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-white/40 p-6 text-center">
               <p className="text-sm text-[var(--color-muted-foreground)]">
                 Crie o seu primeiro grupo.
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="flex max-h-[min(50vh,22rem)] flex-col gap-2 overflow-y-auto overscroll-contain pr-1 lg:max-h-[60vh]">
               {groups.map((g) => (
                 <button
                   key={g.id}
+                  type="button"
                   onClick={() => {
                     setSelectedGroup(g.id);
                     setFeedback(null);
                   }}
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm rounded-md transition-all text-left border ${
+                  className={`flex min-w-0 items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-left text-sm transition-all ${
                     g.id === activeGroupId
-                      ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium border-[var(--color-primary)]/20 shadow-sm"
-                      : "bg-white text-[var(--color-foreground)] border-transparent hover:border-[var(--color-border)] hover:bg-[var(--color-secondary)]/30"
+                      ? "border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 font-medium text-[var(--color-primary)] shadow-sm"
+                      : "border-transparent bg-white text-[var(--color-foreground)] hover:border-[var(--color-border)] hover:bg-[var(--color-secondary)]/30"
                   }`}
                 >
-                  <span className="truncate">{g.name}</span>
-                  <span className="text-xs opacity-70 flex-shrink-0 bg-white/50 px-2 py-0.5 rounded-full">{g.memberIds.length} ecrãs</span>
+                  <span className="min-w-0 truncate">{g.name}</span>
+                  <span className="shrink-0 rounded-full bg-white/50 px-2 py-0.5 text-xs opacity-70">
+                    {g.memberIds.length} ecrãs
+                  </span>
                 </button>
               ))}
             </div>
@@ -257,42 +267,65 @@ export function DeviceGroupsManager({
         </CardContent>
       </Card>
 
-      {/* Direita: Detalhes do Grupo (Detail) */}
-      <Card className="shadow-sm ring-1 ring-black/5 border-0 flex flex-col">
-        <CardHeader className="pb-3 border-b border-[var(--color-border)] bg-[var(--color-secondary)]/10 flex flex-row items-center justify-between">
-          <CardTitle className="truncate flex-1">
+      {/* Detail */}
+      <Card className="flex min-w-0 flex-col border-0 shadow-sm ring-1 ring-black/5">
+        <CardHeader className="flex flex-row items-start justify-between gap-2 border-b border-[var(--color-border)] bg-[var(--color-secondary)]/10 pb-3 sm:items-center">
+          <CardTitle className="min-w-0 flex-1 truncate text-base sm:text-lg">
             {!current ? "Nenhum grupo selecionado" : `Gerir: ${current.name}`}
           </CardTitle>
-          {current && (
-            <div className="flex gap-1 ml-2">
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-[var(--color-muted-foreground)] hover:text-foreground" onClick={() => { setEditNameValue(current.name); setEditDescValue(current.description || ""); setIsEditingGroup(true); }} disabled={busy}>
+          {current ? (
+            <div className="ml-auto flex shrink-0 gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-9 w-9 text-[var(--color-muted-foreground)] hover:text-foreground"
+                aria-label="Editar grupo"
+                onClick={() => {
+                  setEditNameValue(current.name);
+                  setEditDescValue(current.description || "");
+                  setIsEditingGroup(true);
+                }}
+                disabled={busy}
+              >
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-[var(--color-muted-foreground)] hover:text-red-600" onClick={deleteGroup} disabled={busy}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-9 w-9 text-[var(--color-muted-foreground)] hover:text-red-600"
+                aria-label="Apagar grupo"
+                onClick={deleteGroup}
+                disabled={busy}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-          )}
+          ) : null}
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="min-w-0 pt-4">
           {!current ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center border rounded-xl border-dashed bg-white/40">
-              <p className="text-[var(--color-muted-foreground)]">Selecione um grupo na lista à esquerda para gerir os seus ecrãs.</p>
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-white/40 p-8 text-center sm:p-12">
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                Selecione um grupo na lista para gerir os seus ecrãs.
+              </p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {current.description && (
-                <div className="bg-[var(--color-secondary)]/20 p-3 rounded-md border border-[var(--color-border)]">
-                  <p className="text-sm text-[var(--color-muted-foreground)] whitespace-pre-wrap">{current.description}</p>
+            <div className="min-w-0 space-y-6">
+              {current.description ? (
+                <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/20 p-3">
+                  <p className="break-words text-sm text-[var(--color-muted-foreground)] whitespace-pre-wrap">
+                    {current.description}
+                  </p>
                 </div>
-              )}
+              ) : null}
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <select
-                  className="h-9 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-2 text-sm disabled:opacity-50 outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  className="h-9 w-full min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-50 sm:min-w-[12rem]"
                   value={deviceId}
                   onChange={(e) => setDeviceId(e.target.value)}
                   disabled={busy || devices.length === 0}
+                  aria-label="Selecionar ecrã"
                 >
                   {devices.length === 0 ? (
                     <option value="">Sem devices disponíveis</option>
@@ -309,18 +342,19 @@ export function DeviceGroupsManager({
                   onClick={addMember}
                   disabled={!deviceId || busy}
                   variant="secondary"
-                  className="h-9"
+                  className="h-9 w-full shrink-0 sm:w-auto"
                 >
                   Adicionar ecrã
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <select
-                  className="h-9 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-2 text-sm disabled:opacity-50 outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  className="h-9 w-full min-w-0 flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/30 px-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-50 sm:min-w-[12rem]"
                   value={playlistId}
                   onChange={(e) => setPlaylistId(e.target.value)}
                   disabled={busy || playlists.length === 0}
+                  aria-label="Selecionar playlist"
                 >
                   {playlists.length === 0 ? (
                     <option value="">Sem playlists disponíveis</option>
@@ -336,20 +370,25 @@ export function DeviceGroupsManager({
                   type="button"
                   onClick={assignPlaylist}
                   disabled={!playlistId || busy}
-                  className="h-9"
+                  className="h-9 w-full shrink-0 sm:w-auto"
                 >
                   Atribuir playlist
                 </Button>
               </div>
 
               {feedback ? (
-                <p className="text-sm text-[var(--color-primary)] font-medium bg-[var(--color-primary)]/10 px-3 py-2 rounded-md" role="status">
+                <p
+                  className="rounded-md bg-[var(--color-primary)]/10 px-3 py-2 text-sm font-medium break-words text-[var(--color-primary)]"
+                  role="status"
+                >
                   {feedback}
                 </p>
               ) : null}
 
-              <div className="pt-4 border-t border-[var(--color-border)]">
-                <h3 className="text-sm font-semibold mb-3">Membros do Grupo ({current.memberIds.length})</h3>
+              <div className="border-t border-[var(--color-border)] pt-4">
+                <h3 className="mb-3 text-sm font-semibold">
+                  Membros do Grupo ({current.memberIds.length})
+                </h3>
                 {current.memberIds.length === 0 ? (
                   <p className="text-sm text-[var(--color-muted-foreground)]">
                     Este grupo não tem ecrãs associados.
@@ -361,16 +400,18 @@ export function DeviceGroupsManager({
                       return (
                         <li
                           key={id}
-                          className="flex items-center justify-between gap-2 rounded-md bg-[var(--color-secondary)]/10 px-3 py-2.5 border border-[var(--color-border)] hover:bg-[var(--color-secondary)]/30 transition-colors"
+                          className="flex min-w-0 flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-secondary)]/10 px-3 py-2.5 transition-colors hover:bg-[var(--color-secondary)]/30 sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <span className="truncate">{d?.label ?? id}</span>
+                          <span className="min-w-0 truncate">
+                            {d?.label ?? id}
+                          </span>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             disabled={busy}
                             onClick={() => removeMember(id)}
-                            className="h-7 px-2 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                            className="h-9 w-full px-2 text-xs text-red-500 hover:bg-red-50 hover:text-red-700 sm:h-7 sm:w-auto"
                           >
                             Remover
                           </Button>

@@ -123,8 +123,8 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
           </Link>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <div className="min-w-[180px] flex-1 space-y-1">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="min-w-0 w-full flex-1 space-y-1 sm:min-w-[12rem]">
               <Label htmlFor="content-search">Pesquisar</Label>
               <Input
                 id="content-search"
@@ -133,11 +133,11 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
                 placeholder="Título…"
               />
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <Label htmlFor="content-type-filter">Tipo</Label>
               <select
                 id="content-type-filter"
-                className="block h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm sm:w-auto sm:min-w-[9rem]"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
               >
@@ -149,11 +149,11 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <Label htmlFor="content-status-filter">Estado</Label>
               <select
                 id="content-status-filter"
-                className="block h-9 min-w-[140px] rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm sm:w-auto sm:min-w-[9rem]"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >

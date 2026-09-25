@@ -1,11 +1,7 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
+import { LandingPage } from "@/features/marketing/landing-page";
 
-export default function HomePage() {
-  redirect("/admin");
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <Link href="/admin">Admin Console</Link>
-    </main>
-  );
+export default async function HomePage() {
+  const session = await getSession();
+  return <LandingPage signedIn={Boolean(session)} />;
 }

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-label="Welcome scene">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a1f5c"/>
+      <stop offset="55%" stop-color="#6d4aff"/>
+      <stop offset="100%" stop-color="#8b6ff7"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#g1)"/>
+  <circle cx="720" cy="140" r="180" fill="url(#glow)"/>
+  <rect x="80" y="120" width="380" height="280" rx="28" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.28)"/>
+  <text x="110" y="210" fill="#fff" font-family="system-ui,sans-serif" font-size="42" font-weight="700">Vitrine360</text>
+  <text x="110" y="260" fill="rgba(255,255,255,0.85)" font-family="system-ui,sans-serif" font-size="22">Welcome to digital experiences</text>
+  <rect x="110" y="300" width="140" height="10" rx="5" fill="rgba(255,255,255,0.55)"/>
+  <rect x="110" y="324" width="220" height="8" rx="4" fill="rgba(255,255,255,0.28)"/>
+</svg>

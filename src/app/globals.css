@@ -1,52 +1,73 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: oklch(0.985 0.004 160);
-  --color-foreground: oklch(0.22 0.02 160);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.22 0.02 160);
-  /* Surface aliases (SSoT) */
+  /* UI/UX-02C — Soft Glass Media SaaS */
+  --color-background: #f6f3ff;
+  --color-background-secondary: #f1eefa;
+  --color-foreground: #18181b;
+  --color-card: #ffffff;
+  --color-card-foreground: #18181b;
   --color-surface: var(--color-card);
-  --color-surface-muted: var(--color-muted);
-  --color-primary: oklch(0.55 0.14 155);
-  --color-primary-foreground: oklch(0.99 0 0);
-  --color-primary-hover: oklch(0.48 0.13 155);
-  --color-secondary: oklch(0.96 0.01 160);
-  --color-secondary-foreground: oklch(0.28 0.04 160);
-  --color-muted: oklch(0.96 0.005 160);
-  --color-muted-foreground: oklch(0.48 0.02 160);
-  --color-accent: oklch(0.94 0.03 160);
-  --color-accent-foreground: oklch(0.28 0.05 160);
-  --color-destructive: oklch(0.55 0.2 25);
-  --color-border: oklch(0.9 0.01 160);
-  --color-input: oklch(0.9 0.01 160);
-  --color-ring: oklch(0.55 0.14 155);
-  --color-success: oklch(0.52 0.14 145);
-  --color-warning: oklch(0.72 0.14 75);
+  --color-surface-muted: #eee9ff;
+  --color-primary: #6d4aff;
+  --color-primary-foreground: #ffffff;
+  --color-primary-hover: #5136c9;
+  --color-primary-soft: #eee9ff;
+  --color-primary-light: #8b6ff7;
+  --color-secondary: #f1eefa;
+  --color-secondary-foreground: #3f3f46;
+  --color-muted: #f1eefa;
+  --color-muted-foreground: #666672;
+  --color-accent: #eee9ff;
+  --color-accent-foreground: #5136c9;
+  --color-destructive: #ef4444;
+  --color-border: #e8e4f0;
+  --color-input: #e8e4f0;
+  --color-ring: #6d4aff;
+  --color-success: #22a06b;
+  --color-warning: #f59e0b;
   --color-danger: var(--color-destructive);
-  --color-info: oklch(0.52 0.12 250);
-  --color-neutral: oklch(0.5 0.02 160);
-  /* Text aliases */
+  --color-info: #3b82f6;
+  --color-neutral: #666672;
   --color-text-primary: var(--color-foreground);
-  --color-text-secondary: oklch(0.38 0.02 160);
+  --color-text-secondary: #666672;
   --color-text-muted: var(--color-muted-foreground);
-  --color-type-image: oklch(0.55 0.14 250);
-  --color-type-video: oklch(0.52 0.18 300);
-  --color-type-gif: oklch(0.82 0.16 90);
-  --color-type-audio: oklch(0.55 0.2 25);
-  --color-type-clock: oklch(0.48 0.1 200);
-  --color-type-text: oklch(0.45 0.04 160);
-  --color-type-notice: oklch(0.58 0.16 55);
-  --color-type-event: oklch(0.5 0.14 280);
-  --color-type-qr: oklch(0.4 0.06 160);
-  --color-tab-active: oklch(0.32 0.06 250);
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --shadow-subtle: 0 1px 2px color-mix(in oklab, var(--color-foreground) 6%, transparent);
-  --shadow-elevated: 0 4px 14px color-mix(in oklab, var(--color-foreground) 10%, transparent);
-  --shadow-modal: 0 16px 40px color-mix(in oklab, var(--color-foreground) 18%, transparent);
+  /* Colorful media accents (badges / small accents only) */
+  --color-type-image: #3b82f6;
+  --color-type-video: #6366f1;
+  --color-type-gif: #ec4899;
+  --color-type-audio: #f59e0b;
+  --color-type-clock: #14b8a6;
+  --color-type-text: #71717a;
+  --color-type-notice: #f97316;
+  --color-type-event: #06b6d4;
+  --color-type-qr: #52525b;
+  --color-type-experience: #8b5cf6;
+  --color-tab-active: #6d4aff;
+  /* Dark immersive player + glass overlays */
+  --color-player: #111318;
+  --color-player-surface: #181b23;
+  --color-player-overlay: rgba(20, 20, 28, 0.58);
+  --color-player-glass: rgba(255, 255, 255, 0.12);
+  --color-player-border: rgba(255, 255, 255, 0.16);
+  --color-player-text: #ffffff;
+  --color-player-muted: rgba(255, 255, 255, 0.68);
+  --color-player-primary: #8b6ff7;
+  --color-player-success: #35c98b;
+  --color-preview-bg: var(--color-player);
+  --radius-sm: 0.625rem; /* 10 */
+  --radius-md: 0.875rem; /* 14 */
+  --radius-lg: 1.125rem; /* 18 */
+  --radius-xl: 1.5rem; /* 24 */
+  --radius-2xl: 1.75rem; /* 28 */
+  --shadow-subtle: 0 1px 2px rgba(24, 24, 27, 0.04),
+    0 1px 3px rgba(24, 24, 27, 0.03);
+  --shadow-elevated: 0 4px 16px rgba(24, 24, 27, 0.06),
+    0 1px 3px rgba(24, 24, 27, 0.04);
+  --shadow-modal: 0 18px 48px rgba(24, 24, 27, 0.12),
+    0 4px 12px rgba(24, 24, 27, 0.06);
+  --shadow-glass: 0 8px 32px rgba(81, 54, 201, 0.08),
+    0 2px 8px rgba(24, 24, 27, 0.04);
   /*
    * Spacing: keep numeric scale only. Named --spacing-sm/md/lg/xl/2xl collide with
    * Tailwind max-w-* (which falls back to spacing tokens) and collapse layouts to 8–48px.
@@ -54,19 +75,17 @@
   --spacing-3: 0.75rem; /* 12 */
   --spacing-5: 1.25rem; /* 20 */
   --spacing-10: 2.5rem; /* 40 */
-  /* Container scale for max-w-* (PageHeader, modals, empty states) */
-  --container-xs: 20rem; /* 320 */
-  --container-sm: 24rem; /* 384 */
-  --container-md: 28rem; /* 448 */
-  --container-lg: 32rem; /* 512 */
-  --container-xl: 36rem; /* 576 */
-  --container-2xl: 42rem; /* 672 */
-  --container-3xl: 48rem; /* 768 */
-  --container-4xl: 56rem; /* 896 */
-  --container-5xl: 64rem; /* 1024 */
-  --container-6xl: 72rem; /* 1152 */
-  --container-7xl: 80rem; /* 1280 */
-  --color-preview-bg: oklch(0.14 0.02 250);
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-xl: 36rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
 }
@@ -190,18 +209,25 @@ html.player-runtime .player-media {
   position: sticky;
   top: 0;
   z-index: 30;
-  margin-inline: -1rem;
-  padding-inline: 1rem;
-  background: color-mix(in oklab, white 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  margin-inline: -0.75rem;
+  padding-inline: 0.75rem;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid color-mix(in oklab, var(--color-border) 55%, transparent);
+}
+
+@media (min-width: 640px) {
+  .admin-page-header {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+  }
 }
 
 @media (min-width: 768px) {
   .admin-page-header {
-    margin-inline: -1.5rem;
-    padding-inline: 1.5rem;
+    margin-inline: -2rem;
+    padding-inline: 2rem;
   }
 }
 
@@ -269,8 +295,14 @@ html.player-runtime .player-media {
 
 .ui-meta-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .ui-meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -287,4 +319,213 @@ html.player-runtime .player-media {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* UI/UX-02C — dark console + purple accents (opt-in via html.dark) */
+html.dark {
+  color-scheme: dark;
+  --color-background: #0f1016;
+  --color-background-secondary: #161821;
+  --color-foreground: #f4f4f5;
+  --color-card: #181b23;
+  --color-card-foreground: #f4f4f5;
+  --color-surface: var(--color-card);
+  --color-surface-muted: #232733;
+  --color-primary: #8b6ff7;
+  --color-primary-foreground: #111318;
+  --color-primary-hover: #a78bfa;
+  --color-primary-soft: #2a2440;
+  --color-primary-light: #a78bfa;
+  --color-secondary: #232733;
+  --color-secondary-foreground: #e4e4e7;
+  --color-muted: #232733;
+  --color-muted-foreground: #a1a1aa;
+  --color-accent: #2a2440;
+  --color-accent-foreground: #c4b5fd;
+  --color-destructive: #f87171;
+  --color-border: #2e3340;
+  --color-input: #2e3340;
+  --color-ring: #8b6ff7;
+  --color-success: #35c98b;
+  --color-warning: #fbbf24;
+  --color-danger: var(--color-destructive);
+  --color-info: #60a5fa;
+  --color-text-primary: var(--color-foreground);
+  --color-text-secondary: #d4d4d8;
+  --color-text-muted: var(--color-muted-foreground);
+  --color-player: #0c0d12;
+  --color-player-surface: #151821;
+  --color-player-overlay: rgba(8, 8, 14, 0.62);
+  --color-player-glass: rgba(255, 255, 255, 0.1);
+  --color-player-border: rgba(255, 255, 255, 0.14);
+  --color-player-text: #ffffff;
+  --color-player-muted: rgba(255, 255, 255, 0.68);
+  --color-player-primary: #a78bfa;
+  --color-player-success: #35c98b;
+  --color-preview-bg: var(--color-player);
+}
+
+html.dark .admin-page-header {
+  background: color-mix(in oklab, var(--color-surface) 78%, transparent);
+}
+
+.ui-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ui-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+/* Immersive player chrome (console stays light) */
+.ui-player-surface {
+  background: var(--color-player-surface);
+  color: var(--color-player-text);
+}
+
+.ui-player-canvas {
+  background: var(--color-player);
+  color: var(--color-player-text);
+}
+
+/*
+ * Glass hierarchy (UI/UX-02C) — progressive enhancement.
+ * Core layout remains usable without backdrop-filter.
+ */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: var(--shadow-elevated);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-control {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: var(--shadow-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-overlay {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-player-controls {
+  background: var(--color-player-overlay);
+  border: 1px solid var(--color-player-border);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: var(--color-player-text);
+}
+
+html.dark .glass-panel,
+html.dark .glass-card,
+html.dark .glass-control,
+html.dark .glass-overlay {
+  background: rgba(24, 27, 35, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.ui-media-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-subtle);
+  overflow: hidden;
+  transition: box-shadow 160ms ease, transform 160ms ease,
+    border-color 160ms ease;
+}
+
+.ui-media-card:hover {
+  box-shadow: var(--shadow-elevated);
+  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-border));
+}
+
+.ui-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  transition: background-color 140ms ease, opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.ui-icon-btn:hover:not(:disabled) {
+  background: var(--color-player-glass);
+}
+
+.ui-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ui-icon-btn-primary {
+  background: var(--color-player-primary);
+  color: #fff;
+}
+
+.ui-icon-btn-primary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--color-player-primary) 88%, white);
+}
+
+.ui-player-timeline {
+  position: relative;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: visible;
+}
+
+.ui-player-timeline-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-player-primary);
+}
+
+.ui-player-timeline-thumb {
+  position: absolute;
+  top: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-player-primary) 45%, transparent);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel,
+  .glass-card,
+  .glass-control,
+  .glass-overlay {
+    background: var(--color-surface);
+  }
+  .glass-player-controls {
+    background: rgba(24, 27, 35, 0.92);
+  }
+}
+
 
