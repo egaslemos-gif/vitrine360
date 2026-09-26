@@ -57,7 +57,7 @@ const LABELS: Record<MediaTypeKind, string> = {
 const KIND_CLASS: Record<MediaTypeKind, string> = {
   IMAGE: "bg-[var(--color-type-image)] text-white",
   VIDEO: "bg-[var(--color-type-video)] text-white",
-  GIF: "bg-[var(--color-type-gif)] text-[var(--color-foreground)]",
+  GIF: "bg-[var(--color-type-gif)] text-white",
   AUDIO: "bg-[var(--color-type-audio)] text-white",
   PDF: "bg-[var(--color-neutral)] text-white",
   CLOCK: "bg-[var(--color-type-clock)] text-white",
@@ -66,8 +66,7 @@ const KIND_CLASS: Record<MediaTypeKind, string> = {
   EVENT: "bg-[var(--color-type-event)] text-white",
   NEWS: "bg-[var(--color-info)] text-white",
   QR_CODE: "bg-[var(--color-type-qr)] text-white",
-  EXPERIENCE:
-    "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]",
+  EXPERIENCE: "bg-[var(--color-type-experience)] text-white",
   OTHER: "bg-[var(--color-muted)] text-[var(--color-muted-foreground)]",
 };
 

@@ -7,11 +7,13 @@ import { useRouter } from "next/navigation";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { MonitorPlay, Search, X, Trash2, MapPin, LayoutGrid, List } from "lucide-react";
+import { MonitorPlay, Search, X, Trash2, MapPin } from "lucide-react";
 import { DeviceActions } from "@/features/devices/device-actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
+import { ViewSwitcher } from "@/components/ui/view-switcher";
+import { GridView, ListRow, ListView } from "@/components/ui/data-view";
 import { useIsClient } from "@/lib/use-is-client";
 import type { DeviceRuntimeObservability } from "@/domain/device-observability";
 import { deriveDeviceRuntimeObservability } from "@/domain/device-observability";
@@ -21,6 +23,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+function formatRelativeSeen(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "—";
+  const diff = Date.now() - t;
+  if (diff < 60_000) return "agora";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} h`;
+  return new Date(iso).toLocaleDateString("pt-PT", {
+    day: "2-digit",
+    month: "short",
+  });
+}
 
 type Device = {
   id: string;
@@ -297,38 +313,7 @@ export function DeviceListManager({
             <option value="UNASSIGNED">Sem Playlist</option>
           </select>
 
-          <div
-            className="ml-auto flex overflow-hidden rounded-md border border-[var(--color-border)]"
-            role="group"
-            aria-label="Modo de vista"
-          >
-            <button
-              type="button"
-              aria-pressed={viewMode === "grid"}
-              aria-label="Vista em grelha"
-              onClick={() => setViewMode("grid")}
-              className={
-                viewMode === "grid"
-                  ? "bg-[var(--color-tab-active)] p-2 text-white"
-                  : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-              }
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              aria-pressed={viewMode === "list"}
-              aria-label="Vista em lista"
-              onClick={() => setViewMode("list")}
-              className={
-                viewMode === "list"
-                  ? "bg-[var(--color-tab-active)] p-2 text-white"
-                  : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-              }
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
+          <ViewSwitcher value={viewMode} onChange={setViewMode} className="ml-auto" />
 
           {(search ||
             presenceFilter !== "ALL" ||
@@ -345,7 +330,7 @@ export function DeviceListManager({
                 setPlaylistFilter("ALL");
               }}
               title="Limpar todos os filtros"
-              className="flex h-9 items-center justify-center rounded-md border border-[var(--color-border)] px-3 text-sm text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]"
+              className="flex h-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 text-sm text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]"
             >
               <X className="mr-2 h-4 w-4" />
               Limpar
@@ -392,13 +377,10 @@ export function DeviceListManager({
             </Button>
           }
         />
-      ) : (
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-              : "flex flex-col gap-2"
-          }
+      ) : viewMode === "grid" ? (
+        <GridView
+          columns="devices"
+          className="grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
         >
           {filteredDevices.map((d) => {
             const live = liveMap[d.id];
@@ -412,23 +394,24 @@ export function DeviceListManager({
               deviceCode: d.deviceCode ?? "",
               location: d.location,
             };
+            const selected = selectedIds.has(d.id);
             return (
               <Card
                 key={d.id}
                 className={
-                  viewMode === "list"
-                    ? "border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none"
-                    : "border border-[var(--color-border)] bg-[var(--color-surface)] shadow-none transition-colors hover:border-[var(--color-primary)]/30"
+                  selected
+                    ? "border border-[var(--color-primary)]/35 bg-[var(--color-row-selected)] shadow-[var(--shadow-card)]"
+                    : "border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)] transition-colors hover:border-[var(--color-border-strong)]"
                 }
               >
                 <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pb-2 pt-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <input
                       type="checkbox"
-                      checked={selectedIds.has(d.id)}
+                      checked={selected}
                       onChange={() => toggleSelection(d.id)}
                       aria-label={`Seleccionar ${d.name ?? d.deviceCode ?? d.id}`}
-                      className="mt-1 h-4 w-4 cursor-pointer rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                      className="mt-1 h-4 w-4 cursor-pointer rounded border-[var(--color-border)] text-[var(--color-primary)] accent-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                     />
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-text-secondary)]">
                       <MonitorPlay className="h-4 w-4" aria-hidden />
@@ -495,7 +478,100 @@ export function DeviceListManager({
               </Card>
             );
           })}
-        </div>
+        </GridView>
+      ) : (
+        <ListView
+          header={
+            <>
+              <span className="w-4 shrink-0" aria-hidden />
+              <span className="min-w-0 flex-1">Ecrã</span>
+              <span className="w-24 shrink-0">Estado</span>
+              <span className="hidden w-28 shrink-0 lg:block">Tipo / Local</span>
+              <span className="hidden min-w-0 flex-1 md:block">Playlist</span>
+              <span className="hidden w-20 shrink-0 text-right xl:block">Visto</span>
+              <span className="w-10 shrink-0" aria-hidden />
+            </>
+          }
+        >
+          {filteredDevices.map((d) => {
+            const live = liveMap[d.id];
+            const presence = live?.presence ?? d.presence;
+            const playlistName =
+              playlists.find((p) => p.id === d.currentPlaylistId)?.name ??
+              "—";
+            const deviceData = {
+              id: d.id,
+              name: d.name ?? "",
+              deviceCode: d.deviceCode ?? "",
+              location: d.location,
+            };
+            const selected = selectedIds.has(d.id);
+            const lastSeen = live?.lastSeenAt ?? d.lastSeenAt;
+            return (
+              <ListRow key={d.id} selected={selected} className="gap-3">
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={() => toggleSelection(d.id)}
+                  aria-label={`Seleccionar ${d.name ?? d.deviceCode ?? d.id}`}
+                  className="h-4 w-4 shrink-0 cursor-pointer rounded border-[var(--color-border)] text-[var(--color-primary)] accent-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                />
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-text-secondary)]">
+                    <MonitorPlay className="h-4 w-4" aria-hidden />
+                  </div>
+                  <div className="min-w-0">
+                    <Link
+                      href={`/admin/devices/${d.id}`}
+                      className="block truncate text-sm font-semibold text-[var(--color-text-primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                    >
+                      {d.name ?? "Sem nome"}
+                    </Link>
+                    <p className="mt-0.5 truncate text-[12px] text-[var(--color-text-muted)] md:hidden">
+                      {d.displayType}
+                      {d.location ? ` · ${d.location}` : ""}
+                      {" · "}
+                      {playlistName}
+                    </p>
+                  </div>
+                </div>
+                <div className="w-24 shrink-0">
+                  <StatusBadge status={presence} />
+                </div>
+                <div className="hidden w-28 shrink-0 truncate text-[13px] text-[var(--color-text-secondary)] lg:block">
+                  {d.displayType}
+                  {d.location ? ` · ${d.location}` : ""}
+                </div>
+                <div className="hidden min-w-0 flex-1 truncate text-[13px] text-[var(--color-text-secondary)] md:block">
+                  {playlistName}
+                </div>
+                <div
+                  className="hidden w-20 shrink-0 text-right text-[12px] tabular-nums text-[var(--color-text-muted)] xl:block"
+                  title={
+                    lastSeen
+                      ? new Date(lastSeen).toLocaleString("pt-PT")
+                      : undefined
+                  }
+                >
+                  {formatRelativeSeen(lastSeen)}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Link
+                    href={`/admin/devices/${d.id}`}
+                    className="sr-only"
+                  >
+                    Ver detalhes
+                  </Link>
+                  <DeviceActions
+                    device={deviceData}
+                    playlists={playlists}
+                    currentPlaylistId={d.currentPlaylistId}
+                  />
+                </div>
+              </ListRow>
+            );
+          })}
+        </ListView>
       )}
 
       {/* Bulk Actions Bar */}

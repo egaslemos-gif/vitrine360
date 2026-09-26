@@ -5,8 +5,9 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { ListRow, ListView } from "@/components/ui/data-view";
 import { createPlaylistAction, duplicatePlaylistAction, deletePlaylistAction } from "@/app/admin/playlists/actions";
 import { MoreVertical, Edit, Copy, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -115,112 +116,130 @@ export function PlaylistManager({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card className="shadow-sm border-0">
-        <CardHeader className="pb-3 border-b bg-muted/10 flex flex-row justify-between items-center">
-          <CardTitle>Gestão de Playlists</CardTitle>
-          {selectedIds.size > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setMultiDelete(true)}
-            >
-              Remover Selecionados ({selectedIds.size})
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <form onSubmit={createPlaylist} className="flex gap-2 mb-6">
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nome da nova playlist..."
-              required
-              className="max-w-md"
-            />
-            <Button type="submit">
-              Criar Nova
-            </Button>
-          </form>
+    <div className="space-y-4">
+      <FilterBar>
+        <form onSubmit={createPlaylist} className="flex min-w-0 w-full flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nome da nova playlist..."
+            required
+            className="h-10 min-w-0 flex-1"
+            aria-label="Nome da nova playlist"
+          />
+          <Button type="submit" className="h-10 shrink-0">
+            Criar Nova
+          </Button>
+        </form>
+        {selectedIds.size > 0 ? (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-10"
+            onClick={() => setMultiDelete(true)}
+          >
+            Remover ({selectedIds.size})
+          </Button>
+        ) : null}
+      </FilterBar>
 
-          {playlists.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center border rounded-lg border-dashed bg-muted/10">
-              <p className="text-muted-foreground">Nenhuma playlist encontrada. Crie a sua primeira playlist acima.</p>
-            </div>
-          ) : (
-            <div className="border rounded-md divide-y">
-              <div className="flex items-center gap-4 px-4 py-3 bg-muted/30 font-medium text-sm text-muted-foreground">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300"
-                  checked={selectedIds.size === playlists.filter((p) => !p.inUse).length && playlists.length > 0}
-                  onChange={toggleSelectAll}
-                />
-                <div className="flex-1">Nome</div>
-                <div className="w-24 text-center">Versão</div>
-                <div className="w-32 text-center">Estado</div>
-                <div className="w-12"></div>
+      {playlists.length === 0 ? (
+        <div className="ui-list-shell flex flex-col items-center justify-center px-6 py-12 text-center">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            Nenhuma playlist encontrada. Crie a sua primeira playlist acima.
+          </p>
+        </div>
+      ) : (
+        <ListView>
+          <div className="ui-list-header !flex">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
+              aria-label="Selecionar todas"
+              checked={
+                selectedIds.size === playlists.filter((p) => !p.inUse).length &&
+                playlists.length > 0
+              }
+              onChange={toggleSelectAll}
+            />
+            <span className="min-w-0 flex-1">Nome</span>
+            <span className="w-20 shrink-0 text-center">Versão</span>
+            <span className="w-28 shrink-0 text-center">Estado</span>
+            <span className="w-10 shrink-0" aria-hidden />
+          </div>
+          {playlists.map((p) => (
+            <ListRow key={p.id} selected={selectedIds.has(p.id)}>
+              <input
+                type="checkbox"
+                className="h-4 w-4 shrink-0 rounded border-[var(--color-border)] accent-[var(--color-primary)] disabled:opacity-40"
+                checked={selectedIds.has(p.id)}
+                onChange={() => toggleSelection(p.id)}
+                disabled={p.inUse}
+                title={p.inUse ? "Em uso" : undefined}
+                aria-label={`Seleccionar ${p.name}`}
+              />
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={`/admin/playlists/${p.id}`}
+                  className="truncate text-sm font-semibold text-[var(--color-text-primary)] hover:underline"
+                >
+                  {p.name}
+                </Link>
               </div>
-              {playlists.map((p) => (
-                <div key={p.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/10 transition-colors">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 disabled:opacity-40"
-                    checked={selectedIds.has(p.id)}
-                    onChange={() => toggleSelection(p.id)}
-                    disabled={p.inUse}
-                    title={p.inUse ? "Em uso" : undefined}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/admin/playlists/${p.id}`} className="font-medium hover:underline">
-                      {p.name}
-                    </Link>
-                  </div>
-                  <div className="w-24 text-center text-sm text-muted-foreground">
-                    v{p.version}
-                  </div>
-                  <div className="w-32 text-center">
-                    {p.inUse ? (
-                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                        Em Uso
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                        Disponível
-                      </span>
-                    )}
-                  </div>
-                  <div className="w-12 flex justify-end">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/admin/playlists/${p.id}`} className="flex items-center cursor-pointer">
-                            <Edit className="h-4 w-4 mr-2" /> Editar
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(p.id)} className="cursor-pointer">
-                          <Copy className="h-4 w-4 mr-2" /> Duplicar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => setShowDeleteModal(p.id)} 
-                          className="cursor-pointer text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Apagar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              <div className="w-20 shrink-0 text-center text-[13px] text-[var(--color-text-secondary)]">
+                v{p.version}
+              </div>
+              <div className="w-28 shrink-0 text-center">
+                {p.inUse ? (
+                  <span className="inline-flex items-center rounded-full bg-[color-mix(in_oklab,var(--color-info)_12%,white)] px-2 py-1 text-xs font-medium text-[var(--color-info)] ring-1 ring-inset ring-[color-mix(in_oklab,var(--color-info)_25%,transparent)]">
+                    Em Uso
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-[color-mix(in_oklab,var(--color-success)_12%,white)] px-2 py-1 text-xs font-medium text-[var(--color-success)] ring-1 ring-inset ring-[color-mix(in_oklab,var(--color-success)_25%,transparent)]">
+                    Disponível
+                  </span>
+                )}
+              </div>
+              <div className="flex w-10 shrink-0 justify-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      aria-label={`Ações de ${p.name}`}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={`/admin/playlists/${p.id}`}
+                        className="flex cursor-pointer items-center"
+                      >
+                        <Edit className="mr-2 h-4 w-4" /> Editar
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleDuplicate(p.id)}
+                      className="cursor-pointer"
+                    >
+                      <Copy className="mr-2 h-4 w-4" /> Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setShowDeleteModal(p.id)}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Apagar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </ListRow>
+          ))}
+        </ListView>
+      )}
 
       {/* Modal de Eliminação Singular */}
       {showDeleteModal && createPortal(

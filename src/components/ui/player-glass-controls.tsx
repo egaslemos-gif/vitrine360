@@ -62,13 +62,13 @@ export function PlayerGlassControlBar({
   return (
     <div
       className={cn(
-        "glass-player-controls w-full max-w-xl rounded-full px-3 py-2 sm:px-4 sm:py-2.5",
+        "glass-player-controls w-full max-w-md px-2.5 py-1.5 sm:max-w-lg sm:px-3 sm:py-2",
         className,
       )}
       role="group"
       aria-label="Comandos de reprodução (indisponíveis)"
     >
-      <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
+      <div className="flex flex-nowrap items-center justify-center gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {CONTROLS.map(({ key, label, icon: Icon, primary }) => (
           <button
             key={key}
@@ -76,20 +76,15 @@ export function PlayerGlassControlBar({
             disabled
             aria-label={`${label} — Coming soon`}
             title="Coming soon — remote commands not implemented"
-            className={cn(
-              "ui-icon-btn",
-              primary && "ui-icon-btn-primary",
-              !primary && "min-h-10 min-w-10 sm:min-h-11 sm:min-w-11",
-              primary && "min-h-11 min-w-11 sm:min-h-12 sm:min-w-12",
-            )}
+            className={cn("ui-icon-btn", primary && "ui-icon-btn-primary")}
           >
-            <Icon className={primary ? "h-5 w-5" : "h-4 w-4"} aria-hidden />
+            <Icon className={primary ? "h-4 w-4" : "h-3.5 w-3.5"} aria-hidden />
           </button>
         ))}
       </div>
 
-      <div className="mt-2.5 flex items-center gap-3 px-1">
-        <span className="ui-mono shrink-0 text-[10px] text-[var(--color-player-muted)]">
+      <div className="mt-1.5 flex items-center gap-2 px-0.5">
+        <span className="ui-mono shrink-0 text-[10px] tabular-nums text-[var(--color-player-muted)]">
           {currentLabel}
         </span>
         <div
@@ -107,7 +102,7 @@ export function PlayerGlassControlBar({
             aria-hidden
           />
         </div>
-        <span className="ui-mono shrink-0 text-[10px] text-[var(--color-player-muted)]">
+        <span className="ui-mono shrink-0 text-[10px] tabular-nums text-[var(--color-player-muted)]">
           {durationLabel}
         </span>
       </div>

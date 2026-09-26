@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Horizontal filter / search toolbar for list pages. */
+/** Horizontal filter / search toolbar for list pages — white surface, not glass. */
 export function FilterBar({
   children,
   className,
@@ -12,7 +12,7 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-xl bg-[var(--color-card)] p-3 shadow-sm ring-1 ring-black/5 sm:p-4 md:flex-row md:flex-wrap md:items-center",
+        "ui-toolbar flex flex-col gap-3 p-3 sm:p-3.5 md:flex-row md:flex-wrap md:items-center",
         className,
       )}
     >

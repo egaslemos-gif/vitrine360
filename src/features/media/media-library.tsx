@@ -13,7 +13,9 @@ import { TypeBadge } from "@/components/ui/type-badge";
 import { PreviewViewport } from "@/components/ui/preview-viewport";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
-import { ImageIcon, LayoutGrid, List, Search } from "lucide-react";
+import { ImageIcon, Search } from "lucide-react";
+import { ViewSwitcher } from "@/components/ui/view-switcher";
+import { GridView, ListRow, ListView } from "@/components/ui/data-view";
 import {
   countMediaByType,
   filterMediaAssets,
@@ -200,7 +202,7 @@ function AssetCard({
 
   return (
     <Card
-      className="ui-media-card border-0 shadow-none ring-1 ring-[var(--color-border)] transition-[box-shadow,transform,border-color] hover:ring-[var(--color-primary)]/30"
+      className="ui-media-card border-0 shadow-none ring-1 ring-[var(--color-border)] transition-[box-shadow,transform,border-color] hover:ring-[var(--color-border-strong)]"
       style={{ borderTop: `3px solid ${accent}` }}
     >
       <div className="relative">
@@ -281,6 +283,136 @@ function AssetCard({
   );
 }
 
+/** Compact list row — not a reused grid card. */
+function AssetRow({
+  asset,
+  canDelete,
+  onRequestDelete,
+}: {
+  asset: DisplayItem;
+  canDelete: boolean;
+  onRequestDelete: (asset: DisplayItem) => void;
+}) {
+  const gif = isGifMime(asset.mimeType);
+  const image = isImageMime(asset.mimeType);
+  const video = isVideoMime(asset.mimeType);
+  const audio = isAudioMime(asset.mimeType);
+  const usage = asset.usageCount ?? 0;
+  const inUse = usage > 0;
+
+  return (
+    <ListRow className="gap-3 sm:gap-4">
+      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-surface-muted)] ring-1 ring-[var(--color-border)]">
+        {image || gif ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={asset.url}
+            alt=""
+            className="h-full w-full object-cover"
+            draggable={false}
+          />
+        ) : video ? (
+          <div className="relative h-full w-full bg-[var(--color-player)]">
+            <video
+              src={asset.url}
+              preload="metadata"
+              muted
+              playsInline
+              className="h-full w-full object-cover"
+              aria-hidden
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white">
+              ▶
+            </span>
+          </div>
+        ) : audio ? (
+          <div className="flex h-full w-full items-center justify-center bg-[color-mix(in_oklab,var(--color-type-audio)_18%,white)] text-xs font-semibold text-[var(--color-type-audio)]">
+            ♪
+          </div>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[10px] text-[var(--color-text-muted)]">
+            FILE
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]" title={asset.fileName}>
+          {asset.fileName}
+        </p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-[var(--color-text-muted)] sm:hidden">
+          <TypeBadge mimeType={asset.mimeType} />
+          <span>{formatSize(asset.fileSize)}</span>
+          <span>{formatDate(asset.createdAt)}</span>
+        </p>
+      </div>
+
+      <div className="hidden w-24 shrink-0 md:block">
+        <TypeBadge mimeType={asset.mimeType} />
+      </div>
+      <div className="hidden w-20 shrink-0 text-[13px] tabular-nums text-[var(--color-text-secondary)] sm:block">
+        {formatSize(asset.fileSize)}
+      </div>
+      <div className="hidden w-24 shrink-0 text-[13px] text-[var(--color-text-secondary)] md:block">
+        {formatDate(asset.createdAt)}
+      </div>
+      <div className="hidden w-24 shrink-0 text-[13px] text-[var(--color-text-secondary)] lg:block">
+        {usage > 0 ? `${usage} uso${usage === 1 ? "" : "s"}` : "—"}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1">
+        <Link href={`/admin/contents/new?mediaAssetId=${asset.id}`}>
+          <Button variant="outline" size="sm" type="button" className="h-8">
+            Usar
+          </Button>
+        </Link>
+        {canDelete && !inUse ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            aria-label={`Eliminar ${asset.fileName}`}
+            title="Eliminar"
+            className="h-8 text-[var(--color-destructive)]"
+            onClick={() => onRequestDelete(asset)}
+          >
+            Eliminar
+          </Button>
+        ) : null}
+        {asset.duplicateCount > 1 ? (
+          <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-text-secondary)]">
+            ×{asset.duplicateCount}
+          </span>
+        ) : null}
+      </div>
+    </ListRow>
+  );
+}
+
+function mediaGroupLabel(mime: string): string {
+  if (isGifMime(mime)) return "GIFs";
+  if (isImageMime(mime)) return "Imagens";
+  if (isVideoMime(mime)) return "Vídeos";
+  if (isAudioMime(mime)) return "Áudio";
+  return "Outros";
+}
+
+const MEDIA_GROUP_ORDER = ["Imagens", "Vídeos", "GIFs", "Áudio", "Outros"];
+
+function groupMediaByType(items: DisplayItem[]): { label: string; items: DisplayItem[] }[] {
+  const buckets = new Map<string, DisplayItem[]>();
+  for (const item of items) {
+    const label = mediaGroupLabel(item.mimeType);
+    const list = buckets.get(label);
+    if (list) list.push(item);
+    else buckets.set(label, [item]);
+  }
+  return MEDIA_GROUP_ORDER.filter((label) => buckets.has(label)).map((label) => ({
+    label,
+    items: buckets.get(label)!,
+  }));
+}
+
 const TYPE_TABS: { id: MediaTypeFilter; label: string }[] = [
   { id: "all", label: "Todos" },
   { id: "image", label: "Imagens" },
@@ -328,6 +460,10 @@ export function MediaLibrary({
 
   const hiddenDupes = filteredCount - collapsedCount;
   const totalDupes = assets.length - collapseDuplicates(assets, false).length;
+  const mediaGroups = useMemo(
+    () => groupMediaByType(displayItems),
+    [displayItems],
+  );
 
   async function handleDeduplicate() {
     setIsDeduplicating(true);
@@ -376,7 +512,7 @@ export function MediaLibrary({
   return (
     <div className="space-y-6">
       <div
-        className="flex flex-wrap items-center gap-2"
+        className="-mx-1 flex flex-wrap items-center gap-2 overflow-x-auto px-1 pb-1"
         role="tablist"
         aria-label="Organizar por tipo de ficheiro"
       >
@@ -392,8 +528,8 @@ export function MediaLibrary({
               onClick={() => setTypeFilter(tab.id)}
               className={
                 active
-                  ? "rounded-lg bg-[var(--color-tab-active)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm"
-                  : "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3.5 py-2 text-sm font-medium text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+                  ? "shrink-0 rounded-lg bg-[var(--color-tab-active)] px-3 py-2 text-sm font-semibold text-white shadow-sm"
+                  : "shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm font-medium text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
               }
             >
               {tab.label} ({count})
@@ -438,43 +574,13 @@ export function MediaLibrary({
           <option value="name">Ordenar por: Nome A–Z</option>
           <option value="size">Ordenar por: Tamanho</option>
         </select>
-        <div
-          className="flex overflow-hidden rounded-md border border-[var(--color-border)]"
-          role="group"
-          aria-label="Modo de vista"
-        >
-          <button
-            type="button"
-            aria-pressed={viewMode === "grid"}
-            aria-label="Vista em grelha"
-            onClick={() => setViewMode("grid")}
-            className={
-              viewMode === "grid"
-                ? "bg-[var(--color-tab-active)] p-2 text-white"
-                : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-            }
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            aria-pressed={viewMode === "list"}
-            aria-label="Vista em lista"
-            onClick={() => setViewMode("list")}
-            className={
-              viewMode === "list"
-                ? "bg-[var(--color-tab-active)] p-2 text-white"
-                : "bg-[var(--color-card)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-            }
-          >
-            <List className="h-4 w-4" />
-          </button>
-        </div>
+        <ViewSwitcher value={viewMode} onChange={setViewMode} />
         <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="h-10"
             onClick={() => setShowDuplicates((v) => !v)}
           >
             {showDuplicates ? "Ocultar duplicados" : "Mostrar duplicados"}
@@ -484,6 +590,7 @@ export function MediaLibrary({
               type="button"
               variant="destructive"
               size="sm"
+              className="h-10"
               onClick={() => setShowDedupeModal(true)}
               disabled={isDeduplicating}
               aria-label={`Remover ${totalDupes} duplicados`}
@@ -532,20 +639,57 @@ export function MediaLibrary({
           }
         />
       ) : (
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              : "flex flex-col gap-3"
-          }
-        >
-          {displayItems.map((a) => (
-            <AssetCard
-              key={a.id}
-              asset={a}
-              canDelete={canDelete}
-              onRequestDelete={setDeleteTarget}
-            />
+        <div className="space-y-6">
+          {mediaGroups.map((group) => (
+            <section key={group.label} aria-labelledby={`media-group-${group.label}`}>
+              <div className="mb-2 flex items-center gap-2 px-0.5">
+                <h2
+                  id={`media-group-${group.label}`}
+                  className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]"
+                >
+                  {group.label}
+                </h2>
+                <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                  {group.items.length}
+                </span>
+              </div>
+
+              {viewMode === "grid" ? (
+                <GridView columns="media">
+                  {group.items.map((a) => (
+                    <AssetCard
+                      key={a.id}
+                      asset={a}
+                      canDelete={canDelete}
+                      onRequestDelete={setDeleteTarget}
+                    />
+                  ))}
+                </GridView>
+              ) : (
+                <ListView
+                  header={
+                    <>
+                      <span className="w-16 shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1">Nome</span>
+                      <span className="hidden w-24 shrink-0 sm:block">Tipo</span>
+                      <span className="hidden w-20 shrink-0 sm:block">Tamanho</span>
+                      <span className="hidden w-24 shrink-0 md:block">Atualizado</span>
+                      <span className="hidden w-24 shrink-0 lg:block">Uso</span>
+                      <span className="w-[7.5rem] shrink-0 text-right">Ações</span>
+                    </>
+                  }
+                >
+                  {group.items.map((a) => (
+                    <AssetRow
+                      key={a.id}
+                      asset={a}
+                      canDelete={canDelete}
+                      onRequestDelete={setDeleteTarget}
+                    />
+                  ))}
+                </ListView>
+              )}
+            </section>
           ))}
         </div>
       )}

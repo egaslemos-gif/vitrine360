@@ -127,10 +127,10 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             aria-hidden
             style={{
               background:
-                "radial-gradient(ellipse 85% 65% at 78% 12%, color-mix(in oklab, var(--color-primary) 22%, transparent), transparent 58%), radial-gradient(ellipse 50% 40% at 10% 80%, color-mix(in oklab, var(--color-primary-soft) 80%, transparent), transparent 60%), linear-gradient(180deg, var(--color-background), #f0eff8)",
+                "radial-gradient(ellipse 90% 70% at 82% 8%, rgba(147,197,253,0.55), transparent 58%), radial-gradient(ellipse 55% 45% at 8% 88%, rgba(196,181,253,0.5), transparent 60%), linear-gradient(160deg, #eef4ff 0%, #f4f0ff 48%, #faf8ff 100%)",
             }}
           />
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-12 lg:pb-20 lg:pt-16">
+          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-12 lg:pb-20 lg:pt-16">
             <div className="max-w-xl">
               <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                 Digital Display & Presentation
@@ -232,17 +232,23 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                 Runtime foundations already exist.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3" aria-hidden>
-              {["Touchscreen", "Interactive Content", "Experience Runtime"].map(
-                (label) => (
-                  <div
-                    key={label}
-                    className="glass-card rounded-[var(--radius-xl)] px-4 py-6 text-center"
-                  >
-                    <p className="text-sm font-semibold">{label}</p>
-                  </div>
-                ),
-              )}
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Touchscreen", hint: "Tap" },
+                { label: "Interactive Content", hint: "Swipe" },
+                { label: "Experience Runtime", hint: "Select" },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  className="glass-card rounded-[var(--radius-xl)] px-4 py-6 text-center transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/45 active:translate-y-0 active:ring-2 active:ring-[var(--color-primary)]/35"
+                >
+                  <p className="text-sm font-semibold">{item.label}</p>
+                  <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+                    {item.hint}
+                  </p>
+                </button>
+              ))}
             </div>
           </div>
         </section>

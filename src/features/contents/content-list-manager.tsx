@@ -4,11 +4,14 @@ import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { GridView, ListRow, ListView } from "@/components/ui/data-view";
+import { ViewSwitcher, type DataViewMode } from "@/components/ui/view-switcher";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Copy, Trash2 } from "lucide-react";
 import { ModalOverlay, ModalPanel } from "@/components/ui/modal-shell";
 import { useIsClient } from "@/lib/use-is-client";
@@ -42,12 +45,108 @@ function formatDate(iso?: string) {
   });
 }
 
+function formatDuration(ms: number, type: string) {
+  if (type === "VIDEO" && ms === 0) return "natural";
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(ms % 1000 === 0 ? 0 : 1)}s`;
+}
+
+function contentTypeLabel(c: Content): string {
+  if (
+    c.type === "IMAGE" &&
+    c.primaryMimeType &&
+    isGifMime(c.primaryMimeType)
+  ) {
+    return "GIF";
+  }
+  return c.type;
+}
+
+function groupContentsByType(items: Content[]): { type: string; items: Content[] }[] {
+  const buckets = new Map<string, Content[]>();
+  for (const c of items) {
+    const key = contentTypeLabel(c);
+    const list = buckets.get(key);
+    if (list) list.push(c);
+    else buckets.set(key, [c]);
+  }
+
+  const order = [...CONTENT_TYPES, "GIF"];
+  const ranked = [...buckets.entries()].sort(([a], [b]) => {
+    const ia = order.indexOf(a as (typeof order)[number]);
+    const ib = order.indexOf(b as (typeof order)[number]);
+    const ra = ia === -1 ? 999 : ia;
+    const rb = ib === -1 ? 999 : ib;
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  });
+
+  return ranked.map(([type, groupItems]) => ({ type, items: groupItems }));
+}
+
+function ContentActions({
+  content,
+  busy,
+  onToggleStatus,
+  onDuplicate,
+  onDelete,
+}: {
+  content: Content;
+  busy: boolean;
+  onToggleStatus: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-8 px-2.5 text-xs"
+        onClick={onToggleStatus}
+      >
+        {content.status === "ACTIVE" ? "Desactivar" : "Activar"}
+      </Button>
+      <Link href={`/admin/contents/${content.id}`}>
+        <Button type="button" size="sm" variant="outline" className="h-8 px-2.5 text-xs">
+          Abrir
+        </Button>
+      </Link>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-8 w-8 px-0"
+        aria-label={`Duplicar ${content.title}`}
+        disabled={busy}
+        onClick={onDuplicate}
+      >
+        <Copy className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="destructive"
+        className="h-8 w-8 px-0"
+        disabled={!!content.inUse || busy}
+        title={content.inUse ? "Não é possível remover: em uso" : "Eliminar"}
+        aria-label={`Eliminar ${content.title}`}
+        onClick={onDelete}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
 export function ContentListManager({ contents }: { contents: Content[] }) {
   const router = useRouter();
   const mounted = useIsClient();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<DataViewMode>("list");
   const [deleteItem, setDeleteItem] = useState<Content | null>(null);
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -61,6 +160,8 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
       return true;
     });
   }, [contents, query, typeFilter, statusFilter]);
+
+  const groups = useMemo(() => groupContentsByType(filtered), [filtered]);
 
   async function handleDelete() {
     if (!deleteItem) return;
@@ -114,199 +215,238 @@ export function ContentListManager({ contents }: { contents: Content[] }) {
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <CardTitle>Biblioteca de conteúdos</CardTitle>
-          <Link href="/admin/contents/new">
-            <Button type="button">Novo conteúdo</Button>
-          </Link>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <div className="min-w-0 w-full flex-1 space-y-1 sm:min-w-[12rem]">
-              <Label htmlFor="content-search">Pesquisar</Label>
-              <Input
-                id="content-search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Título…"
-              />
-            </div>
-            <div className="min-w-0 space-y-1">
-              <Label htmlFor="content-type-filter">Tipo</Label>
-              <select
-                id="content-type-filter"
-                className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm sm:w-auto sm:min-w-[9rem]"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-              >
-                <option value="all">Todos</option>
-                {CONTENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="min-w-0 space-y-1">
-              <Label htmlFor="content-status-filter">Estado</Label>
-              <select
-                id="content-status-filter"
-                className="block h-9 w-full min-w-0 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm sm:w-auto sm:min-w-[9rem]"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Todos</option>
-                {CONTENT_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="divide-y divide-[var(--color-border)]">
-            {filtered.map((c) => (
-              <div
-                key={c.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/admin/contents/${c.id}`}
-                      className="ui-card-title hover:underline"
-                    >
-                      {c.title}
-                    </Link>
-                    <TypeBadge
-                      contentType={
-                        c.type === "IMAGE" &&
-                        c.primaryMimeType &&
-                        isGifMime(c.primaryMimeType)
-                          ? "GIF"
-                          : c.type
-                      }
-                    />
-                    {c.inUse ? (
-                      <Badge variant="muted" className="text-[10px]">
-                        EM USO
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <p className="ui-caption mt-0.5">
-                    {c.type === "VIDEO" && c.durationMs === 0
-                      ? "duração natural"
-                      : `${c.durationMs}ms`}
-                    {" · uso "}
-                    {c.usageCount ?? 0}
-                    {" · "}
-                    {formatDate(c.updatedAt)}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={c.status} />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => toggleStatus(c)}
-                  >
-                    {c.status === "ACTIVE" ? "Desactivar" : "Activar"}
-                  </Button>
-                  <Link href={`/admin/contents/${c.id}`}>
-                    <Button type="button" size="sm" variant="outline">
-                      Abrir
-                    </Button>
-                  </Link>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    aria-label={`Duplicar ${c.title}`}
-                    disabled={busy}
-                    onClick={() => handleDuplicate(c.id)}
-                  >
-                    <Copy className="mr-1 h-3.5 w-3.5" />
-                    Duplicar
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    disabled={!!c.inUse || busy}
-                    title={
-                      c.inUse
-                        ? "Não é possível remover: em uso"
-                        : "Eliminar"
-                    }
-                    onClick={() => setDeleteItem(c)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {filtered.length === 0 ? (
-              <p className="py-4 text-sm text-[var(--color-muted-foreground)]">
-                Nenhum conteúdo para os filtros actuais.
-              </p>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
-
-      {mounted && deleteItem && createPortal(
-        <ModalOverlay
-          onClose={() => {
-            if (!busy) {
-              setDeleteItem(null);
-              setErrorMsg(null);
-            }
-          }}
+    <div className="space-y-4">
+      <FilterBar>
+        <div className="min-w-0 w-full flex-1 space-y-1 sm:min-w-[12rem]">
+          <Label htmlFor="content-search" className="sr-only">
+            Pesquisar
+          </Label>
+          <Input
+            id="content-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Pesquisar título…"
+            className="h-10"
+            aria-label="Pesquisar conteúdos"
+          />
+        </div>
+        <select
+          id="content-type-filter"
+          aria-label="Filtrar por tipo"
+          className="block h-10 w-full min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-sm sm:w-auto sm:min-w-[9rem]"
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
         >
-          <ModalPanel
-            size="md"
-            onClick={(e) => e.stopPropagation()}
-            className="text-center"
-          >
-            <h2 className="mb-2 text-xl font-bold">Remover conteúdo?</h2>
-            <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
-              Deseja remover <strong>{deleteItem.title}</strong>? O MediaAsset
-              associado não será eliminado.
-            </p>
-            {errorMsg ? (
-              <p className="mb-4 text-sm text-[var(--color-destructive)]" role="alert">
-                {errorMsg}
-              </p>
-            ) : null}
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setDeleteItem(null);
-                  setErrorMsg(null);
-                }}
-                disabled={busy}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={busy}
-              >
-                {busy ? "A remover…" : "Eliminar"}
-              </Button>
-            </div>
-          </ModalPanel>
-        </ModalOverlay>,
-        document.body,
+          <option value="all">Tipo: Todos</option>
+          {CONTENT_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <select
+          id="content-status-filter"
+          aria-label="Filtrar por estado"
+          className="block h-10 w-full min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-sm sm:w-auto sm:min-w-[9rem]"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">Estado: Todos</option>
+          {CONTENT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <ViewSwitcher value={viewMode} onChange={setViewMode} className="w-full sm:w-auto" />
+        <Link href="/admin/contents/new" className="w-full sm:ml-auto sm:w-auto">
+          <Button type="button" className="h-10 w-full sm:w-auto">
+            Novo conteúdo
+          </Button>
+        </Link>
+      </FilterBar>
+
+      {filtered.length === 0 ? (
+        <p className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-10 text-center text-sm text-[var(--color-muted-foreground)]">
+          Nenhum conteúdo para os filtros actuais.
+        </p>
+      ) : (
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <section key={group.type} aria-labelledby={`content-group-${group.type}`}>
+              <div className="mb-2 flex items-center gap-2 px-0.5">
+                <h2
+                  id={`content-group-${group.type}`}
+                  className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]"
+                >
+                  {group.type}
+                </h2>
+                <span className="rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                  {group.items.length}
+                </span>
+              </div>
+
+              {viewMode === "grid" ? (
+                <GridView columns="default">
+                  {group.items.map((c) => (
+                    <Card
+                      key={c.id}
+                      className="ui-media-card border-0 shadow-none ring-1 ring-[var(--color-border)]"
+                    >
+                      <CardHeader className="space-y-2 px-3 pb-2 pt-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <TypeBadge contentType={contentTypeLabel(c)} />
+                          <StatusBadge status={c.status} />
+                          {c.inUse ? (
+                            <Badge variant="muted" className="text-[10px]">
+                              EM USO
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <CardTitle className="ui-card-title line-clamp-2" title={c.title}>
+                          <Link
+                            href={`/admin/contents/${c.id}`}
+                            className="hover:underline"
+                          >
+                            {c.title}
+                          </Link>
+                        </CardTitle>
+                        <p className="ui-caption">
+                          {formatDuration(c.durationMs, c.type)} · {formatDate(c.updatedAt)}
+                        </p>
+                      </CardHeader>
+                      <CardFooter className="border-t border-[var(--color-border)] px-3 py-2.5">
+                        <ContentActions
+                          content={c}
+                          busy={busy}
+                          onToggleStatus={() => toggleStatus(c)}
+                          onDuplicate={() => handleDuplicate(c.id)}
+                          onDelete={() => setDeleteItem(c)}
+                        />
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </GridView>
+              ) : (
+                <ListView
+                  header={
+                    <>
+                      <span className="min-w-0 flex-1">Título</span>
+                      <span className="hidden w-24 shrink-0 sm:block">Tipo</span>
+                      <span className="hidden w-20 shrink-0 md:block">Duração</span>
+                      <span className="w-24 shrink-0">Estado</span>
+                      <span className="hidden w-24 shrink-0 lg:block">Atualizado</span>
+                      <span className="w-[9.5rem] shrink-0 text-right sm:w-40">Ações</span>
+                    </>
+                  }
+                >
+                  {group.items.map((c) => (
+                    <ListRow
+                      key={c.id}
+                      className="flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link
+                            href={`/admin/contents/${c.id}`}
+                            className="truncate text-sm font-semibold text-[var(--color-text-primary)] hover:underline"
+                          >
+                            {c.title}
+                          </Link>
+                          {c.inUse ? (
+                            <Badge variant="muted" className="text-[10px]">
+                              EM USO
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <p className="mt-0.5 text-[12px] text-[var(--color-text-muted)] sm:hidden">
+                          {contentTypeLabel(c)} · {c.status} ·{" "}
+                          {formatDuration(c.durationMs, c.type)} ·{" "}
+                          {formatDate(c.updatedAt)}
+                        </p>
+                      </div>
+                      <div className="hidden w-24 shrink-0 sm:block">
+                        <TypeBadge contentType={contentTypeLabel(c)} />
+                      </div>
+                      <div className="hidden w-20 shrink-0 text-[13px] text-[var(--color-text-secondary)] md:block">
+                        {formatDuration(c.durationMs, c.type)}
+                      </div>
+                      <div className="hidden w-24 shrink-0 sm:block">
+                        <StatusBadge status={c.status} />
+                      </div>
+                      <div className="hidden w-24 shrink-0 text-[13px] text-[var(--color-text-secondary)] lg:block">
+                        {formatDate(c.updatedAt)}
+                      </div>
+                      <ContentActions
+                        content={c}
+                        busy={busy}
+                        onToggleStatus={() => toggleStatus(c)}
+                        onDuplicate={() => handleDuplicate(c.id)}
+                        onDelete={() => setDeleteItem(c)}
+                      />
+                    </ListRow>
+                  ))}
+                </ListView>
+              )}
+            </section>
+          ))}
+        </div>
       )}
-    </>
+
+      {mounted &&
+        deleteItem &&
+        createPortal(
+          <ModalOverlay
+            onClose={() => {
+              if (!busy) {
+                setDeleteItem(null);
+                setErrorMsg(null);
+              }
+            }}
+          >
+            <ModalPanel
+              size="md"
+              onClick={(e) => e.stopPropagation()}
+              className="text-center"
+            >
+              <h2 className="mb-2 text-xl font-bold">Remover conteúdo?</h2>
+              <p className="mb-6 text-sm text-[var(--color-muted-foreground)]">
+                Deseja remover <strong>{deleteItem.title}</strong>? O MediaAsset
+                associado não será eliminado.
+              </p>
+              {errorMsg ? (
+                <p
+                  className="mb-4 text-sm text-[var(--color-destructive)]"
+                  role="alert"
+                >
+                  {errorMsg}
+                </p>
+              ) : null}
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteItem(null);
+                    setErrorMsg(null);
+                  }}
+                  disabled={busy}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={busy}
+                >
+                  {busy ? "A remover…" : "Remover"}
+                </Button>
+              </div>
+            </ModalPanel>
+          </ModalOverlay>,
+          document.body,
+        )}
+    </div>
   );
 }

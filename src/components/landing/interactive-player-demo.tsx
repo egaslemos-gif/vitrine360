@@ -10,7 +10,6 @@ import {
   useId,
   useRef,
   useState,
-  useSyncExternalStore,
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
@@ -38,15 +37,6 @@ import {
 const PREV_RESTART_THRESHOLD_MS = 3000;
 const TICK_MS = 100;
 
-function subscribeNoop() {
-  return () => {};
-}
-
-/** True only after client mount — avoids SSR/client control-tree mismatch. */
-function useIsClient() {
-  return useSyncExternalStore(subscribeNoop, () => true, () => false);
-}
-
 type Props = {
   className?: string;
   /** Larger layout for dedicated showcase section */
@@ -64,7 +54,6 @@ export function InteractivePlayerDemo({
   const volumeBeforeMute = useRef(72);
   const seekingRef = useRef(false);
   const labelId = useId();
-  const hydrated = useIsClient();
 
   const [status, setStatus] = useState<DemoPlaybackStatus>("PAUSED");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -183,7 +172,7 @@ export function InteractivePlayerDemo({
   }
 
   function selectItem(index: number) {
-    goToIndex(index, { play: status === "PLAYING" || status === "PAUSED" });
+    goToIndex(index, { play: status === "PLAYING" });
     if (status === "STOPPED") setStatus("PAUSED");
   }
 
@@ -249,6 +238,10 @@ export function InteractivePlayerDemo({
     ) {
       return;
     }
+    // Let focused controls keep native Space/Enter activation.
+    if (t?.closest("button") && (e.key === " " || e.key === "Enter")) {
+      return;
+    }
 
     switch (e.key) {
       case " ":
@@ -285,26 +278,6 @@ export function InteractivePlayerDemo({
   const showcase = size === "showcase";
   const effectiveVolume = muted ? 0 : volume;
 
-  if (!hydrated) {
-    return (
-      <div
-        className={cn(
-          "overflow-hidden rounded-[var(--radius-2xl)] border border-white/50 bg-[var(--color-surface)] shadow-[var(--shadow-modal)] ring-1 ring-[var(--color-primary)]/10",
-          className,
-        )}
-        aria-busy="true"
-        aria-label="Vitrine360 Player demo loading"
-      >
-        <div
-          className={cn(
-            showcase ? "aspect-[16/10] sm:aspect-video" : "aspect-video",
-            "bg-[var(--color-background-secondary)]",
-          )}
-        />
-      </div>
-    );
-  }
-
   return (
     <div
       ref={rootRef}
@@ -313,62 +286,84 @@ export function InteractivePlayerDemo({
       aria-labelledby={labelId}
       className={cn(
         "group/demo outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2",
-        isFullscreen && "fixed inset-0 z-[100] flex items-center justify-center bg-black p-4",
+        isFullscreen &&
+          "fixed inset-0 z-[100] flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#dbe4ff_0%,#efe7ff_55%,#f6f3ff_100%)] p-3 sm:p-6",
         className,
       )}
     >
       <div
         className={cn(
-          "overflow-hidden rounded-[var(--radius-2xl)] border border-white/50 bg-[var(--color-surface)] shadow-[var(--shadow-modal)]",
-          "ring-1 ring-[var(--color-primary)]/10",
+          "ui-demo-app-shell relative overflow-hidden rounded-[1.35rem]",
           isFullscreen && "h-full max-h-full w-full max-w-6xl",
         )}
       >
         <div
+          className="pointer-events-none absolute inset-0 opacity-90"
+          aria-hidden
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 15% 10%, rgba(147,197,253,0.45), transparent 55%), radial-gradient(ellipse 70% 55% at 90% 85%, rgba(196,181,253,0.4), transparent 50%), linear-gradient(145deg, rgba(255,255,255,0.55), rgba(237,233,254,0.35))",
+          }}
+        />
+
+        <div
           className={cn(
-            "grid",
+            "relative grid min-w-0",
             showPlaylist
-              ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(200px,0.65fr)]"
+              ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(220px,0.7fr)]"
               : "grid-cols-1",
           )}
         >
           <div className="min-w-0">
-            <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)]/70 px-4 py-2.5">
+            <div className="flex items-center justify-between gap-2 border-b border-white/50 bg-white/35 px-4 py-3 backdrop-blur-md">
               <div className="min-w-0">
                 <p
                   id={labelId}
-                  className="truncate text-sm font-semibold tracking-tight text-[var(--color-text-primary)]"
+                  className="truncate text-[15px] font-semibold tracking-tight text-[var(--color-text-primary)]"
                 >
                   Vitrine360 Player
                 </p>
-                <p className="ui-caption mt-0.5 flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-primary)]">
+                <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-primary)] shadow-sm ring-1 ring-[var(--color-primary)]/15">
                     Live demo
                   </span>
                   <StatusDot status={status} />
                 </p>
+              </div>
+              <div
+                className="hidden shrink-0 rounded-full bg-white/55 px-3 py-1 text-[11px] font-medium text-[var(--color-text-secondary)] ring-1 ring-white/70 sm:block"
+                aria-hidden
+              >
+                Local only
               </div>
             </div>
 
             <div
               className={cn(
                 "ui-player-canvas relative overflow-hidden",
-                showcase || isFullscreen ? "aspect-[16/10] sm:aspect-video" : "aspect-video",
-                isFullscreen && "max-h-[min(70vh,720px)]",
+                showcase || isFullscreen
+                  ? "aspect-[16/10] sm:aspect-video"
+                  : "aspect-video",
+                isFullscreen && "max-h-[min(72vh,760px)]",
               )}
             >
-              <MediaSurface key={mediaKey} item={item} playing={status === "PLAYING"} />
+              <MediaSurface
+                key={mediaKey}
+                item={item}
+                playing={status === "PLAYING"}
+              />
 
-              <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/45 to-transparent px-4 pb-10 pt-3">
-                <p className="text-sm font-semibold text-white sm:text-base">
+              <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/50 to-transparent px-4 pb-12 pt-3">
+                <p className="text-sm font-semibold tracking-tight text-white sm:text-base">
                   {item.title}
                 </p>
-                <p className="mt-0.5 text-[11px] text-white/70">
-                  {item.type} · {formatDemoTime(durationMs)}
+                <p className="mt-0.5 text-[11px] font-medium text-white/75">
+                  {item.type} · {formatDemoTime(positionMs)} /{" "}
+                  {formatDemoTime(durationMs)}
                 </p>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-3 pb-3 pt-12 sm:px-4 sm:pb-4">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent px-2.5 pb-2.5 pt-10 sm:px-3 sm:pb-3">
                 <ControlBar
                   status={status}
                   muted={muted}
@@ -399,13 +394,18 @@ export function InteractivePlayerDemo({
           </div>
 
           {showPlaylist ? (
-            <aside className="border-t border-[var(--color-border)]/70 bg-[var(--color-background-secondary)]/60 p-3 lg:border-l lg:border-t-0">
+            <aside className="border-t border-white/50 bg-white/30 p-3 backdrop-blur-md lg:border-l lg:border-t-0">
               <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
                 Playlist
               </p>
-              <ul className="mt-2 space-y-1" role="listbox" aria-label="Demo playlist">
+              <ul
+                className="mt-2 space-y-1.5"
+                role="listbox"
+                aria-label="Demo playlist"
+              >
                 {DEMO_PLAYLIST.map((row, i) => {
                   const active = i === currentIndex;
+                  const rowProgress = active ? progress : 0;
                   return (
                     <li key={row.id}>
                       <button
@@ -414,30 +414,57 @@ export function InteractivePlayerDemo({
                         aria-selected={active}
                         onClick={() => selectItem(i)}
                         className={cn(
-                          "flex w-full min-h-11 items-start gap-2 rounded-[var(--radius-md)] px-2.5 py-2 text-left transition-colors",
+                          "flex w-full min-h-11 items-center gap-2.5 rounded-2xl px-2 py-2 text-left transition-all",
                           active
-                            ? "bg-[var(--color-primary-soft)] ring-1 ring-[var(--color-primary)]/35"
-                            : "hover:bg-white/70",
+                            ? "bg-white/80 shadow-sm ring-1 ring-[var(--color-primary)]/30"
+                            : "hover:bg-white/55",
                         )}
                       >
-                        <span
-                          className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
-                          style={{
-                            background: active ? row.accent : "transparent",
-                            color: active ? "#fff" : "var(--color-text-muted)",
-                          }}
-                          aria-hidden
-                        >
-                          {active && status === "PLAYING" ? "●" : String(i + 1).padStart(2, "0")}
+                        <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-black/5">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={row.src}
+                            alt=""
+                            className="h-full w-full object-cover"
+                            draggable={false}
+                          />
+                          {active ? (
+                            <span
+                              className="absolute inset-x-1 bottom-1 h-1 overflow-hidden rounded-full bg-black/25"
+                              aria-hidden
+                            >
+                              <span
+                                className="block h-full rounded-full bg-[var(--color-player-primary)]"
+                                style={{
+                                  width: `${Math.round(rowProgress * 100)}%`,
+                                }}
+                              />
+                            </span>
+                          ) : null}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium text-[var(--color-text-primary)]">
-                            {row.title}
+                          <span className="flex items-center gap-1.5">
+                            <span className="block truncate text-[13px] font-semibold text-[var(--color-text-primary)]">
+                              {row.title}
+                            </span>
+                            {active && status === "PLAYING" ? (
+                              <span
+                                className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)]"
+                                aria-hidden
+                              />
+                            ) : null}
                           </span>
-                          <span className="ui-caption">
-                            {row.type} · {formatDemoTime(row.duration * 1000)}
+                          <span className="mt-0.5 block text-[11px] font-medium text-[var(--color-text-muted)]">
+                            {String(i + 1).padStart(2, "0")} · {row.type} ·{" "}
+                            {formatDemoTime(row.duration * 1000)}
                           </span>
                         </span>
+                        {active && status !== "PLAYING" ? (
+                          <Play
+                            className="h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]"
+                            aria-hidden
+                          />
+                        ) : null}
                       </button>
                     </li>
                   );
@@ -551,13 +578,13 @@ function ControlBar({
 
   return (
     <div
-      className="glass-player-controls mx-auto w-full max-w-xl rounded-full px-3 py-2 sm:px-4 sm:py-2.5"
+      className="glass-player-controls pointer-events-auto mx-auto w-full max-w-md px-2.5 py-1.5 sm:max-w-lg sm:px-3 sm:py-2"
       role="group"
       aria-label="Player controls"
     >
-      <div className="flex flex-wrap items-center justify-center gap-0.5 sm:gap-1">
+      <div className="flex flex-nowrap items-center justify-center gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <IconBtn label="Previous media" onClick={onPrevious}>
-          <SkipBack className="h-4 w-4" aria-hidden />
+          <SkipBack className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
         <IconBtn
           label={status === "PLAYING" ? "Pause" : "Play"}
@@ -565,28 +592,28 @@ function ControlBar({
           primary
         >
           {status === "PLAYING" ? (
-            <Pause className="h-5 w-5" aria-hidden />
+            <Pause className="h-4 w-4" aria-hidden />
           ) : (
-            <Play className="h-5 w-5" aria-hidden />
+            <Play className="h-4 w-4" aria-hidden />
           )}
         </IconBtn>
         <IconBtn label="Stop" onClick={onStop}>
-          <Square className="h-4 w-4" aria-hidden />
+          <Square className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
         <IconBtn label="Next media" onClick={onNext}>
-          <SkipForward className="h-4 w-4" aria-hidden />
+          <SkipForward className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
         <IconBtn label="Restart" onClick={onRestart}>
-          <RotateCcw className="h-4 w-4" aria-hidden />
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
         <IconBtn label={muted || volume === 0 ? "Unmute" : "Mute"} onClick={onMute}>
           {muted || volume === 0 ? (
-            <VolumeX className="h-4 w-4" aria-hidden />
+            <VolumeX className="h-3.5 w-3.5" aria-hidden />
           ) : (
-            <Volume2 className="h-4 w-4" aria-hidden />
+            <Volume2 className="h-3.5 w-3.5" aria-hidden />
           )}
         </IconBtn>
-        <label className="mx-1 hidden items-center gap-1 sm:flex">
+        <label className="mx-0.5 hidden items-center sm:flex">
           <span className="sr-only">Volume</span>
           <input
             type="range"
@@ -595,7 +622,7 @@ function ControlBar({
             value={volume}
             aria-label="Volume"
             onChange={(e) => onVolume(Number(e.target.value))}
-            className="h-1.5 w-16 cursor-pointer accent-[var(--color-player-primary)]"
+            className="h-1 w-14 cursor-pointer accent-[var(--color-player-primary)]"
           />
         </label>
         <IconBtn
@@ -603,20 +630,20 @@ function ControlBar({
           onClick={onFullscreen}
         >
           {isFullscreen ? (
-            <Minimize2 className="h-4 w-4" aria-hidden />
+            <Minimize2 className="h-3.5 w-3.5" aria-hidden />
           ) : (
-            <Maximize2 className="h-4 w-4" aria-hidden />
+            <Maximize2 className="h-3.5 w-3.5" aria-hidden />
           )}
         </IconBtn>
       </div>
 
-      <div className="mt-2 flex items-center gap-2 px-1 sm:gap-3">
-        <span className="ui-mono shrink-0 text-[10px] text-[var(--color-player-muted)]">
+      <div className="mt-1.5 flex items-center gap-2 px-0.5">
+        <span className="ui-mono shrink-0 text-[10px] tabular-nums text-[var(--color-player-muted)]">
           {formatDemoTime(positionMs)}
         </span>
         <div
           ref={seekTrackRef}
-          className="ui-player-timeline relative min-h-5 min-w-0 flex-1 cursor-pointer py-2"
+          className="ui-player-timeline relative min-w-0 flex-1 cursor-pointer py-2"
           role="slider"
           tabIndex={0}
           aria-valuemin={0}
@@ -670,7 +697,7 @@ function ControlBar({
             />
           </div>
         </div>
-        <span className="ui-mono shrink-0 text-[10px] text-[var(--color-player-muted)]">
+        <span className="ui-mono shrink-0 text-[10px] tabular-nums text-[var(--color-player-muted)]">
           {formatDemoTime(durationMs)}
         </span>
       </div>
@@ -697,9 +724,7 @@ function IconBtn({
       onClick={onClick}
       className={cn(
         "ui-icon-btn",
-        primary
-          ? "ui-icon-btn-primary min-h-11 min-w-11 sm:min-h-12 sm:min-w-12"
-          : "min-h-10 min-w-10 text-[var(--color-player-text)] sm:min-h-11 sm:min-w-11",
+        primary ? "ui-icon-btn-primary" : "text-[var(--color-player-text)]",
       )}
     >
       {children}
