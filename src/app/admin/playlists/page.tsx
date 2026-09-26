@@ -14,7 +14,7 @@ export default async function PlaylistsPage() {
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <PageHeader
         title="Playlists"
-        description="Sequências de reprodução para os ecrãs."
+        description="Ordene conteúdos, durações e transições para os ecrãs."
       />
       <PlaylistManager playlists={playlistsWithUsage} />
     </div>

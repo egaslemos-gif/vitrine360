@@ -108,6 +108,37 @@ export const userIdentities = sqliteTable(
   ],
 );
 
+/**
+ * PLATFORM-IDENTITY-04 — Control-plane assignments (global, not tenant-scoped).
+ * Distinct from `memberships` (tenant RBAC). No tenant_id by design.
+ * Presence of a row does NOT grant authority until PI-05+ wires authorization.
+ */
+export const platformAssignments = sqliteTable(
+  "platform_assignments",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    status: text("status").notNull().default("ACTIVE"),
+    createdByUserId: text("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex("platform_assignments_user_role_uidx").on(t.userId, t.role),
+    index("platform_assignments_user_idx").on(t.userId),
+    index("platform_assignments_status_idx").on(t.status),
+  ],
+);
+
 export const devices = sqliteTable(
   "devices",
   {
@@ -417,13 +448,224 @@ export const systemSettings = sqliteTable("system_settings", {
     .default(sql`(datetime('now'))`),
 });
 
+/**
+ * PLATFORM-IDENTITY-10B — Entitlement catalogue (PLATFORM scope).
+ * Does not grant RBAC. Enforcement is deferred to later phases.
+ */
+export const entitlementDefinitions = sqliteTable(
+  "entitlement_definitions",
+  {
+    id: text("id").primaryKey(),
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** BOOLEAN | INTEGER | BYTES */
+    valueType: text("value_type").notNull(),
+    /** FEATURE_GATE | HARD_LIMIT | SOFT_LIMIT */
+    enforcementType: text("enforcement_type").notNull(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex("entitlement_definitions_key_uidx").on(t.key),
+    index("entitlement_definitions_active_idx").on(t.active),
+  ],
+);
+
+/**
+ * PLATFORM-IDENTITY-10B — Global plan catalogue (PLATFORM scope).
+ * No tenant_id. No price/billing fields.
+ */
+export const plans = sqliteTable(
+  "plans",
+  {
+    id: text("id").primaryKey(),
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex("plans_key_uidx").on(t.key),
+    index("plans_active_idx").on(t.active),
+  ],
+);
+
+/**
+ * PLATFORM-IDENTITY-10B — Plan → EntitlementDefinition binding with value.
+ * Value stored as TEXT; domain parser validates against valueType.
+ */
+export const planEntitlements = sqliteTable(
+  "plan_entitlements",
+  {
+    id: text("id").primaryKey(),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "restrict" }),
+    entitlementDefinitionId: text("entitlement_definition_id")
+      .notNull()
+      .references(() => entitlementDefinitions.id, { onDelete: "restrict" }),
+    value: text("value").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex("plan_entitlements_plan_def_uidx").on(
+      t.planId,
+      t.entitlementDefinitionId,
+    ),
+    index("plan_entitlements_plan_idx").on(t.planId),
+    index("plan_entitlements_def_idx").on(t.entitlementDefinitionId),
+  ],
+);
+
+/**
+ * PLATFORM-IDENTITY-10B — Tenant → Plan association (TENANT scope).
+ * At most one ACTIVE binding per tenant (enforced in domain/service).
+ */
+export const tenantPlans = sqliteTable(
+  "tenant_plans",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "restrict" }),
+    /** ACTIVE | INACTIVE */
+    status: text("status").notNull().default("ACTIVE"),
+    startsAt: text("starts_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    endsAt: text("ends_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    index("tenant_plans_tenant_idx").on(t.tenantId),
+    index("tenant_plans_plan_idx").on(t.planId),
+    index("tenant_plans_status_idx").on(t.status),
+    index("tenant_plans_tenant_status_idx").on(t.tenantId, t.status),
+  ],
+);
+
+/**
+ * PLATFORM-IDENTITY-10I — Storage reservation foundation (no enforcement).
+ * Active capacity hold = status RESERVED only.
+ */
+export const storageReservations = sqliteTable(
+  "storage_reservations",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    operationId: text("operation_id").notNull(),
+    expectedBytes: integer("expected_bytes").notNull(),
+    status: text("status").notNull().default("RESERVED"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    expiresAt: text("expires_at"),
+    committedAt: text("committed_at"),
+    releasedAt: text("released_at"),
+  },
+  (t) => [
+    uniqueIndex("storage_reservations_tenant_operation_uidx").on(
+      t.tenantId,
+      t.operationId,
+    ),
+    index("storage_reservations_tenant_idx").on(t.tenantId),
+    index("storage_reservations_tenant_status_idx").on(t.tenantId, t.status),
+  ],
+);
+
+/**
+ * RUNTIME-PLAYBACK-09 — Durable device command inbox (HTTP polling).
+ * commandId is the logical idempotency key; `id` is the row PK.
+ */
+export const deviceCommandInbox = sqliteTable(
+  "device_command_inbox",
+  {
+    id: text("id").primaryKey(),
+    commandId: text("command_id").notNull(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    deviceId: text("device_id")
+      .notNull()
+      .references(() => devices.id, { onDelete: "cascade" }),
+    sessionId: text("session_id"),
+    binding: text("binding").notNull().default("SESSION_BOUND"),
+    type: text("type").notNull(),
+    payload: text("payload").notNull().default("{}"),
+    issuedAt: integer("issued_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    status: text("status").notNull().default("QUEUED"),
+    resultStatus: text("result_status"),
+    resultReason: text("result_reason"),
+    attempts: integer("attempts").notNull().default(0),
+    availableAt: integer("available_at").notNull(),
+    claimedAt: integer("claimed_at"),
+    leaseUntil: integer("lease_until"),
+    correlationId: text("correlation_id"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex("device_command_inbox_command_id_uidx").on(t.commandId),
+    index("device_command_inbox_tenant_device_status_idx").on(
+      t.tenantId,
+      t.deviceId,
+      t.status,
+    ),
+    index("device_command_inbox_device_status_available_idx").on(
+      t.deviceId,
+      t.status,
+      t.availableAt,
+    ),
+    index("device_command_inbox_expires_idx").on(t.expiresAt),
+  ],
+);
+
 export type Tenant = typeof tenants.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Membership = typeof memberships.$inferSelect;
 export type UserIdentity = typeof userIdentities.$inferSelect;
+export type PlatformAssignment = typeof platformAssignments.$inferSelect;
 export type Device = typeof devices.$inferSelect;
 export type Content = typeof contents.$inferSelect;
 export type Playlist = typeof playlists.$inferSelect;
 export type MediaAsset = typeof mediaAssets.$inferSelect;
 export type Schedule = typeof schedules.$inferSelect;
 export type ScheduleTarget = typeof scheduleTargets.$inferSelect;
+export type DeviceCommandInboxRow = typeof deviceCommandInbox.$inferSelect;
+export type EntitlementDefinition = typeof entitlementDefinitions.$inferSelect;
+export type Plan = typeof plans.$inferSelect;
+export type PlanEntitlement = typeof planEntitlements.$inferSelect;
+export type TenantPlan = typeof tenantPlans.$inferSelect;
+export type StorageReservationRow = typeof storageReservations.$inferSelect;

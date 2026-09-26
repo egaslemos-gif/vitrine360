@@ -20,6 +20,7 @@ import {
   runtimeStateForHeartbeat,
   updateRuntimeState,
 } from "@/player/runtime/state";
+import { getPlayerSessionStore } from "@/player/session/player-session-store";
 
 const PLAYER_VERSION = "0.1.2-smarttv";
 
@@ -30,6 +31,11 @@ function noteSyncState(
     updateRuntimeState({ syncState });
   } catch {
     /* observational — never break sync */
+  }
+  try {
+    getPlayerSessionStore().noteSync(syncState, syncState === "READY");
+  } catch {
+    /* telemetry failure isolation */
   }
 }
 
@@ -47,6 +53,9 @@ export async function sendHeartbeat(extra?: {
   contentId?: string;
   playerState?: string;
   resolution?: string;
+  sessionId?: string;
+  /** Compact observed playback — never treated as command authority. */
+  playback?: Record<string, unknown>;
   runtimeState?: Record<string, unknown>;
   policy?: {
     policySource?: string;
@@ -167,15 +176,20 @@ async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
 
 /**
  * Download asset with device auth. Validates checksum when present.
- * Throws on network/checksum failure so caller can skip the item.
+ * Large files skip IndexedDB (stream from URL) to avoid OOM on mobile/TV
+ * during playlist updates — playback still works via remote/presigned URL.
  */
+const MAX_OFFLINE_CACHE_BYTES = 12 * 1024 * 1024;
+
 export async function downloadAsset(asset: {
   id: string;
   url: string;
   offlineUrl?: string;
   checksum: string;
-}) {
-  if (await hasAsset(asset.id, asset.checksum)) return;
+}): Promise<{ cached: boolean; skipped?: boolean }> {
+  if (await hasAsset(asset.id, asset.checksum)) {
+    return { cached: true };
+  }
 
   const headers = await authHeaders();
   // Signed R2/S3 URLs reject an extra Authorization header; only attach Bearer for app media routes.
@@ -189,14 +203,26 @@ export async function downloadAsset(asset: {
         : undefined,
   });
   if (!res.ok) throw new Error(`Failed download ${asset.id} (${res.status})`);
-  const buffer = await res.arrayBuffer();
+
+  const declared = Number(res.headers.get("content-length") || 0);
+  if (declared > MAX_OFFLINE_CACHE_BYTES) {
+    return { cached: false, skipped: true };
+  }
+
+  const blob = await res.blob();
+  if (blob.size > MAX_OFFLINE_CACHE_BYTES) {
+    return { cached: false, skipped: true };
+  }
+
+  const buffer = await blob.arrayBuffer();
   const actual = await sha256Hex(buffer);
 
   if (!checksumMatches(asset.checksum, actual)) {
     throw new Error(`Checksum mismatch for ${asset.id}`);
   }
 
-  await putAssetBlob(asset.id, new Blob([buffer]), asset.checksum);
+  await putAssetBlob(asset.id, blob, asset.checksum);
+  return { cached: true };
 }
 
 type ManifestItem = {
@@ -216,18 +242,20 @@ function playlistItemCount(manifest: LocalManifest | null) {
 }
 
 /**
- * RUNTIME-CACHE-02: never promote CURRENT until every required asset is local.
- * Writes NEXT first; activates only after downloads succeed.
- * On failure / interrupt: leave CURRENT unchanged and clear NEXT.
+ * Sync playlist: soft-activate for online playback first (smooth updates),
+ * then best-effort offline cache. Never clears CURRENT on download failure.
  */
 export async function runSyncCycle(options?: {
   /** Test hook: abort after N successful downloads */
   abortAfterDownloads?: number;
+  /** When false, require full offline cache before activate (legacy strict). Default true. */
+  softOnlineActivate?: boolean;
 }): Promise<{
   activated: boolean;
   manifest: LocalManifest | null;
   error?: string;
 }> {
+  const softOnline = options?.softOnlineActivate !== false;
   noteSyncState("SYNCING");
   const current = await getCurrentManifest();
   // Empty cache must not look "up to date" at version 0 — that left the
@@ -276,22 +304,24 @@ export async function runSyncCycle(options?: {
   try {
     await prepareNextManifest(next);
 
+    // Soft promote first so /player keeps presenting while large assets cache.
+    let activatedManifest: LocalManifest | null = null;
+    if (softOnline) {
+      activatedManifest = await activateNextManifest({ allowIncomplete: true });
+    }
+
     const presentSync = new Map<string, boolean>();
     const isPresent = (id: string, checksum: string) => {
       const key = `${id}|${checksum}`;
       return presentSync.get(key) === true;
     };
 
-    // Seed presence from IDB for dedupe within this cycle
     for (const asset of assets) {
       const key = `${asset.id}|${asset.checksum}`;
       if (presentSync.has(key)) continue;
       presentSync.set(key, await hasAsset(asset.id, asset.checksum));
     }
 
-    // Download only missing / checksum-mismatched assets (idempotent).
-    // Server changedAssetIds is a true delta hint; we still verify the full
-    // required set so a cold device never activates an incomplete NEXT.
     const queue = assetsRequiringDownload(assets, isPresent);
 
     let downloaded = 0;
@@ -302,13 +332,24 @@ export async function runSyncCycle(options?: {
       ) {
         throw new Error("Simulated download interruption");
       }
-      await downloadAsset(asset);
-      presentSync.set(`${asset.id}|${asset.checksum}`, true);
-      downloaded++;
+      try {
+        const result = await downloadAsset(asset);
+        if (result.cached) {
+          presentSync.set(`${asset.id}|${asset.checksum}`, true);
+          downloaded++;
+        }
+      } catch (err) {
+        console.warn("[v360-sync] asset cache skipped", asset.id, err);
+      }
     }
 
-    const activated = await activateNextManifest();
-    if (!activated) {
+    if (!activatedManifest) {
+      activatedManifest = await activateNextManifest({
+        allowIncomplete: softOnline,
+      });
+    }
+
+    if (!activatedManifest) {
       throw new Error("Incomplete sync: activation returned null");
     }
 
@@ -318,12 +359,12 @@ export async function runSyncCycle(options?: {
     noteSyncState("READY");
     try {
       updateRuntimeState({
-        currentManifestVersion: activated.manifestVersion,
+        currentManifestVersion: activatedManifest.manifestVersion,
       });
     } catch {
       /* ignore */
     }
-    return { activated: true, manifest: activated };
+    return { activated: true, manifest: activatedManifest };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "sync failed";
     console.error("Sync failed — keeping current manifest", e);
@@ -333,7 +374,9 @@ export async function runSyncCycle(options?: {
       msg,
     }).catch(() => undefined);
     noteSyncState("ERROR");
-    return { activated: false, manifest: current, error: msg };
+    // Prefer whatever is already CURRENT (may be soft-activated).
+    const kept = await getCurrentManifest().catch(() => current);
+    return { activated: false, manifest: kept ?? current, error: msg };
   }
 }
 

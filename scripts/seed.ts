@@ -89,6 +89,17 @@ async function main() {
     })
     .onConflictDoNothing();
 
+  // PLATFORM-IDENTITY-10B — technical compatibility plan (idempotent)
+  const { ensureSchema } = await import("../src/db/client");
+  await ensureSchema();
+  const { seedCompatibilityPlan } = await import(
+    "../src/services/entitlements"
+  );
+  const seeded = await seedCompatibilityPlan();
+  console.log(
+    `Compatibility plan: ${seeded.planId} (${seeded.created ? "created" : "existing"})`,
+  );
+
   console.log("Seed complete. [DEVELOPMENT ONLY — do not use in production]");
   console.log("Tenant slug: demo");
   console.log("DEV admin: admin@vitrine360.local / Admin123!");

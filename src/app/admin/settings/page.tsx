@@ -41,6 +41,10 @@ export default async function SettingsPage() {
           Media storage: {process.env.MEDIA_STORAGE_PROVIDER ?? "local"}
         </li>
         <li>Max upload: {process.env.MAX_UPLOAD_BYTES ?? "52428800"} bytes</li>
+        <li>
+          Direct R2 upload: browser PUT via prepare/complete (bypasses Vercel
+          ~4.5MB body limit). Bucket CORS must allow PUT from this origin.
+        </li>
       </ul>
     </div>
   );

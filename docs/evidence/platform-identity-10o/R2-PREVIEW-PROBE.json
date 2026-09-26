@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "previewBucket": "vitrine360-preview",
+  "productionBucketConfigured": "SET",
+  "put": "OK",
+  "headBytes": 33,
+  "delete": "OK",
+  "presence": {
+    "R2_ACCOUNT_ID": "SET",
+    "R2_ACCESS_KEY_ID": "SET",
+    "R2_SECRET_ACCESS_KEY": "SET",
+    "R2_ENDPOINT": "SET"
+  },
+  "note": "Only R2_BUCKET_NAME=vitrine360-preview used; Production bucket not targeted"
+}

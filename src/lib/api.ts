@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { AuthError } from "@/lib/auth";
 import { MembershipError } from "@/services/members";
+import { TenantLifecycleError } from "@/services/tenant-lifecycle";
+import { EntitlementDeniedError } from "@/services/entitlements";
 import { ZodError } from "zod";
 import { clientIp, rateLimit, type RateLimitResult } from "@/lib/rate-limit";
+
+export { clientIp };
 
 export function jsonOk<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data, init);
@@ -49,6 +53,20 @@ export function handleApiError(error: unknown) {
   if (error instanceof MembershipError) {
     return jsonError(error.message, error.status);
   }
+  if (error instanceof TenantLifecycleError) {
+    return jsonError(error.message, error.status);
+  }
+  if (error instanceof EntitlementDeniedError) {
+    return NextResponse.json(
+      {
+        error: "ENTITLEMENT_DENIED",
+        code: error.code,
+        entitlement: error.entitlementKey,
+        reason: error.reason,
+      },
+      { status: error.status },
+    );
+  }
   if (error instanceof ZodError) {
     return jsonError(error.issues.map((i) => i.message).join("; "), 400);
   }
@@ -66,7 +84,7 @@ export function handleApiError(error: unknown) {
     ) {
       return jsonError(msg, 409);
     }
-    if (/invalid|expired|already|required|not allowed|exceeds/i.test(msg)) {
+    if (/invalid|expired|already|required|not allowed|not supported|exceeds|mismatch/i.test(msg)) {
       return jsonError(msg, 400);
     }
   }

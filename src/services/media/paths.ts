@@ -61,7 +61,44 @@ export function sniffMime(data: Buffer, fallback: string): string {
   ) {
     return "image/webp";
   }
+  if (
+    data.length >= 12 &&
+    data.toString("ascii", 0, 4) === "RIFF" &&
+    data.toString("ascii", 8, 12) === "WAVE"
+  ) {
+    return "audio/wav";
+  }
+  if (data.length >= 4 && data.toString("ascii", 0, 4) === "OggS") {
+    return "audio/ogg";
+  }
+  if (
+    data.length >= 3 &&
+    data[0] === 0x49 &&
+    data[1] === 0x44 &&
+    data[2] === 0x33
+  ) {
+    return "audio/mpeg";
+  }
+  if (
+    data.length >= 2 &&
+    data[0] === 0xff &&
+    (data[1]! & 0xe0) === 0xe0
+  ) {
+    // MPEG audio frame sync (mp3)
+    return "audio/mpeg";
+  }
   if (data.length >= 12 && data.toString("ascii", 4, 8) === "ftyp") {
+    const brand = data.toString("ascii", 8, 12);
+    if (
+    brand.startsWith("M4A") ||
+    brand.startsWith("m4a") ||
+    /^(M4A |m4a |mp4a)/i.test(brand) ||
+    fallback === "audio/x-m4a" ||
+    fallback === "audio/m4a" ||
+    fallback.startsWith("audio/")
+  ) {
+    return "audio/mp4";
+  }
     return "video/mp4";
   }
   if (
@@ -71,7 +108,7 @@ export function sniffMime(data: Buffer, fallback: string): string {
     data[2] === 0xdf &&
     data[3] === 0xa3
   ) {
-    return "video/webm";
+    return fallback.startsWith("audio/") ? "audio/webm" : "video/webm";
   }
   return fallback;
 }

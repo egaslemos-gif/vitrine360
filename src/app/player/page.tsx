@@ -29,7 +29,7 @@ const SMART_TV_BOOT_REDIRECT = `
     var force = /[?&]tv=1(?:&|$)/.test(location.search);
     if (force || /Sraf|Web0S|Tizen|SmartTV|NetRange|HbbTV|Maple|Viera|Hisense|VIDAA/i.test(ua)) {
           if (location.pathname.indexOf("player-smarttv") === -1) {
-            location.replace("/tv.html?v=044");
+            location.replace("/tv.html?v=055");
           }
     }
   } catch (e) {}

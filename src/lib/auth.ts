@@ -124,6 +124,8 @@ export async function getSession(): Promise<SessionUser | null> {
     );
     const membership = await resolveActiveMembership(user.id, claimedTenant);
     if (!membership || membership.status !== "ACTIVE") return null;
+    const { isTenantOperable } = await import("@/services/tenant-lifecycle");
+    if (!(await isTenantOperable(membership.tenantId))) return null;
     const role = membershipRole(membership);
     return {
       id: user.id,
@@ -199,6 +201,8 @@ export async function sessionFromUser(
   );
   const membership = await resolveActiveMembership(user.id, preferredTenantId);
   if (!membership) return null;
+  const { isTenantOperable } = await import("@/services/tenant-lifecycle");
+  if (!(await isTenantOperable(membership.tenantId))) return null;
   const role = membershipRole(membership);
   return {
     id: user.id,

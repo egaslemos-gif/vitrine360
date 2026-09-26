@@ -78,7 +78,7 @@
         bootSec +
         "s · v" +
         VERSION +
-        "</p>",
+        "</p>"
     );
   }
 
@@ -90,7 +90,7 @@
         msg +
         "</p>" +
         '<p class="muted" style="font-size:14px;margin-top:12px">Limpe a cache do browser e abra de novo.</p>' +
-        '<button type="button" id="retry">Tentar novamente</button>',
+        '<button type="button" id="retry">Tentar novamente</button>'
     );
     var btn = document.getElementById("retry");
     if (btn) btn.onclick = function () { location.reload(); };
@@ -109,7 +109,7 @@
         "</p>" +
         '<p class="muted" style="margin-top:24px;font-size:12px">v' +
         VERSION +
-        " · Smart TV</p>",
+        " · Smart TV</p>"
     );
   }
 
@@ -236,7 +236,7 @@
           deviceId: cfg.deviceId,
           pairingSecret: cfg.pairingSecret,
         },
-        8000,
+        8000
       )
         .then(function (data) {
           if (data.status === "ACTIVE" && data.deviceToken) {
@@ -281,7 +281,7 @@
         clientId: identity.clientId,
         pairingSecret: identity.pairingSecret,
       },
-      12000,
+      12000
     )
       .then(function (data) {
         if (!data.pairingSecret || !data.deviceId || !data.activationCode) {
@@ -302,7 +302,7 @@
         showError(
           e && e.message
             ? "Sem resposta do servidor: " + e.message
-            : "Sem resposta do servidor. Verifique a rede.",
+            : "Sem resposta do servidor. Verifique a rede."
         );
       });
   }
@@ -362,7 +362,7 @@
       if (!vidUrl) { renderNoContent(); return; }
       setHtml(
         '<div class="slide fade-in" style="display:flex;align-items:center;justify-content:center;background:#000">' +
-          '<video src="' + escapeHtml(vidUrl) + '" autoplay muted playsinline' +
+          '<video src="' + escapeHtml(vidUrl) + '" autoplay playsinline' +
           ' style="width:100%;height:100%;object-fit:contain;background:#000"></video>' +
         '</div>'
       );

@@ -1,0 +1,52 @@
+PASS PI10O-ISO-DB — forced file DB; Turso aliases cleared
+PASS PI10O-ISO-MEDIA — local media under pi10o-preview prefix
+PASS PI10O-ISO-MIGRATE — drizzle SQL applied to isolated file DB
+PASS PI10O-SCHEMA-platform_assignments — table present
+PASS PI10O-SCHEMA-plans — table present
+PASS PI10O-SCHEMA-plan_entitlements — table present
+PASS PI10O-SCHEMA-tenant_plans — table present
+PASS PI10O-SCHEMA-storage_reservations — table present
+PASS PI10O-E-PLAN — staging_entitlements_test bindings
+PASS PI10O-F-TENANTS
+PASS PI10O-H-FLAG-OFF — flag OFF
+PASS PI10O-H-BASELINE — pair+upload under OFF without quota deny
+PASS PI10O-I-FLAG-ON
+PASS PI10O-I-RESOLVE — auth/RBAC unchanged; entitlements resolve
+PASS PI10O-J-ALLOW — device 1+2 ALLOW
+PASS PI10O-J-DENY — device 3 DENY
+PASS PI10O-J-DISABLED-FREE — DISABLED frees capacity
+PASS PI10O-J-AFTER-DISABLE — device 3 ALLOW after free
+PASS PI10O-J-OFFLINE — OFFLINE still counts
+PASS PI10O-K-900 — committed=922100
+PASS PI10O-K-DENY — 200KB over 1MB DENY
+PASS PI10O-K-NO-OVER — effective=[object Object] reserved=0
+PASS PI10O-L-LOCAL-NO-SIGNED — local provider cannot signed-PUT; R2 Preview live deferred
+PASS PI10O-L-SOURCE-CL — R2 ContentLength signing present in source
+PASS PI10O-M-SAME — same tenant checksum → one asset, no quota inflation
+PASS PI10O-M-CROSS — other tenant independent MediaAsset
+PASS PI10O-N-DEVICE — ok=1 deny=1 usage=1
+PASS PI10O-N-STORAGE — ok=1 deny=1 reserved=204800
+PASS PI10O-O-PRESERVE — existing resources preserved
+PASS PI10O-O-NEW-DENY — new alloc DENY under downgrade
+PASS PI10O-P-SUSPEND — SUSPENDED DENY pair/upload
+PASS PI10O-P-REACTIVATE — ACTIVE again; quota still enforced
+PASS PI10O-Q-ISO — A cannot consume B quota
+PASS PI10O-R-FAILCLOSED — Tenant C without quantitative plan DENY
+PASS PI10O-S-DISTINGUISH — QUOTA vs lifecycle distinguishable
+PASS PI10O-T-FLAG-OFF
+PASS PI10O-T-LEGACY — flag OFF restores legacy pair without quantitative plan
+PASS PI10O-T-NO-CORRUPT — plans intact; no unexpected deletion
+PASS PI10O-U-INTEGRITY — before={"tenants":3,"devices":1,"media_assets":1,"playlists":1,"contents":1,"memberships":0,"tenant_plans":3,"reservations":0} after={"tenants":5,"devices":13,"media_assets":7,"playlists":4,"contents":4,"memberships":0,"tenant_plans":6,"reservations":7}
+PASS PI10O-SEC-001 — suite DB is isolated file — not Production Turso
+PASS PI10O-SEC-002 — suite does not write Production R2 bucket
+PASS PI10O-SEC-003 — client cannot toggle flag
+PASS PI10O-SEC-004 — plan assignment is server TenantPlan only (no client plan picker API in this phase)
+PASS PI10O-SEC-005 — maxBytes from plan binding only — upload body cannot choose limit
+PASS PI10O-SEC-006 — cross-tenant quota/asset isolation
+PASS PI10O-SEC-007 — quota deny is role-agnostic at service layer (no SUPER_ADMIN bypass path)
+PASS PI10O-SEC-008 — PLATFORM_SUPER_ADMIN has no entitlement bypass in device-quota service
+PASS PI10O-SEC-009 — device Bearer uses same pairDevice quota path; no alternate allocate API
+PASS PI10O-SEC-010 — SUSPENDED cannot allocate
+FAIL PI10O-ENV-PREVIEW-DEPLOY — ENVIRONMENT LIMITATION — Preview DB/AUTH/R2 env not fully provisioned; no live Preview deploy
+PASS PI10O-ENV-PREVIEW-FLAG — Vercel Preview ENTITLEMENTS_ENABLED=false SET (Production UNSET)
+PASS PI10O-ENV-PREVIEW-R2-BUCKET — Cloudflare bucket vitrine360-preview created (namespace ready)

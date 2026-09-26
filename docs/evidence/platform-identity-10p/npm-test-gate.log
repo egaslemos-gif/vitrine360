@@ -1,0 +1,11 @@
+PASS PI10P-WSL-UBUNTU — Ubuntu VERSION 2; docker-desktop VERSION 2 untouched
+PASS PI10P-TURSO-CLI — v1.0.32; auth/org/api-tokens present
+PASS PI10P-AUTH — whoami=elemos
+PASS PI10P-ORG — TURSO_ORG=PRESENT (elemos)
+PASS PI10P-API-TOKEN — TURSO_API_TOKEN=PRESENT (unversioned local store)
+PASS PI10P-PROVISION — npm run provision:pi10p-preview-turso SUCCESS database_created=true
+PASS PI10P-PREVIEW-ENV-FILE — .env.preview.local PRESENT
+PASS PI10P-SEC-001 — Preview DB vitrine360-preview != Production vitrine360
+PASS PI10P-SEC-001-HOST — preview host aws-us-west-2 != production aws-us-east-1
+PASS PI10P-SEC-011 — no Production mutations this phase
+PASS PI10P-STOP — migrations/cohort/Vercel Preview deploy NOT RUN

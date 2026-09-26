@@ -11,8 +11,15 @@ import {
 import { runSyncCycle, sendHeartbeat, PLAYER_VERSION } from "@/player/sync/engine";
 import {
   DisplayEngine,
+  type DisplayEngineHandle,
   type PlaybackItem,
 } from "@/player/playback/display-engine";
+import { PlaybackChrome } from "@/player/playback/playback-chrome";
+import {
+  createInitialPlaybackState,
+  type PlaybackAction,
+  type PlaybackState,
+} from "@/domain/playback-state";
 import {
   ACTIVE_PLAYER_RUNTIME,
   getPassiveRuntimeCapabilities,
@@ -33,7 +40,15 @@ import {
   withServerDeviceConfig,
 } from "@/player/runtime/device-config";
 import { updateRuntimeState } from "@/player/runtime/state";
+import { getPlayerSessionStore } from "@/player/session/player-session-store";
+import { compactPlaybackObservation } from "@/domain/playback-observation";
+import { formatPlayerDiagnostics } from "@/domain/player-session";
 import type { DetectedRuntimeCapabilities } from "@/domain/runtime-policy";
+import { createCommandDispatcher } from "@/player/command/command-dispatcher";
+import { createCommandPoller } from "@/player/command/command-poller";
+import { createIdempotencyStore } from "@/player/command/idempotency-store";
+import type { PlaybackController } from "@/player/playback/playback-controller";
+import { COMMAND_TRANSPORT } from "@/domain/command-transport";
 
 type Phase = "boot" | "pairing" | "claiming" | "playing" | "error";
 
@@ -125,6 +140,18 @@ export function PlayerApp() {
   const [manifestVersion, setManifestVersion] = useState(0);
   const [currentContentId, setCurrentContentId] = useState<string | undefined>();
   const [diag, setDiag] = useState(false);
+  const [playbackState, setPlaybackState] = useState<PlaybackState>(() =>
+    createInitialPlaybackState(0),
+  );
+  const engineRef = useRef<DisplayEngineHandle>(null);
+  const fragileTv = isFragileSmartTvBrowser();
+
+  const dispatchPlayback = useCallback((action: PlaybackAction) => {
+    engineRef.current?.dispatch(action);
+    setPlaybackState(
+      engineRef.current?.getState() ?? createInitialPlaybackState(0),
+    );
+  }, []);
   const [bootKey, setBootKey] = useState(0);
   const [bootHint, setBootHint] = useState("A iniciar…");
   const [bootSec, setBootSec] = useState(0);
@@ -295,7 +322,7 @@ export function PlayerApp() {
 
     // Sraf: leave Next/React entirely — static pairing page (no IDB/SW)
     if (isFragileSmartTvBrowser()) {
-      window.location.replace("/tv.html?v=047");
+      window.location.replace("/tv.html?v=055");
       return () => {
         cancelled = true;
       };
@@ -449,13 +476,20 @@ export function PlayerApp() {
           setPhase("error");
           setTimeout(() => {
             void saveConfig(null);
-            window.location.reload();
+            setPhase("boot");
+            setBootHint("A iniciar…");
+            setActivationCode(null);
+            setDeviceId(null);
+            setPairingSecret(null);
+            setBootKey((k) => k + 1);
           }, 3000);
         }
       } catch (e) {
         if (e instanceof Error && e.message === "UNAUTHORIZED") {
           void saveConfig(null);
-          window.location.reload();
+          setPhase("boot");
+          setBootHint("A iniciar…");
+          setBootKey((k) => k + 1);
         }
         /* keep pairing UI */
       }
@@ -530,13 +564,34 @@ export function PlayerApp() {
 
   useEffect(() => {
     if (phase !== "playing") return;
+    void (async () => {
+      try {
+        const config = await getConfig();
+        getPlayerSessionStore().start({
+          deviceId: config?.deviceId ?? deviceId ?? null,
+          tenantId: config?.tenantId ?? null,
+          now: Date.now(),
+        });
+      } catch {
+        /* observational */
+      }
+    })();
+  }, [phase, deviceId]);
 
-    const pulse = () =>
-      sendHeartbeat({
+  useEffect(() => {
+    if (phase !== "playing") return;
+
+    const pulse = () => {
+      const store = getPlayerSessionStore();
+      const obs = store.getObservation();
+      const session = store.getSession();
+      return sendHeartbeat({
         playerState: itemsRef.current.length > 0 ? "PLAYING" : "IDLE",
         resolution: `${window.innerWidth}x${window.innerHeight}`,
         contentId: contentIdRef.current ?? itemsRef.current[0]?.contentId,
-        playlistId: undefined,
+        playlistId: obs?.playlistId ?? undefined,
+        sessionId: session?.sessionId,
+        playback: obs ? compactPlaybackObservation(obs) : undefined,
       })
         .then(async (hb) => {
           if (!hb) return;
@@ -554,9 +609,12 @@ export function PlayerApp() {
         .catch((e) => {
           if (e instanceof Error && e.message === "UNAUTHORIZED") {
             void saveConfig(null);
-            window.location.reload();
+            setPhase("boot");
+            setBootHint("Sessão expirada — a reemparelhar…");
+            setBootKey((k) => k + 1);
           }
         });
+    };
 
     // Immediate beat so Admin shows ONLINE without waiting 30s (kiosk / HW validation)
     void pulse();
@@ -571,7 +629,9 @@ export function PlayerApp() {
       void syncAndShow().catch((e) => {
         if (e instanceof Error && e.message === "UNAUTHORIZED") {
           void saveConfig(null);
-          window.location.reload();
+          setPhase("boot");
+          setBootHint("Sessão expirada — a reemparelhar…");
+          setBootKey((k) => k + 1);
         }
       });
     }, itemsRef.current.length > 0 ? 20_000 : 10_000);
@@ -579,7 +639,9 @@ export function PlayerApp() {
       void syncAndShow().catch((e) => {
         if (e instanceof Error && e.message === "UNAUTHORIZED") {
           void saveConfig(null);
-          window.location.reload();
+          setPhase("boot");
+          setBootHint("Sessão expirada — a reemparelhar…");
+          setBootKey((k) => k + 1);
         }
       });
     };
@@ -590,6 +652,65 @@ export function PlayerApp() {
       window.removeEventListener("online", onOnline);
     };
   }, [phase, syncAndShow]);
+
+  // RUNTIME-PLAYBACK-09 — HTTP command poll → Dispatcher → ACK (React Player only).
+  useEffect(() => {
+    if (phase !== "playing") return;
+
+    const idempotency = createIdempotencyStore();
+
+    const poller = createCommandPoller({
+      intervalMs: COMMAND_TRANSPORT.POLL_INTERVAL_MS,
+      getDeviceToken: async () => (await getConfig())?.deviceToken ?? null,
+      dispatcher: {
+        getIdempotencyStore: () => idempotency,
+        dispatch: (command) => {
+          const d = createCommandDispatcher({
+            controller: {
+              dispatch: (action) => {
+                const handle = engineRef.current;
+                if (!handle) return createInitialPlaybackState(0);
+                const next = handle.dispatch(action);
+                setPlaybackState(next);
+                try {
+                  getPlayerSessionStore().observePlayback(next);
+                } catch {
+                  /* observational */
+                }
+                return next;
+              },
+              getState: () =>
+                engineRef.current?.getState() ?? createInitialPlaybackState(0),
+            } as PlaybackController,
+            getSession: () => {
+              const sess = getPlayerSessionStore().getSession();
+              if (!sess) return null;
+              return {
+                sessionId: sess.sessionId,
+                deviceId: sess.deviceId,
+                tenantId: sess.tenantId,
+              };
+            },
+            auth: {
+              authorized: true,
+              tenantId: command.tenantId,
+              deviceTenantId: command.tenantId,
+              deviceId: command.deviceId,
+              role: "OPERATOR",
+            },
+            idempotency,
+          });
+          return d.dispatch(command);
+        },
+      },
+      onError: () => {
+        /* never block playback */
+      },
+    });
+
+    poller.start();
+    return () => poller.stop();
+  }, [phase, deviceId]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -725,20 +846,49 @@ export function PlayerApp() {
         background: "#070b14",
       }}
     >
-      <DisplayEngine
-        items={items}
-        onItemChange={(item) => {
-          setCurrentContentId(item?.contentId);
-          try {
-            updateRuntimeState({
-              currentContentId: item?.contentId ?? null,
-              isPlaying: Boolean(item),
-            });
-          } catch {
-            /* observational */
-          }
-        }}
-      />
+      {(() => {
+        const engine = (
+          <DisplayEngine
+            ref={engineRef}
+            items={items}
+            playlistId="device-playlist"
+            manifestVersion={manifestVersion}
+            onItemChange={(item) => {
+              setCurrentContentId(item?.contentId);
+            }}
+            onPlaybackStateChange={(pb) => {
+              setPlaybackState(pb);
+              try {
+                updateRuntimeState({
+                  currentContentId: pb.currentContentId,
+                  isPlaying: pb.status === "PLAYING",
+                });
+              } catch {
+                /* observational — RuntimeState is not playback SoT */
+              }
+              try {
+                getPlayerSessionStore().observePlayback(pb);
+              } catch {
+                /* observational — never block playback */
+              }
+            }}
+          />
+        );
+        if (fragileTv) return engine;
+        const current = items[playbackState.currentItemIndex];
+        return (
+          <PlaybackChrome
+            state={playbackState}
+            dispatch={dispatchPlayback}
+            itemCount={items.length}
+            itemTitle={current?.title ?? null}
+            autoHide
+            style={{ height: "100%", width: "100%" }}
+          >
+            {engine}
+          </PlaybackChrome>
+        );
+      })()}
       {diag ? (
         <div className="pointer-events-none absolute bottom-4 left-4 max-w-[min(92vw,560px)] rounded bg-black/70 px-3 py-2 font-mono text-[10px] leading-relaxed text-white">
           <div>
@@ -774,6 +924,17 @@ export function PlayerApp() {
               return formatCapabilitiesDiagnostics(
                 snap.capabilities as DetectedRuntimeCapabilities,
               );
+            })()}
+          </div>
+          <div className="mt-1 opacity-70">
+            {(() => {
+              try {
+                const s = getPlayerSessionStore().getSession();
+                if (!s) return "session: (none)";
+                return formatPlayerDiagnostics(s);
+              } catch {
+                return "session: (error)";
+              }
             })()}
           </div>
           <div className="mt-1 opacity-75">

@@ -82,6 +82,28 @@ async function runTests() {
   assert.equal(url.includes("test-bucket"), true);
   assert.equal(url.includes("X-Amz-Signature"), true);
 
+  console.log("Testing createUploadUrl()...");
+  const upload = await provider.createUploadUrl({
+    storageKey: "tenants/tenant-1/asset-direct.png",
+    mimeType: "image/png",
+    expiresIn: 900,
+    contentLength: 128,
+  });
+  assert.equal(upload.storageKey, "tenants/tenant-1/asset-direct.png");
+  assert.equal(upload.expiresIn, 900);
+  assert.equal(upload.contentLength, 128);
+  assert.equal(upload.requiredHeaders["Content-Length"], "128");
+  assert.equal(upload.uploadUrl.includes("X-Amz-Signature"), true);
+  assert.equal(upload.uploadUrl.includes("test-bucket"), true);
+
+  console.log("Testing headObject()...");
+  headObjectMockResponse.ContentType = "image/png";
+  headObjectMockResponse.ContentLength = 42;
+  const head = await provider.headObject("tenants/tenant-1/asset-direct.png");
+  assert.equal(lastSentCommand instanceof S3Module.HeadObjectCommand, true);
+  assert.equal(head.contentType, "image/png");
+  assert.equal(head.contentLength, 42);
+
   console.log("Testing delete()...");
   await provider.delete("tenants/tenant-1/asset-123.png");
   assert.equal(lastSentCommand instanceof S3Module.DeleteObjectCommand, true);

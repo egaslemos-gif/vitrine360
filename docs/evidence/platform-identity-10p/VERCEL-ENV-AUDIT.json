@@ -1,0 +1,22 @@
+{
+  "auditedAt": "2026-09-25T16:30:00.000Z",
+  "phase": "PI-10P-CONTROLLED-PRODUCTION-ACTIVATION",
+  "project": "vitrine360",
+  "projectId": "prj_fcQMbXzU4QF9VmhuTi9aRWMnX032",
+  "authorizedPilotSlug": "egaslemos",
+  "productionEntitlementsEnabled": "SET(true)",
+  "previewEntitlementsEnabled": "SET(false)",
+  "productionEnvMutatedByPi10p": true,
+  "productionEntitlementsEnvId": "QVlubQ8jU4Ypjtgt",
+  "previewDeploymentId": "dpl_7U7ivaLBEW3U1tgcUYFdEeVpPz3N",
+  "productionDeploymentIdOff": "dpl_CezALPtRdqimJNaZuoGmXWEkMJv7",
+  "productionDeploymentIdOn": "dpl_Amo25Sy1eRXspPUYxFirH4DGRaqo",
+  "productionAlias": "https://vitrine360-psi.vercel.app",
+  "verdict": "PRODUCTION_CONTROLLED_ACTIVATION_READY",
+  "notes": [
+    "Pilot egaslemos only — sole ACTIVE TenantPlan",
+    "Non-cohort witness demo fail-closed DENY when flag ON",
+    "Preview flag left false",
+    "R2 MEDIUM residual unchanged"
+  ]
+}

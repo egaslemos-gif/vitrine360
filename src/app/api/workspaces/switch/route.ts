@@ -18,6 +18,10 @@ export async function POST(req: NextRequest) {
     if (!membership || membership.status !== "ACTIVE") {
       return jsonError("Workspace não autorizado", 403);
     }
+    const { isTenantOperable } = await import("@/services/tenant-lifecycle");
+    if (!(await isTenantOperable(body.tenantId))) {
+      return jsonError("Workspace suspenso", 403);
+    }
     const [user] = await db.select().from(users).where(eq(users.id, session.id)).limit(1);
     if (!user) return jsonError("Unauthorized", 401);
     const next = await sessionFromUser(user, body.tenantId);

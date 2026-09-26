@@ -1,8 +1,10 @@
 # UI/UX-01 — Design System & Interface Standardization
 
-**Status:** Visual refinement complete — **PENDING REGRESSION** (not VALIDATED)  
+**Status:** **VALIDATED** (2026-09-23)  
 **Date:** 2026-09-23  
-**Scope:** Admin chrome + shared UI primitives. No LIVE-MEDIA-01. No business-logic / DB / API / Player runtime behaviour changes.
+**Scope:** Admin chrome + shared UI primitives. No LIVE-MEDIA-01. No business-logic / DB / API / Player runtime behaviour changes.  
+**Commits:** `d5d9648` (refinement) · `0421931` (max-w theme collision QA fix)  
+**Production:** https://vitrine360-psi.vercel.app · `dpl_5NhztLaQ9N3gMRZhb99Qa5rwatP7`
 
 ## Goals
 

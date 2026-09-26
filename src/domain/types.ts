@@ -55,6 +55,7 @@ export type DeviceStatus = (typeof DEVICE_STATUSES)[number];
 export const CONTENT_TYPES = [
   "IMAGE",
   "VIDEO",
+  "AUDIO",
   "TEXT",
   "NOTICE",
   "EVENT",

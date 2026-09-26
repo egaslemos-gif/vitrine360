@@ -23,7 +23,7 @@ export function runClockLegacyParityTests() {
   const root = process.cwd();
   const tv = readFileSync(join(root, "public/tv.js"), "utf8");
   const reactEng = readFileSync(
-    join(root, "src/player/playback/display-engine.tsx"),
+    join(root, "src/player/playback/playback-renderer-adapter.tsx"),
     "utf8",
   );
   const reactVis = readFileSync(
@@ -172,9 +172,18 @@ export function runClockLegacyParityTests() {
   // Shell / SW cache-bust aligned with VERSION
   const html = readFileSync(join(root, "public/tv.html"), "utf8");
   const sw = readFileSync(join(root, "public/tv-sw.js"), "utf8");
-  assert.ok(html.includes("tv.js?v=050"), "shell cache-bust v050");
-  assert.ok(sw.includes("v050"), "service worker v050");
-  assert.ok(tv.includes("0.1.22-smarttv-static"), "tv VERSION 0.1.22");
+  assert.ok(html.includes("tv.js?v=055"), "shell cache-bust v055");
+  assert.ok(sw.includes("v055"), "service worker v055");
+  assert.ok(tv.includes("0.1.27-smarttv-static"), "tv VERSION 0.1.27");
+  assert.ok(
+    tv.includes("Math.min(Number(h), Number(w)"),
+    "tvFontPx uses min(height, width) for portrait",
+  );
+  // ES5: no trailing comma in setInterval call args (Hisense/Sraf SyntaxError)
+  assert.ok(
+    !/setInterval\(\s*applyHands\s*,\s*showSeconds \? 1000 : 30000\s*,/.test(tv),
+    "no trailing comma in analog setInterval call",
+  );
 
   // React cleanup
   assert.ok(liveSrc.includes("clearInterval"), "React timer cleanup");

@@ -1,8 +1,25 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { tenants } from "@/db/schema";
 
 export const DEFAULT_TENANT_SLUG = "demo";
+
+/**
+ * @deprecated Prefer `listPlatformTenantsMetadata` from platform-tenants (paginated).
+ * Kept for non-platform callers that need a full metadata scan in tests/tools.
+ */
+export async function listTenantsMetadata() {
+  return db
+    .select({
+      id: tenants.id,
+      name: tenants.name,
+      slug: tenants.slug,
+      status: tenants.status,
+      createdAt: tenants.createdAt,
+    })
+    .from(tenants)
+    .orderBy(asc(tenants.createdAt), asc(tenants.id));
+}
 
 export async function createTenant(params: {
   name: string;

@@ -51,6 +51,23 @@ const schema = z.object({
     )
     .optional(),
   observedAt: z.string().optional(),
+  /** Client session id — observational only. */
+  sessionId: z.string().max(80).optional(),
+  /** Compact PlaybackObservation — OBSERVED, never command authority. */
+  playback: z
+    .object({
+      status: z.string().optional(),
+      contentId: z.string().nullable().optional(),
+      contentType: z.string().nullable().optional(),
+      playlistId: z.string().nullable().optional(),
+      playlistItemId: z.string().nullable().optional(),
+      generation: z.number().optional(),
+      positionMs: z.number().optional(),
+      durationMs: z.number().nullable().optional(),
+      errorCode: z.string().nullable().optional(),
+      observedAt: z.string().optional(),
+    })
+    .optional(),
 });
 
 export async function POST(req: NextRequest) {

@@ -14,7 +14,7 @@ export default async function MediaPage() {
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <PageHeader
         title="Media"
-        description="Biblioteca de ficheiros multimédia."
+        description="Biblioteca profissional de ficheiros multimédia."
         actions={
           <Link
             href="/admin/contents/new"

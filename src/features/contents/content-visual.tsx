@@ -14,7 +14,15 @@ export type ContentVisualProps = {
 };
 
 const stageClass =
-  "flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#0b1220] text-white";
+  "flex h-full w-full min-w-0 flex-col items-center justify-center overflow-hidden bg-[#0b1220] text-white";
+
+const textPadClass = "px-4 sm:px-8 md:px-10";
+const titleBaseClass =
+  "mt-4 w-full max-w-3xl min-w-0 break-words font-semibold leading-tight [overflow-wrap:anywhere]";
+const bodyBaseClass =
+  "mt-4 w-full max-w-2xl min-w-0 break-words text-sm leading-relaxed text-white/80 sm:text-base md:text-lg whitespace-pre-wrap [overflow-wrap:anywhere]";
+const brandClass =
+  "max-w-full text-[10px] tracking-[0.2em] text-white/40 sm:text-xs sm:tracking-[0.35em]";
 
 function plain(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -26,11 +34,13 @@ function textAlign(align: unknown): "left" | "center" | "right" {
 }
 
 function fontSizeClass(fontSize: unknown): string {
-  if (fontSize === "small") return "text-lg md:text-xl";
-  if (fontSize === "medium") return "text-2xl md:text-3xl";
-  if (fontSize === "xlarge") return "text-5xl md:text-6xl";
+  if (fontSize === "small") return "text-base sm:text-lg md:text-xl";
+  if (fontSize === "medium") return "text-xl sm:text-2xl md:text-3xl";
+  if (fontSize === "xlarge") {
+    return "text-2xl sm:text-4xl md:text-5xl lg:text-6xl break-words";
+  }
   // default large
-  return "text-3xl md:text-4xl";
+  return "text-xl sm:text-3xl md:text-4xl break-words";
 }
 
 function ImageVisual({
@@ -119,10 +129,65 @@ function VideoVisual({
         ref={videoRef}
         src={mediaUrl}
         className="h-full w-full object-contain"
-        muted
         playsInline
         controls
         preload="metadata"
+        onError={() => setFailed(true)}
+      />
+      <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-[10px] uppercase tracking-wider text-white/80">
+        {durationMs === 0 ? "Duração natural" : `${durationMs} ms`}
+      </div>
+    </div>
+  );
+}
+
+function AudioVisual({
+  title,
+  mediaUrl,
+  durationMs,
+}: {
+  title: string;
+  mediaUrl: string | null | undefined;
+  durationMs: number;
+}) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    return () => {
+      if (el) {
+        el.pause();
+        el.removeAttribute("src");
+        el.load();
+      }
+    };
+  }, [mediaUrl]);
+
+  if (!mediaUrl || failed) {
+    return (
+      <div className={`${stageClass} bg-[#0b1220] px-8 text-center`}>
+        <p className="text-xs uppercase tracking-[0.25em] text-white/40">
+          AUDIO · media em falta
+        </p>
+        <p className="mt-4 text-2xl font-semibold">{title}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-[#0b1220] via-[#132033] to-[#1a2740] px-8 text-center">
+      <p className="text-xs uppercase tracking-[0.25em] text-white/40">
+        VITRINE360 · AUDIO
+      </p>
+      <p className="mt-4 text-2xl font-semibold text-white">{title}</p>
+      <audio
+        ref={audioRef}
+        src={mediaUrl}
+        className="mt-8 w-full max-w-md"
+        controls
+        preload="metadata"
+        autoPlay
         onError={() => setFailed(true)}
       />
       <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-[10px] uppercase tracking-wider text-white/80">
@@ -219,19 +284,19 @@ function QrStubVisual({
   const label = plain(payload.label);
 
   return (
-    <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] px-10 text-center`}>
-      <p className="text-xs tracking-[0.35em] text-white/40">VITRINE360 · QR_CODE</p>
+    <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] ${textPadClass} text-center`}>
+      <p className={brandClass}>VITRINE360 · QR_CODE</p>
       <h2
-        className="mt-5 max-w-3xl text-3xl font-semibold leading-tight md:text-4xl"
+        className={`${titleBaseClass} text-2xl sm:text-3xl md:text-4xl`}
         style={{ fontFamily: "var(--font-fraunces), serif" }}
       >
         {title}
       </h2>
       {label ? (
-        <p className="mt-3 text-base text-white/70">{label}</p>
+        <p className={`${bodyBaseClass} text-white/70`}>{label}</p>
       ) : null}
       {url ? (
-        <p className="mt-4 max-w-xl break-all text-sm text-white/60">{url}</p>
+        <p className="mt-4 max-w-xl break-all text-xs text-white/60 sm:text-sm">{url}</p>
       ) : null}
       <p className="mt-8 rounded-md border border-dashed border-white/30 px-4 py-3 text-xs uppercase tracking-wider text-white/50">
         QR visual ainda não disponível
@@ -252,19 +317,15 @@ function TextLikeVisual({
   if (type === "NOTICE") {
     const message = plain(payload.message);
     return (
-      <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] px-10 text-center`}>
-        <p className="text-xs tracking-[0.35em] text-white/40">VITRINE360 · NOTICE</p>
+      <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] ${textPadClass} text-center`}>
+        <p className={brandClass}>VITRINE360 · NOTICE</p>
         <h2
-          className="mt-5 max-w-3xl text-3xl font-semibold leading-tight md:text-4xl"
+          className={`${titleBaseClass} text-2xl sm:text-3xl md:text-4xl`}
           style={{ fontFamily: "var(--font-fraunces), serif" }}
         >
           {title}
         </h2>
-        {message ? (
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg whitespace-pre-wrap">
-            {message}
-          </p>
-        ) : null}
+        {message ? <p className={bodyBaseClass}>{message}</p> : null}
       </div>
     );
   }
@@ -275,20 +336,16 @@ function TextLikeVisual({
     const time = plain(payload.time);
     const location = plain(payload.location);
     return (
-      <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] px-10 text-center`}>
-        <p className="text-xs tracking-[0.35em] text-white/40">VITRINE360 · EVENT</p>
+      <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] ${textPadClass} text-center`}>
+        <p className={brandClass}>VITRINE360 · EVENT</p>
         <h2
-          className="mt-5 max-w-3xl text-3xl font-semibold leading-tight md:text-4xl"
+          className={`${titleBaseClass} text-2xl sm:text-3xl md:text-4xl`}
           style={{ fontFamily: "var(--font-fraunces), serif" }}
         >
           {title}
         </h2>
-        {description ? (
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg whitespace-pre-wrap">
-            {description}
-          </p>
-        ) : null}
-        <div className="mt-6 space-y-1 text-sm text-white/60">
+        {description ? <p className={bodyBaseClass}>{description}</p> : null}
+        <div className="mt-6 w-full max-w-2xl space-y-1 break-words text-sm text-white/60">
           {date ? <p>Data: {date}</p> : null}
           {time ? <p>Hora: {time}</p> : null}
           {location ? <p>Local: {location}</p> : null}
@@ -301,21 +358,19 @@ function TextLikeVisual({
     const body = plain(payload.body);
     const source = plain(payload.source);
     return (
-      <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] px-10 text-center`}>
-        <p className="text-xs tracking-[0.35em] text-white/40">VITRINE360 · NEWS</p>
+      <div className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] ${textPadClass} text-center`}>
+        <p className={brandClass}>VITRINE360 · NEWS</p>
         <h2
-          className="mt-5 max-w-3xl text-3xl font-semibold leading-tight md:text-4xl"
+          className={`${titleBaseClass} text-2xl sm:text-3xl md:text-4xl`}
           style={{ fontFamily: "var(--font-fraunces), serif" }}
         >
           {title}
         </h2>
-        {body ? (
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg whitespace-pre-wrap">
-            {body}
-          </p>
-        ) : null}
+        {body ? <p className={bodyBaseClass}>{body}</p> : null}
         {source ? (
-          <p className="mt-4 text-sm text-white/50">Fonte: {source}</p>
+          <p className="mt-4 max-w-full break-words text-sm text-white/50">
+            Fonte: {source}
+          </p>
         ) : null}
       </div>
     );
@@ -328,21 +383,17 @@ function TextLikeVisual({
 
   return (
     <div
-      className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] px-10`}
+      className={`${stageClass} bg-[linear-gradient(160deg,#0b1220_0%,#132033_55%,#1a2740_100%)] ${textPadClass}`}
       style={{ textAlign: align }}
     >
-      <p className="text-xs tracking-[0.35em] text-white/40">VITRINE360 · TEXT</p>
+      <p className={brandClass}>VITRINE360 · TEXT</p>
       <h2
-        className={`mt-5 max-w-3xl font-semibold leading-tight ${sizeClass}`}
+        className={`${titleBaseClass} ${sizeClass}`}
         style={{ fontFamily: "var(--font-fraunces), serif" }}
       >
         {title}
       </h2>
-      {body ? (
-        <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg whitespace-pre-wrap">
-          {body}
-        </p>
-      ) : null}
+      {body ? <p className={bodyBaseClass}>{body}</p> : null}
     </div>
   );
 }
@@ -363,6 +414,11 @@ export function ContentVisual({ content, previewNow }: ContentVisualProps) {
   if (type === "VIDEO") {
     return (
       <VideoVisual title={title} mediaUrl={mediaUrl} durationMs={durationMs} />
+    );
+  }
+  if (type === "AUDIO") {
+    return (
+      <AudioVisual title={title} mediaUrl={mediaUrl} durationMs={durationMs} />
     );
   }
   if (type === "CLOCK") {

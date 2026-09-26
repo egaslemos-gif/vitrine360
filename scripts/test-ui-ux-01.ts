@@ -130,8 +130,14 @@ function main() {
   assert.ok(typeSrc.includes("QR_CODE"), "UI-UX-003 QR_CODE");
   console.log("  UI-UX-003 PASS");
 
-  // UI-UX-004 — Sidebar sections
-  assert.deepEqual(NAV_SECTION_ORDER, ["OVERVIEW", "MANAGEMENT", "SYSTEM"]);
+  // UI-UX-004 — Sidebar sections (UI/UX-02 IA: Overview/Content/Devices/Playback/System)
+  assert.deepEqual(NAV_SECTION_ORDER, [
+    "OVERVIEW",
+    "CONTENT",
+    "DEVICES",
+    "PLAYBACK",
+    "SYSTEM",
+  ]);
   const grouped = navGroupedForRole("ADMIN");
   assert.ok(grouped.length >= 2, "UI-UX-004 groups");
   assert.ok(
@@ -142,7 +148,9 @@ function main() {
   assert.ok(hrefs.includes("/admin/devices"));
   assert.ok(hrefs.includes("/admin/users"));
   assert.ok(hrefs.includes("/admin/logs"));
-  // routes unchanged from prior nav set
+  assert.ok(hrefs.includes("/admin/media"));
+  assert.ok(hrefs.includes("/admin/schedules"));
+  // routes unchanged from prior nav set (all under /admin)
   for (const item of ADMIN_NAV) {
     assert.ok(item.href.startsWith("/admin"), `route ${item.href}`);
   }

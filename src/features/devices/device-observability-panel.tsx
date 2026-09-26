@@ -64,7 +64,8 @@ export function DeviceObservabilityPanel({
             {obs.presence.label}
           </Badge>
           <span aria-label={`Runtime ${obs.runtime.isPlaying ? "a reproduzir" : "idle"}`}>
-            {obs.runtime.isPlaying ? "PLAYING" : "IDLE"}
+            {obs.playback.observedStatus ??
+              (obs.runtime.isPlaying ? "PLAYING" : "IDLE")}
           </span>
           {obs.runtime.syncState ? (
             <span>· Sync {obs.runtime.syncState}</span>
@@ -148,6 +149,10 @@ export function DeviceObservabilityPanel({
             value={obs.runtime.isPlaying ? "PLAYING" : "IDLE"}
           />
           <Fact
+            label="Status observado"
+            value={obs.playback.observedStatus ?? "—"}
+          />
+          <Fact
             label="Conteúdo actual"
             value={
               obs.content.id
@@ -160,6 +165,37 @@ export function DeviceObservabilityPanel({
           <Fact
             label="Manifest"
             value={`v${obs.runtime.currentManifestVersion ?? "—"}`}
+          />
+          <Fact
+            label="Sessão"
+            value={
+              obs.playback.sessionId
+                ? `${obs.playback.sessionId.slice(0, 14)}…`
+                : "—"
+            }
+          />
+          <Fact
+            label="Posição observada"
+            value={
+              obs.playback.positionMs != null
+                ? `${Math.round(obs.playback.positionMs / 1000)}s` +
+                  (obs.playback.durationMs != null
+                    ? ` / ${Math.round(obs.playback.durationMs / 1000)}s`
+                    : "")
+                : "—"
+            }
+          />
+          <Fact
+            label="Geração"
+            value={
+              obs.playback.generation != null
+                ? String(obs.playback.generation)
+                : "—"
+            }
+          />
+          <Fact
+            label="Erro observado"
+            value={obs.playback.errorCode ?? "none"}
           />
           <Fact
             label="Sincronização"

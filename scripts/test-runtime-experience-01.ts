@@ -46,10 +46,10 @@ function main() {
 
   const checklist: { id: string; ok: boolean; detail: string }[] = [];
 
-  // EXP-ARCH-001 — no HTML_APP in CONTENT_TYPES
+  // EXP-ARCH-001 — no HTML_APP; EXPERIENCE added in EXPERIENCE-09
   console.log("EXP-ARCH-001 CONTENT_TYPES");
   assert.ok(!CONTENT_TYPES.includes("HTML_APP" as never));
-  assert.ok(!(CONTENT_TYPES as readonly string[]).includes("EXPERIENCE"));
+  assert.ok((CONTENT_TYPES as readonly string[]).includes("EXPERIENCE"));
   checklist.push({
     id: "EXP-ARCH-001",
     ok: true,
@@ -93,13 +93,11 @@ function main() {
   const srcFiles = walkTsFiles(path.join(ROOT, "src"));
   const executorHits: string[] = [];
   for (const file of srcFiles) {
+    // EXPERIENCE-06/07 may ship sandbox frame + bridge host under experience-sandbox/
+    if (file.replace(/\\/g, "/").includes("/experience-sandbox/")) continue;
     const text = read(file);
-    // Functional Experience sandbox host / bridge — not mere documentation strings in comments of this audit
     if (
-      /sandbox=["']allow-scripts/.test(text) ||
-      /createExperienceRuntime|ExperienceSandboxHost|ExperienceIframeExecutor/.test(
-        text,
-      ) ||
+      /ExperienceIframeExecutor|createExperienceRuntime/.test(text) ||
       /postMessage\([^)]*EXPERIENCE_|method:\s*["']REQUEST_FULLSCREEN["']/.test(
         text,
       )
@@ -115,7 +113,7 @@ function main() {
   checklist.push({
     id: "EXP-ARCH-003",
     ok: true,
-    detail: "No Experience Runtime / sandbox executor under src/",
+    detail: "No Experience executor/bridge under src/ (sandbox host allowed in EXPERIENCE-06+)",
   });
 
   // EXP-ARCH-004 — no Experience migration
@@ -165,23 +163,25 @@ function main() {
     detail: "No Experience token bridge patterns in src/",
   });
 
-  // EXP-ARCH-006 — media content types unchanged (playback contract)
+  // EXP-ARCH-006 — media content types preserved; EXPERIENCE added (EX-09)
   console.log("EXP-ARCH-006 media types stable");
   const expected = [
     "IMAGE",
     "VIDEO",
+    "AUDIO",
     "TEXT",
     "NOTICE",
     "EVENT",
     "NEWS",
     "QR_CODE",
     "CLOCK",
+    "EXPERIENCE",
   ];
   assert.deepEqual([...CONTENT_TYPES], expected);
   checklist.push({
     id: "EXP-ARCH-006",
     ok: true,
-    detail: "CONTENT_TYPES unchanged",
+    detail: "CONTENT_TYPES media preserved + EXPERIENCE",
   });
 
   // EXP-ARCH-007 — threat model + contracts mentioned
@@ -216,7 +216,7 @@ function main() {
 ${checklist.map((c) => `| ${c.id} | ${c.ok ? "PASS" : "FAIL"} | ${c.detail} |`).join("\n")}
 
 ## Confirmed absences
-- HTML_APP / EXPERIENCE not in CONTENT_TYPES
+- HTML_APP not in CONTENT_TYPES; EXPERIENCE added in EXPERIENCE-09
 - No src/player/experience* executor
 - No Experience DB migration
 - No functional Experience postMessage bridge

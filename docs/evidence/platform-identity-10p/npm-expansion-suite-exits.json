@@ -1,0 +1,58 @@
+[
+    {
+        "suite":  "test:platform-identity-10b",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10c",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10d",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10i",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10j",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10k",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10l",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10n",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-10o",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-04",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-05b",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-06b",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-07",
+        "exit":  0
+    },
+    {
+        "suite":  "test:platform-identity-09",
+        "exit":  0
+    }
+]

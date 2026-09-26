@@ -11,14 +11,16 @@ export function MediaAssetPicker({
   onSelect,
 }: {
   assets: MediaAssetItem[];
-  contentType: "IMAGE" | "VIDEO";
+  contentType: "IMAGE" | "VIDEO" | "AUDIO";
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
   const filtered = assets.filter((a) =>
     contentType === "IMAGE"
       ? a.mimeType.startsWith("image/")
-      : a.mimeType.startsWith("video/"),
+      : contentType === "VIDEO"
+        ? a.mimeType.startsWith("video/")
+        : a.mimeType.startsWith("audio/"),
   );
 
   return (
@@ -60,7 +62,7 @@ export function MediaAssetPicker({
                     alt={asset.fileName}
                     className="h-full w-full object-cover"
                   />
-                ) : (
+                ) : contentType === "VIDEO" ? (
                   <div className="flex h-full w-full items-center justify-center bg-black">
                     <video
                       src={asset.url}
@@ -68,6 +70,15 @@ export function MediaAssetPicker({
                       muted
                       preload="metadata"
                     />
+                  </div>
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[#0b1220] p-2 text-white">
+                    <span className="text-[10px] uppercase tracking-wider text-white/50">
+                      AUDIO
+                    </span>
+                    <span className="line-clamp-3 text-center text-[11px]">
+                      {asset.fileName}
+                    </span>
                   </div>
                 )}
                 {gif ? (

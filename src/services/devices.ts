@@ -50,8 +50,11 @@ export function toPublicDeviceConfigSlice(device: {
 }
 
 /** Tenant playlist used for every newly associated screen. */
-export async function getOrCreateDefaultPlaylistId(tenantId: string) {
-  const [defaultPlaylist] = await db
+export async function getOrCreateDefaultPlaylistId(
+  tenantId: string,
+  executor: typeof db | { select: typeof db.select; insert: typeof db.insert } = db,
+) {
+  const [defaultPlaylist] = await executor
     .select()
     .from(playlists)
     .where(and(eq(playlists.name, DEFAULT_PLAYLIST_NAME), eq(playlists.tenantId, tenantId)))
@@ -61,7 +64,7 @@ export async function getOrCreateDefaultPlaylistId(tenantId: string) {
 
   const playlistId = crypto.randomUUID();
   const contentId = crypto.randomUUID();
-  const [defaultVideoAsset] = await db
+  const [defaultVideoAsset] = await executor
     .select()
     .from(mediaAssets)
     .where(
@@ -72,7 +75,7 @@ export async function getOrCreateDefaultPlaylistId(tenantId: string) {
     )
     .limit(1);
 
-  await db.insert(contents).values({
+  await executor.insert(contents).values({
     id: contentId,
     type: defaultVideoAsset ? "VIDEO" : "TEXT",
     title: defaultVideoAsset ? "Vídeo de Demonstração" : "Vitrine360 pronta",
@@ -85,21 +88,21 @@ export async function getOrCreateDefaultPlaylistId(tenantId: string) {
   });
 
   if (defaultVideoAsset) {
-    await db.insert(contentAssets).values({
+    await executor.insert(contentAssets).values({
       contentId,
       mediaAssetId: defaultVideoAsset.id,
       role: "primary",
     });
   }
 
-  await db.insert(playlists).values({
+  await executor.insert(playlists).values({
     id: playlistId,
     name: DEFAULT_PLAYLIST_NAME,
     description: "Criada automaticamente. Edite ou remova esta playlist.",
     tenantId,
   });
 
-  await db.insert(playlistItems).values({
+  await executor.insert(playlistItems).values({
     id: crypto.randomUUID(),
     playlistId,
     contentId,
@@ -238,76 +241,125 @@ export async function pairDevice(params: {
   tenantId: string;
   userId?: string;
 }) {
-  const now = new Date().toISOString();
-  const [device] = await db
-    .select()
-    .from(devices)
-    .where(
-      and(
-        eq(devices.activationCode, params.activationCode),
-        eq(devices.status, "PENDING"),
-        or(
-          isNull(devices.activationExpiresAt),
-          gt(devices.activationExpiresAt, now),
-        ),
-      ),
-    )
-    .limit(1);
+  const { assertTenantOperable } = await import("@/services/tenant-lifecycle");
+  await assertTenantOperable(params.tenantId);
 
-  if (!device) {
-    throw new Error("Invalid or expired activation code");
+  const { withTenantAllocationLock } = await import("@/db");
+  const { assertDevicesEnabled, EntitlementDeniedError } = await import(
+    "@/services/entitlements"
+  );
+  const { assertDevicesMaxAllocation } = await import(
+    "@/services/device-quota"
+  );
+  const { logActivity: logEntitlementDeny } = await import(
+    "@/services/activity-log"
+  );
+
+  try {
+    const paired = await withTenantAllocationLock(params.tenantId, async (tx) => {
+      // PI-10D FEATURE_GATE + PI-10G devices.max — flag OFF → both no-op ALLOW
+      await assertDevicesEnabled(params.tenantId, "device.pair");
+      await assertDevicesMaxAllocation(params.tenantId, "device.pair", tx);
+
+      const now = new Date().toISOString();
+      const [device] = await tx
+        .select()
+        .from(devices)
+        .where(
+          and(
+            eq(devices.activationCode, params.activationCode),
+            eq(devices.status, "PENDING"),
+            or(
+              isNull(devices.activationExpiresAt),
+              gt(devices.activationExpiresAt, now),
+            ),
+          ),
+        )
+        .limit(1);
+
+      if (!device) {
+        throw new Error("Invalid or expired activation code");
+      }
+
+      const existing = await tx
+        .select()
+        .from(devices)
+        .where(
+          and(
+            eq(devices.deviceCode, params.deviceCode),
+            eq(devices.tenantId, params.tenantId),
+          ),
+        )
+        .limit(1);
+      if (existing.length) {
+        throw new Error("Device code already in use");
+      }
+
+      const defaultPlaylistId = await getOrCreateDefaultPlaylistId(
+        params.tenantId,
+        tx,
+      );
+
+      const result = await tx
+        .update(devices)
+        .set({
+          name: params.name,
+          location: params.location ?? null,
+          description: params.description ?? null,
+          deviceCode: params.deviceCode,
+          status: "ACTIVE",
+          currentPlaylistId: defaultPlaylistId,
+          manifestVersion: device.manifestVersion + 1,
+          activationCode: null,
+          activationExpiresAt: null,
+          tenantId: params.tenantId,
+          updatedAt: now,
+        })
+        .where(and(eq(devices.id, device.id), eq(devices.status, "PENDING")))
+        .returning({ id: devices.id });
+
+      if (!result.length) {
+        throw new Error("Device already paired");
+      }
+
+      return { deviceId: device.id };
+    });
+
+    try {
+      await logActivity({
+        userId: params.userId,
+        tenantId: params.tenantId,
+        action: "device.paired",
+        resource: "device",
+        resourceId: paired.deviceId,
+        metadata: { deviceCode: params.deviceCode },
+      });
+    } catch {
+      /* observability must not fail allocation after commit */
+    }
+
+    return paired;
+  } catch (e) {
+    if (e instanceof EntitlementDeniedError) {
+      try {
+        await logEntitlementDeny({
+          userId: params.userId,
+          tenantId: params.tenantId,
+          action: "entitlement.denied",
+          resource: "device",
+          metadata: {
+            entitlement: e.entitlementKey,
+            reason: e.reason,
+            code: e.code,
+            operation: "device.pair",
+          },
+        });
+      } catch {
+        /* observability must not mask quota denial */
+      }
+    }
+    throw e;
   }
-
-  const existing = await db
-    .select()
-    .from(devices)
-    .where(
-      and(
-        eq(devices.deviceCode, params.deviceCode),
-        eq(devices.tenantId, params.tenantId),
-      ),
-    )
-    .limit(1);
-  if (existing.length) {
-    throw new Error("Device code already in use");
-  }
-
-  const defaultPlaylistId = await getOrCreateDefaultPlaylistId(params.tenantId);
-
-  // 2. Activate device — bump manifestVersion so the first sync actually
-  // delivers the default playlist (fresh players report version -1/0).
-  const result = await db
-    .update(devices)
-    .set({
-      name: params.name,
-      location: params.location ?? null,
-      description: params.description ?? null,
-      deviceCode: params.deviceCode,
-      status: "ACTIVE",
-      currentPlaylistId: defaultPlaylistId,
-      manifestVersion: device.manifestVersion + 1,
-      activationCode: null,
-      activationExpiresAt: null,
-      tenantId: params.tenantId,
-      updatedAt: now,
-    })
-    .where(and(eq(devices.id, device.id), eq(devices.status, "PENDING")))
-    .returning({ id: devices.id });
-
-  if (!result.length) {
-    throw new Error("Device already paired");
-  }
-
-  await logActivity({
-    userId: params.userId,
-    tenantId: params.tenantId,
-    action: "device.paired",
-    resource: "device",
-    resourceId: device.id,
-    metadata: { deviceCode: params.deviceCode },
-  });
-
-  return { deviceId: device.id };
 }
 
 export async function bootstrapByActivationCode(activationCode: string) {
@@ -456,6 +508,10 @@ export async function authenticateDevice(bearer: string | null) {
   ) {
     return null;
   }
+  if (device.tenantId) {
+    const { isTenantOperable } = await import("@/services/tenant-lifecycle");
+    if (!(await isTenantOperable(device.tenantId))) return null;
+  }
   return device;
 }
 
@@ -465,36 +521,105 @@ export async function setDeviceStatus(params: {
   status: "ACTIVE" | "DISABLED";
   userId?: string;
 }) {
-  const now = new Date().toISOString();
-  const patch: Record<string, unknown> = {
-    status: params.status,
-    updatedAt: now,
-  };
-  if (params.status === "DISABLED") {
-    patch.deviceTokenHash = null;
-    patch.deviceTokenExpiresAt = null;
-    patch.pairingSecretHash = null;
-  }
-  const updated = await db
-    .update(devices)
-    .set(patch)
+  const [current] = await db
+    .select()
+    .from(devices)
     .where(
       and(
         eq(devices.id, params.deviceId),
         eq(devices.tenantId, params.tenantId),
       ),
     )
-    .returning({ id: devices.id });
-  if (!updated.length) throw new Error("Device not found");
-  await logActivity({
-    userId: params.userId,
-    tenantId: params.tenantId,
-    action:
-      params.status === "DISABLED" ? "device.disabled" : "device.reactivated",
-    resource: "device",
-    resourceId: params.deviceId,
-  });
-  return { ok: true };
+    .limit(1);
+  if (!current) throw new Error("Device not found");
+
+  const isAllocation =
+    current.status === "DISABLED" && params.status === "ACTIVE";
+
+  if (isAllocation) {
+    const { assertTenantOperable } = await import("@/services/tenant-lifecycle");
+    await assertTenantOperable(params.tenantId);
+  }
+
+  const applyStatus = async (
+    executor: typeof db | { select: typeof db.select; update: typeof db.update } = db,
+  ) => {
+    if (isAllocation) {
+      const { assertDevicesEnabled } = await import("@/services/entitlements");
+      const { assertDevicesMaxAllocation } = await import(
+        "@/services/device-quota"
+      );
+      await assertDevicesEnabled(params.tenantId, "device.reactivate");
+      await assertDevicesMaxAllocation(
+        params.tenantId,
+        "device.reactivate",
+        executor as Parameters<typeof assertDevicesMaxAllocation>[2],
+      );
+    }
+
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = {
+      status: params.status,
+      updatedAt: now,
+    };
+    if (params.status === "DISABLED") {
+      patch.deviceTokenHash = null;
+      patch.deviceTokenExpiresAt = null;
+      patch.pairingSecretHash = null;
+    }
+    const updated = await executor
+      .update(devices)
+      .set(patch)
+      .where(
+        and(
+          eq(devices.id, params.deviceId),
+          eq(devices.tenantId, params.tenantId),
+        ),
+      )
+      .returning({ id: devices.id });
+    if (!updated.length) throw new Error("Device not found");
+    return { ok: true as const };
+  };
+
+  try {
+    const result = isAllocation
+      ? await (
+          await import("@/db")
+        ).withTenantAllocationLock(params.tenantId, (tx) => applyStatus(tx))
+      : await applyStatus();
+
+    await logActivity({
+      userId: params.userId,
+      tenantId: params.tenantId,
+      action:
+        params.status === "DISABLED" ? "device.disabled" : "device.reactivated",
+      resource: "device",
+      resourceId: params.deviceId,
+    });
+    return result;
+  } catch (e) {
+    const { EntitlementDeniedError } = await import("@/services/entitlements");
+    if (e instanceof EntitlementDeniedError) {
+      try {
+        await logActivity({
+          userId: params.userId,
+          tenantId: params.tenantId,
+          action: "entitlement.denied",
+          resource: "device",
+          resourceId: params.deviceId,
+          metadata: {
+            entitlement: e.entitlementKey,
+            reason: e.reason,
+            code: e.code,
+            operation: "device.reactivate",
+          },
+        });
+      } catch {
+        /* observability must not mask quota denial */
+      }
+    }
+    throw e;
+  }
 }
 
 export async function rotateDeviceToken(params: {
@@ -537,6 +662,8 @@ export async function recordHeartbeat(params: {
   contentId?: string;
   playerState?: string;
   resolution?: string;
+  sessionId?: string;
+  playback?: Record<string, unknown>;
   runtimeState?: Record<string, unknown>;
   policy?: {
     policySource?: string;
@@ -562,12 +689,15 @@ export async function recordHeartbeat(params: {
         contentId: params.contentId,
         state: params.playerState,
         runtime: "PASSIVE",
+        ...(params.sessionId ? { sessionId: params.sessionId } : {}),
+        ...(params.playback ? { playback: params.playback } : {}),
         ...(params.runtimeState
           ? { runtimeState: params.runtimeState }
           : {}),
         ...(params.policy ? { policy: params.policy } : {}),
         ...(params.diagnostics ? { diagnostics: params.diagnostics } : {}),
         observedAt: params.observedAt ?? now,
+        receivedAt: now,
       }),
       updatedAt: now,
     })

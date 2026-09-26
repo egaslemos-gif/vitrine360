@@ -16,6 +16,7 @@ import {
   isGifMime,
 } from "@/features/contents/gif-support";
 import { TemplateRegistry } from "@/domain/content-templates";
+import { uploadMediaFile } from "@/features/media/direct-upload";
 
 export type StudioMode = "create" | "edit";
 
@@ -67,12 +68,16 @@ function resolveCreateSeed(
     ? existingAssets.find((a) => a.id === mediaAssetId)
     : undefined;
   if (asset) {
-    const type = asset.mimeType.startsWith("video/") ? "VIDEO" : "IMAGE";
+    const type = asset.mimeType.startsWith("video/")
+      ? "VIDEO"
+      : asset.mimeType.startsWith("audio/")
+        ? "AUDIO"
+        : "IMAGE";
     return {
       type,
       title: asset.fileName,
       description: "",
-      durationMs: type === "VIDEO" ? 0 : 10000,
+      durationMs: type === "VIDEO" || type === "AUDIO" ? 0 : 10000,
       status: "ACTIVE",
       payload: {},
       mediaAssetId: asset.id,
@@ -114,7 +119,7 @@ export function ContentStudioForm({
   const [status, setStatus] = useState(seed.status);
   const [durationMs, setDurationMs] = useState(seed.durationMs);
   const [naturalVideo, setNaturalVideo] = useState(
-    seed.type === "VIDEO" && seed.durationMs === 0,
+    (seed.type === "VIDEO" || seed.type === "AUDIO") && seed.durationMs === 0,
   );
   const [body, setBody] = useState(payloadBody(seed.type, seed.payload ?? {}));
   const [newsSource, setNewsSource] = useState(
@@ -163,7 +168,7 @@ export function ContentStudioForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const isMedia = type === "IMAGE" || type === "VIDEO";
+  const isMedia = type === "IMAGE" || type === "VIDEO" || type === "AUDIO";
 
   const selectedAsset = useMemo(() => {
     if (file && isGifMime(file.type)) {
@@ -188,7 +193,7 @@ export function ContentStudioForm({
     isGifMime(selectedAsset.mimeType);
 
   const effectiveDuration = useMemo(() => {
-    if (type === "VIDEO" && naturalVideo) return 0;
+    if ((type === "VIDEO" || type === "AUDIO") && naturalVideo) return 0;
     return durationMs;
   }, [type, naturalVideo, durationMs]);
 
@@ -283,7 +288,7 @@ export function ContentStudioForm({
         setError("Título obrigatório");
         return;
       }
-      if (type !== "VIDEO" && effectiveDuration <= 0) {
+      if (type !== "VIDEO" && type !== "AUDIO" && effectiveDuration <= 0) {
         setError("A duração deve ser maior que 0");
         return;
       }
@@ -295,20 +300,23 @@ export function ContentStudioForm({
               setError("Seleccione um ficheiro");
               return;
             }
-            const form = new FormData();
-            form.set("file", file);
-            form.set("type", type);
-            form.set("title", title.trim());
-            form.set("status", status);
-            if (description) form.set("description", description);
-            form.set("durationMs", String(effectiveDuration));
+            const asset = await uploadMediaFile(file);
             const res = await fetch("/api/admin/contents", {
               method: "POST",
-              body: form,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type,
+                title: title.trim(),
+                description: description || undefined,
+                durationMs: effectiveDuration,
+                status,
+                mediaAssetId: asset.id,
+                payload: {},
+              }),
             });
             const data = (await res.json()) as { id?: string; error?: string };
             if (!res.ok) {
-              setError(data.error ?? "Erro no upload");
+              setError(data.error ?? "Erro ao criar conteúdo");
               return;
             }
             router.push(`/admin/contents/${data.id}`);
@@ -371,18 +379,8 @@ export function ContentStudioForm({
       }
 
       if (isMedia && sourceMode === "upload" && file) {
-        const up = new FormData();
-        up.set("file", file);
-        const upRes = await fetch("/api/admin/media", {
-          method: "POST",
-          body: up,
-        });
-        const upData = (await upRes.json()) as { id?: string; error?: string };
-        if (!upRes.ok || !upData.id) {
-          setError(upData.error ?? "Erro no upload do media");
-          return;
-        }
-        setSelectedAssetId(upData.id);
+        const asset = await uploadMediaFile(file);
+        setSelectedAssetId(asset.id);
         const res = await fetch(`/api/admin/contents/${initial.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -392,7 +390,7 @@ export function ContentStudioForm({
             durationMs: effectiveDuration,
             status,
             payload: {},
-            mediaAssetId: upData.id,
+            mediaAssetId: asset.id,
           }),
         });
         const data = (await res.json()) as { error?: string };
@@ -426,8 +424,10 @@ export function ContentStudioForm({
         return;
       }
       router.refresh();
-    } catch {
-      setError("Ocorreu um erro inesperado");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Ocorreu um erro inesperado",
+      );
     } finally {
       setBusy(false);
     }
@@ -455,7 +455,7 @@ export function ContentStudioForm({
                   setType(next);
                   setSelectedAssetId(null);
                   setFile(null);
-                  if (next === "VIDEO") {
+                  if (next === "VIDEO" || next === "AUDIO") {
                     setNaturalVideo(true);
                     setDurationMs(0);
                   } else if (durationMs === 0) {
@@ -522,7 +522,7 @@ export function ContentStudioForm({
 
           <div className="space-y-2 sm:col-span-2">
             <Label>Duração</Label>
-            {type === "VIDEO" ? (
+            {type === "VIDEO" || type === "AUDIO" ? (
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm">
                   <input
@@ -534,7 +534,8 @@ export function ContentStudioForm({
                       else if (durationMs <= 0) setDurationMs(10000);
                     }}
                   />
-                  Duração natural do vídeo (durationMs = 0)
+                  Duração natural do {type === "AUDIO" ? "áudio" : "vídeo"}{" "}
+                  (durationMs = 0)
                 </label>
                 {!naturalVideo ? (
                   <Input
@@ -546,7 +547,8 @@ export function ContentStudioForm({
                   />
                 ) : (
                   <p className="text-sm text-[var(--color-muted-foreground)]">
-                    O Runtime avança quando o vídeo terminar.
+                    O Runtime avança quando o{" "}
+                    {type === "AUDIO" ? "áudio" : "vídeo"} terminar.
                   </p>
                 )}
               </div>
@@ -618,7 +620,13 @@ export function ContentStudioForm({
                   <Label>Ficheiro</Label>
                   <input
                     type="file"
-                    accept={type === "IMAGE" ? "image/*" : "video/*"}
+                    accept={
+                      type === "IMAGE"
+                        ? "image/*"
+                        : type === "AUDIO"
+                          ? "audio/*"
+                          : "video/*"
+                    }
                     className="block w-full cursor-pointer rounded-md border border-[var(--color-border)] px-3 py-2 text-sm"
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   />
@@ -626,7 +634,7 @@ export function ContentStudioForm({
               ) : (
                 <MediaAssetPicker
                   assets={existingAssets}
-                  contentType={type as "IMAGE" | "VIDEO"}
+                  contentType={type as "IMAGE" | "VIDEO" | "AUDIO"}
                   selectedId={selectedAssetId}
                   onSelect={setSelectedAssetId}
                 />

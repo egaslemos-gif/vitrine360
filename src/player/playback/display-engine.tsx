@@ -1,28 +1,39 @@
+/**
+ * RUNTIME-PLAYBACK-02 — DisplayEngine orchestration layer.
+ *
+ * Owns PlaybackController lifecycle, loads/syncs playlist from manifest items,
+ * subscribes to PlaybackState, and delegates presentation to PlaybackRendererAdapter.
+ *
+ * MUST NOT independently own playlist index / NEXT / PREVIOUS / ENDED policy.
+ */
+
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
-import { createObjectUrl, getConfig, putAssetBlob } from "@/player/cache/indexed-db";
-import { useLiveClock } from "@/features/contents/use-live-clock";
+import {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  forwardRef,
+  type CSSProperties,
+} from "react";
+import { PlaybackController } from "@/player/playback/playback-controller";
+import { usePlaybackState } from "@/player/playback/use-playback-state";
+import { PlaybackRendererAdapter } from "@/player/playback/playback-renderer-adapter";
+import {
+  playlistFingerprint,
+  toPlaylistItems,
+  type EnginePlaybackItem,
+} from "@/player/playback/playlist-map";
+import type { PlaybackAction, PlaybackState } from "@/domain/playback-state";
 
-export type PlaybackItem = {
-  playlistItemId: string;
-  contentId: string;
-  type: string;
-  title: string;
-  durationMs: number;
-  transition: string;
-  fitMode?: string;
-  payload: Record<string, unknown>;
-  assets: {
-    id: string;
-    mimeType: string;
-    url?: string;
-    offlineUrl?: string;
-    checksum?: string;
-  }[];
-  /** EXPERIENCE-09 — false when ref invalid / not published. Never execute HTML. */
-  experienceExecutable?: boolean;
-  experienceBlockReason?: string;
+/** @deprecated Prefer EnginePlaybackItem — kept for Experience slide imports. */
+export type PlaybackItem = EnginePlaybackItem;
+
+export type DisplayEngineHandle = {
+  dispatch: (action: PlaybackAction) => PlaybackState;
+  getState: () => PlaybackState;
+  getController: () => PlaybackController;
 };
 
 const stageStyle: CSSProperties = {
@@ -32,455 +43,175 @@ const stageStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   overflow: "hidden",
+  boxSizing: "border-box",
 };
 
-/** Fill the stage; object-fit contain keeps the whole frame and centers the leftover axis. */
-const mediaStyle: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  width: "100%",
-  height: "100%",
-  objectFit: "contain",
-  objectPosition: "center center",
-  background: "transparent",
-};
+export const DisplayEngine = forwardRef<
+  DisplayEngineHandle,
+  {
+    items: PlaybackItem[];
+    playlistId?: string;
+    manifestVersion?: number | null;
+    onItemChange?: (item: PlaybackItem | null) => void;
+    onPlaybackStateChange?: (state: PlaybackState) => void;
+  }
+>(function DisplayEngine(
+  {
+    items,
+    playlistId = "device-playlist",
+    manifestVersion = null,
+    onItemChange,
+    onPlaybackStateChange,
+  },
+  ref,
+) {
+  const controllerRef = useRef<PlaybackController | null>(null);
+  if (controllerRef.current == null) {
+    controllerRef.current = new PlaybackController();
+  }
+  const controller = controllerRef.current;
 
-export function DisplayEngine({
-  items,
-  onItemChange,
-}: {
-  items: PlaybackItem[];
-  onItemChange?: (item: PlaybackItem | null) => void;
-}) {
-  const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const item = items[index] ?? null;
+  useImperativeHandle(
+    ref,
+    () => ({
+      dispatch: (action) => controller.dispatch(action),
+      getState: () => controller.getState(),
+      getController: () => controller,
+    }),
+    [controller],
+  );
+
+  const fingerprint = useMemo(() => playlistFingerprint(items), [items]);
+  const preferContentIdRef = useRef<string | null>(null);
+  const initialLoadRef = useRef(true);
+
+  // Load / soft-sync playlist — controller is SoT for index.
+  useEffect(() => {
+    const playlistItems = toPlaylistItems(items);
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      controller.dispatch({
+        type: "LOAD_PLAYLIST",
+        playlistId,
+        manifestVersion,
+        items: playlistItems,
+        startIndex: 0,
+      });
+      return;
+    }
+    controller.dispatch({
+      type: "SYNC_PLAYLIST",
+      playlistId,
+      manifestVersion,
+      items: playlistItems,
+      preferContentId: preferContentIdRef.current,
+    });
+  }, [fingerprint, playlistId, manifestVersion, controller, items]);
+
+  const state = usePlaybackState(controller);
+  const item =
+    items.length > 0 && state.currentItemIndex >= 0
+      ? (items[state.currentItemIndex] ?? null)
+      : null;
+
+  useEffect(() => {
+    if (item?.contentId) preferContentIdRef.current = item.contentId;
+  }, [item?.contentId]);
 
   useEffect(() => {
     onItemChange?.(item);
   }, [item, onItemChange]);
 
-  const advanceSlide = () => {
-    const next = items[(index + 1) % items.length];
-    if (!next || next.type === "VIDEO" || item?.type === "VIDEO" || item?.transition === "cut") {
-      setVisible(true);
-      setIndex((i) => (i + 1) % items.length);
-      return;
-    }
-    setVisible(false);
-    window.setTimeout(() => {
-      setIndex((i) => (i + 1) % items.length);
-      setVisible(true);
-    }, 280);
-  };
-
-  const nextType = items.length ? items[(index + 1) % items.length]?.type : undefined;
-
   useEffect(() => {
-    if (!items.length || !item) return;
+    onPlaybackStateChange?.(state);
+  }, [state, onPlaybackStateChange]);
 
-    if (item.type === "VIDEO" && item.durationMs === 0) {
-      return; // Slide component handles advance via onNaturalEnd
-    }
-
-    const keepFrame = nextType === "VIDEO" || item.type === "VIDEO" || item.transition === "cut";
-    const duration = Math.max(item.durationMs || 8000, 2000);
-    let transitionTimer: number | undefined;
-    const timer = window.setTimeout(() => {
-      if (keepFrame) {
-        setVisible(true);
-        setIndex((current) => (current + 1) % items.length);
-        return;
-      }
-      setVisible(false);
-      transitionTimer = window.setTimeout(() => {
-        setIndex((current) => (current + 1) % items.length);
-        setVisible(true);
-      }, 280);
-    }, duration);
-    return () => {
-      window.clearTimeout(timer);
-      if (transitionTimer !== undefined) {
-        window.clearTimeout(transitionTimer);
-      }
-    };
-  }, [index, items.length, item?.durationMs, item?.transition, item?.type, nextType]);
+  // Timers cleanup lives in PresentationTimer / adapter.
+  // Do NOT STOP on unmount — React Strict Mode remount + SYNC soft-remap
+  // would otherwise leave the controller permanently STOPPED.
 
   if (!items.length) {
     return (
-      <div style={{ ...stageStyle, background: "#070b14", color: "#fff", textAlign: "center", padding: 24 }}>
+      <div
+        style={{
+          ...stageStyle,
+          background: "#070b14",
+          color: "#fff",
+          textAlign: "center",
+          padding: 24,
+        }}
+      >
         <div>
-          <p style={{ letterSpacing: "0.35em", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>VITRINE360</p>
-          <p style={{ marginTop: 24, fontSize: 32, fontWeight: 600 }}>NO CONTENT AVAILABLE</p>
-          <p style={{ marginTop: 12, color: "rgba(255,255,255,0.5)" }}>A sincronizar a playlist…</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#000", color: "#fff" }}>
-      <div
-        className={`player-slide-${item.transition || "fade"}`}
-        style={{ position: "absolute", inset: 0, opacity: visible ? 1 : 0, transition: "opacity 300ms" }}
-      >
-        <Slide key={`${item.playlistItemId}-${index}`} item={item!} onNaturalEnd={advanceSlide} />
-      </div>
-    </div>
-  );
-}
-
-function Slide({ item, onNaturalEnd }: { item: PlaybackItem; onNaturalEnd?: () => void }) {
-  const asset = item.assets[0];
-  const assetId = asset?.id;
-  const assetUrl = asset?.url;
-  const offlineUrl = asset?.offlineUrl;
-  const assetChecksum = asset?.checksum ?? "";
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let revoked: string | null = null;
-    let cancelled = false;
-    (async () => {
-      if (!assetId) {
-        const payloadUrl = item.payload?.url;
-        setUrl(typeof payloadUrl === "string" ? payloadUrl : null);
-        return;
-      }
-      const objectUrl = await createObjectUrl(assetId).catch(() => null);
-      if (cancelled) {
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
-        return;
-      }
-      if (objectUrl) {
-        revoked = objectUrl;
-        setUrl(objectUrl);
-        return;
-      }
-      if (assetUrl && /^https?:\/\//i.test(assetUrl)) {
-        setUrl(assetUrl);
-        return;
-      }
-      try {
-        const config = await getConfig();
-        const path = offlineUrl ?? `/api/device/media/${encodeURIComponent(assetId)}`;
-        if (!config?.deviceToken) {
-          setUrl(assetUrl ?? null);
-          return;
-        }
-        const res = await fetch(path, {
-          headers: { Authorization: `Bearer ${config.deviceToken}` },
-        });
-        if (!res.ok) throw new Error(`media ${res.status}`);
-        const blob = await res.blob();
-        if (cancelled) return;
-        // Persist so refresh / later slides do not re-hit the network.
-        if (assetChecksum) {
-          void putAssetBlob(assetId, blob, assetChecksum).catch(() => undefined);
-        }
-        const blobUrl = URL.createObjectURL(blob);
-        revoked = blobUrl;
-        setUrl(blobUrl);
-      } catch {
-        if (!cancelled) setUrl(assetUrl ?? null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-      if (revoked && revoked.startsWith("blob:")) {
-        URL.revokeObjectURL(revoked);
-      }
-    };
-    // assetUrl is read once per asset. Refreshing the signed URL must not
-    // restart a video that is already playing.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assetId]);
-
-  if (item.type === "IMAGE" && url) {
-    return (
-      <div style={{ ...stageStyle, background: "#000" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt={item.title} className="player-media" style={{ ...mediaStyle, zIndex: 1 }} />
-      </div>
-    );
-  }
-
-  if (item.type === "VIDEO" && url) {
-    return (
-      <div style={{ ...stageStyle, background: "#000" }}>
-        <video
-          src={url}
-          className="player-media"
-          style={mediaStyle}
-          autoPlay
-          muted
-          playsInline
-          preload="auto"
-          loop={item.durationMs > 0}
-          onEnded={() => {
-            if (item.durationMs === 0) onNaturalEnd?.();
-          }}
-          onError={() => {
-            if (item.durationMs === 0) {
-              setTimeout(() => onNaturalEnd?.(), 2000);
-            }
-          }}
-        />
-      </div>
-    );
-  }
-
-  if (item.type === "CLOCK") {
-    return <LiveClockSlide payload={item.payload ?? {}} />;
-  }
-
-  // EXPERIENCE-09: typed Content reference only — no iframe / HTML / eval here.
-  // Runtime Core (EX-10) + Admission (EX-08) are required before execution.
-  if (item.type === "EXPERIENCE") {
-    const exp =
-      item.payload?.experience && typeof item.payload.experience === "object"
-        ? (item.payload.experience as { experienceId?: string; version?: string })
-        : null;
-    const blocked =
-      item.experienceExecutable === false ||
-      !exp?.experienceId ||
-      !exp?.version;
-    return (
-      <div
-        style={{
-          ...stageStyle,
-          flexDirection: "column",
-          textAlign: "center",
-          padding: "0 8vw",
-          background: "linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%)",
-        }}
-        data-experience-playback="safe-fallback"
-        data-experience-block={item.experienceBlockReason ?? (blocked ? "EXPERIENCE_UNAVAILABLE" : "PENDING_RUNTIME")}
-      >
-        <p className="text-sm tracking-[0.4em] text-white/40">VITRINE360</p>
-        <h1
-          className="mt-8 max-w-5xl text-4xl font-semibold leading-tight md:text-5xl"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          {item.title}
-        </h1>
-        <p className="mt-6 text-lg text-white/55">
-          {blocked ? "EXPERIENCE_UNAVAILABLE" : "EXPERIENCE · awaiting Runtime admission"}
-        </p>
-        {exp?.experienceId ? (
-          <p className="mt-3 font-mono text-sm text-white/35">
-            {exp.experienceId}@{exp.version}
-          </p>
-        ) : null}
-      </div>
-    );
-  }
-
-  const body =
-    (item.payload.body as string) ||
-    (item.payload.message as string) ||
-    (item.payload.description as string) ||
-    "";
-
-  return (
-    <div
-      style={{
-        ...stageStyle,
-        flexDirection: "column",
-        textAlign: "center",
-        padding: "6vh 8vw",
-        background: "linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%)",
-      }}
-    >
-      <p
-        style={{
-          margin: 0,
-          letterSpacing: "0.35em",
-          opacity: 0.45,
-          fontWeight: 600,
-          fontSize: "clamp(20px, 2.8vh, 36px)",
-        }}
-      >
-        VITRINE360
-      </p>
-      <h1
-        style={{
-          marginTop: "4vh",
-          maxWidth: "92vw",
-          fontWeight: 700,
-          lineHeight: 1.15,
-          fontFamily: "var(--font-fraunces), Georgia, serif",
-          fontSize: "clamp(64px, 11vh, 160px)",
-        }}
-      >
-        {item.title}
-      </h1>
-      {body ? (
-        <p
-          style={{
-            marginTop: "3.5vh",
-            maxWidth: "88vw",
-            opacity: 0.88,
-            lineHeight: 1.35,
-            fontWeight: 500,
-            fontSize: "clamp(36px, 5.5vh, 84px)",
-          }}
-        >
-          {body}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-/** Native CLOCK slide — ticks from device time; cleans up on unmount. */
-function LiveClockSlide({ payload }: { payload: Record<string, unknown> }) {
-  const showDate = payload.showDate !== false;
-  const showTime = payload.showTime !== false;
-  const showSeconds = payload.showSeconds === true;
-  const style = payload.style === "analog" ? "analog" : "digital";
-  const format = typeof payload.format === "string" ? payload.format : "24h";
-  const hour12 = format === "12h";
-  const now = useLiveClock(showSeconds || style === "analog");
-
-  if (style === "analog") {
-    const h = now.getHours() % 12;
-    const m = now.getMinutes();
-    const s = now.getSeconds();
-    const hourDeg = h * 30 + m * 0.5;
-    const minDeg = m * 6 + s * 0.1;
-    const secDeg = s * 6;
-    return (
-      <div
-        style={{
-          ...stageStyle,
-          flexDirection: "column",
-          background: "#0b1220",
-          textAlign: "center",
-          padding: "4vh 6vw",
-        }}
-      >
-        <div
-          style={{
-            position: "relative",
-            width: "min(42vh, 280px)",
-            height: "min(42vh, 280px)",
-            borderRadius: "9999px",
-            border: "4px solid rgba(255,255,255,0.4)",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              width: 4,
-              height: "28%",
-              background: "#fff",
-              transformOrigin: "bottom center",
-              transform: `translate(-50%, -100%) rotate(${hourDeg}deg)`,
-              borderRadius: 2,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              width: 3,
-              height: "38%",
-              background: "rgba(255,255,255,0.9)",
-              transformOrigin: "bottom center",
-              transform: `translate(-50%, -100%) rotate(${minDeg}deg)`,
-              borderRadius: 2,
-            }}
-          />
-          {showSeconds ? (
-            <div
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                width: 1,
-                height: "42%",
-                background: "#34d399",
-                transformOrigin: "bottom center",
-                transform: `translate(-50%, -100%) rotate(${secDeg}deg)`,
-              }}
-            />
-          ) : null}
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              width: 10,
-              height: 10,
-              borderRadius: "9999px",
-              background: "#fff",
-              transform: "translate(-50%, -50%)",
-            }}
-          />
-        </div>
-        {showDate ? (
           <p
             style={{
-              marginTop: "3vh",
-              opacity: 0.78,
-              fontWeight: 500,
-              fontSize: "clamp(40px, 7vh, 88px)",
+              letterSpacing: "0.35em",
+              color: "rgba(255,255,255,0.4)",
+              fontSize: 14,
             }}
           >
-            {now.toLocaleDateString()}
+            VITRINE360
           </p>
-        ) : null}
+          <p style={{ marginTop: 24, fontSize: 32, fontWeight: 600 }}>
+            NO CONTENT AVAILABLE
+          </p>
+          <p style={{ marginTop: 12, color: "rgba(255,255,255,0.5)" }}>
+            A sincronizar a playlist…
+          </p>
+        </div>
       </div>
     );
   }
 
+  // Guard: items shrank before SYNC remapped index — never read item.* as null.
+  if (!item || state.status === "IDLE") {
+    return (
+      <div
+        style={{
+          ...stageStyle,
+          background: "#070b14",
+          color: "rgba(255,255,255,0.55)",
+          textAlign: "center",
+        }}
+      >
+        A carregar playback…
+      </div>
+    );
+  }
+
+  const keepFrame =
+    item.type === "VIDEO" ||
+    item.type === "AUDIO" ||
+    item.transition === "cut";
+
   return (
     <div
       style={{
-        ...stageStyle,
-        flexDirection: "column",
-        background: "#0b1220",
-        textAlign: "center",
-        padding: "4vh 6vw",
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        background: "#000",
+        color: "#fff",
       }}
+      data-playback-status={state.status}
+      data-playback-generation={state.generation}
+      data-playback-index={state.currentItemIndex}
+      data-playback-content={state.currentContentId ?? ""}
     >
-      {showTime ? (
-        <p
-          style={{
-            margin: 0,
-            fontWeight: 700,
-            lineHeight: 1,
-            letterSpacing: "0.04em",
-            fontVariantNumeric: "tabular-nums",
-            fontFamily: "ui-monospace, Consolas, monospace",
-            fontSize: "clamp(120px, 32vh, 320px)",
-          }}
-        >
-          {now.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: showSeconds ? "2-digit" : undefined,
-            hour12,
-          })}
-        </p>
-      ) : null}
-      {showDate ? (
-        <p
-          style={{
-            marginTop: "3vh",
-            opacity: 0.78,
-            fontWeight: 500,
-            fontSize: "clamp(40px, 7vh, 88px)",
-          }}
-        >
-          {now.toLocaleDateString()}
-        </p>
-      ) : null}
+      <div
+        className={`player-slide-${item.transition || "fade"}`}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: state.status === "LOADING" && !keepFrame ? 0.92 : 1,
+          transition: keepFrame ? undefined : "opacity 300ms",
+        }}
+      >
+        <PlaybackRendererAdapter
+          controller={controller}
+          state={state}
+          item={item}
+        />
+      </div>
     </div>
   );
-}
-
+});

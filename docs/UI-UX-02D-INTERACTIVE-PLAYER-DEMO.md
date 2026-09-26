@@ -6,7 +6,7 @@
 
 ## Objective
 
-Replace the static hero mockup with a functional, isolated product demo of the Vitrine360 Player.
+Replace the static hero mockup with a functional, isolated product demo of the Vitrine360 Player — soft glass application chrome inspired by modern media product UIs.
 
 ## Architecture
 
@@ -16,6 +16,7 @@ Replace the static hero mockup with a functional, isolated product demo of the V
 | Player UI + state | `src/components/landing/interactive-player-demo.tsx` |
 | Assets | `public/demo/media/*.svg` (local, lightweight) |
 | Landing integration | `src/features/marketing/landing-page.tsx` |
+| Shell token | `.ui-demo-app-shell` in `src/app/globals.css` |
 
 ## State model (local)
 
@@ -29,11 +30,12 @@ Starts **PAUSED** (no autoplay audio).
 ## Controls
 
 Play / Pause / Resume / Stop / Next / Previous / Restart / Seek / Mute / Volume / Fullscreen  
-Playlist selection · auto-advance · loop
+Playlist selection (thumbnails + progress) · auto-advance · loop
 
 ## Security boundary
 
-**Does NOT** call Device / Manifest / Playback APIs, mutate DB/R2, or send remote commands.
+**Does NOT** call Device / Manifest / Playback APIs, mutate DB/R2, or send remote commands.  
+**Does NOT** deploy Production in this phase.
 
 **Is NOT** RUNTIME-PLAYBACK-01 / PlaybackSession / Command Bus.
 

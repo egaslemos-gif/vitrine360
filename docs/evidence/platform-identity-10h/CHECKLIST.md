@@ -1,0 +1,21 @@
+# CHECKLIST — PI-10H Release Gate
+
+- [x] Upload lifecycle audit concluído
+- [x] Storage usage semantics definida
+- [x] Reservation decisão fechada (REQUIRED) — TTL OPEN
+- [x] Logical vs physical bytes documentado
+- [x] Expected vs actual bytes documentado
+- [x] Deduplication documentada
+- [x] Concurrent duplicate upload analisado
+- [x] Delete semantics documentada
+- [x] Replacement upload documentado (OPEN)
+- [x] R2 failure modes documentados
+- [x] DB/R2 consistency documentada
+- [x] Orphan handling documentado
+- [x] Reconciliation documentada
+- [x] Security invariants documentados
+- [x] Downgrade documentado
+- [x] Provider abstraction preservada
+- [x] ENTITLEMENTS_ENABLED permanece OFF
+- [x] Nenhum enforcement implementado
+- [x] Typecheck / lint / build / regressions (gate run)

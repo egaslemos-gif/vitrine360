@@ -19,5 +19,11 @@ export function getMediaStorage(): MediaStorageProvider {
   return cached;
 }
 
-export type { MediaStorageProvider, StoredObject, StoredObjectBytes } from "./types";
+export type {
+  MediaStorageProvider,
+  ObjectHead,
+  PresignedUpload,
+  StoredObject,
+  StoredObjectBytes,
+} from "./types";
 export { resolveMediaRoot, resolveUnderRoot, safeFileExtension, sniffMime } from "./paths";

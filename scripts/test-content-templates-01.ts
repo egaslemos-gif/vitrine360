@@ -104,13 +104,18 @@ function main() {
   assert.ok(!liveSrc.includes("fetch("), "CLOCK-018 no fetch");
   assert.ok(liveSrc.includes("clearInterval"), "CLOCK-009 cleanup");
 
-  // display-engine uses LiveClock
+  // Playback renderer adapter uses LiveClock (DisplayEngine is orchestration only)
+  const adapter = readFileSync(
+    join(process.cwd(), "src/player/playback/playback-renderer-adapter.tsx"),
+    "utf8",
+  );
+  assert.ok(adapter.includes("useLiveClock"), "CLOCK player live");
+  assert.ok(!adapter.includes("eval("), "CLOCK-017");
   const eng = readFileSync(
     join(process.cwd(), "src/player/playback/display-engine.tsx"),
     "utf8",
   );
-  assert.ok(eng.includes("useLiveClock"), "CLOCK player live");
-  assert.ok(!eng.includes("eval("), "CLOCK-017");
+  assert.ok(!eng.includes("eval("), "CLOCK-017 display-engine");
 
   // tv.js clock timer — digital + analog parity
   const tv = readFileSync(join(process.cwd(), "public/tv.js"), "utf8");

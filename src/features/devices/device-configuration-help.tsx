@@ -1,19 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function DeviceConfigurationHelp() {
-  const urls = useMemo(() => {
-    if (typeof window === "undefined") {
-      return { tv: "/tv.html", player: "/player" };
-    }
-    return {
-      tv: `${window.location.origin}/tv.html`,
-      player: `${window.location.origin}/player`,
-    };
-  }, []);
-
   return (
     <Card className="border-0 bg-[var(--color-primary)]/5 shadow-sm ring-1 ring-[var(--color-primary)]/15">
       <CardHeader className="pb-3">
@@ -22,9 +11,9 @@ export function DeviceConfigurationHelp() {
       <CardContent className="space-y-3 text-sm text-[var(--color-muted-foreground)]">
         <div>
           <p className="font-medium text-[var(--color-foreground)]">Link recomendado</p>
-          <code className="break-all">{urls.tv}</code>
+          <code className="break-all">/tv.html</code>
           <p className="mt-1">
-            Em Android TV/Chrome também pode usar <code>{urls.player}</code>. A TV e o painel
+            Em Android TV/Chrome também pode usar <code>/player</code>. A TV e o painel
             devem estar na mesma rede; substitua o host pelo IPv4 do computador que executa o
             Vitrine360 (por exemplo, <code>http://192.168.1.20:3000/tv.html</code>).
           </p>

@@ -1,0 +1,2 @@
+﻿# REPEAT-MODES
+NONE→ENDED; PLAYLIST wrap; ITEM restart same.

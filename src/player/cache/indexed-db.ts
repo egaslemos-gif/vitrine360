@@ -239,8 +239,12 @@ export async function hasAsset(
 /**
  * Activate NEXT only if every listed asset exists with matching checksum.
  * On failure, leaves CURRENT unchanged and clears incomplete NEXT.
+ * Soft mode (`allowIncomplete`) promotes NEXT for online playback so playlist
+ * updates do not block on large IDB downloads (avoids mobile/TV OOM crashes).
  */
-export async function activateNextManifest() {
+export async function activateNextManifest(options?: {
+  allowIncomplete?: boolean;
+}) {
   const next = await getNextManifest();
   if (!next) return null;
 
@@ -267,7 +271,10 @@ export async function activateNextManifest() {
   }
 
   const requiredIds = [...new Set(required.map((a) => a.id).filter(Boolean))];
-  if (!canActivateAssetSet(requiredIds, present)) {
+  if (
+    !options?.allowIncomplete &&
+    !canActivateAssetSet(requiredIds, present)
+  ) {
     await setMeta("NEXT_MANIFEST", null);
     throw new Error("Incomplete sync: missing assets — keeping current manifest");
   }

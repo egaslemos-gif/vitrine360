@@ -51,8 +51,8 @@ export function LivePresence({
         >
           {isOnline && (
             <span className="mr-1.5 flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-success)] opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-success)]"></span>
             </span>
           )}
           {label}

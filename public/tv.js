@@ -5,7 +5,7 @@
  */
 (function () {
   var LS_KEY = "v360-player-config";
-  var VERSION = "0.1.22-smarttv-static";
+  var VERSION = "0.1.27-smarttv-static";
   var root = document.getElementById("root");
   var claimTimer = null;
   var bootSec = 0;
@@ -619,7 +619,13 @@
       window.innerHeight ||
       (document.documentElement && document.documentElement.clientHeight) ||
       720;
-    var px = Math.round(Number(h) * Number(fractionOfHeight));
+    var w =
+      window.innerWidth ||
+      (document.documentElement && document.documentElement.clientWidth) ||
+      1280;
+    /* Portrait / phone: height-based size overflows width — scale by the shorter axis. */
+    var ref = Math.min(Number(h), Number(w) * 1.15);
+    var px = Math.round(ref * Number(fractionOfHeight));
     if (!(px > 0)) px = minPx;
     if (px < minPx) px = minPx;
     if (px > maxPx) px = maxPx;
@@ -900,25 +906,30 @@
       return;
     }
 
+    if (type === "AUDIO") {
+      showAudio(item, generation);
+      return;
+    }
+
     if (type === "CLOCK") {
       renderClock(item);
       return;
     }
 
-    // TEXT, NOTICE, EVENT, NEWS, QR_CODE — TV-scale type (no clamp — Sraf drops it)
+    // TEXT, NOTICE, EVENT, NEWS, QR_CODE — TV-scale type (no CSS clamp — Sraf drops it)
     var payload = item.payload || {};
     var body = payload.body || payload.message || payload.description || "";
-    var brandPx = tvFontPx(0.028, 20, 36);
-    var titlePx = tvFontPx(0.11, 64, 160);
-    var bodyPx = tvFontPx(0.055, 36, 84);
+    var brandPx = tvFontPx(0.028, 12, 36);
+    var titlePx = tvFontPx(0.09, 28, 160);
+    var bodyPx = tvFontPx(0.045, 16, 84);
     setHtml(
       '<div class="slide ' + transitionClass(item.transition) + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-        'height:100%;padding:6vh 8vw;box-sizing:border-box;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
-        '<p style="font-size:' + brandPx + 'px;letter-spacing:0.35em;opacity:0.45;margin:0;font-weight:600">VITRINE360</p>' +
-        '<h1 style="font-size:' + titlePx + 'px;font-weight:700;margin:' + Math.round(titlePx * 0.35) + 'px 0 0;max-width:92vw;line-height:1.15">' +
+        'height:100%;width:100%;padding:max(12px,4vh) max(12px,5vw);box-sizing:border-box;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center;overflow:hidden">' +
+        '<p style="font-size:' + brandPx + 'px;letter-spacing:0.2em;opacity:0.45;margin:0;font-weight:600;max-width:100%">VITRINE360</p>' +
+        '<h1 style="font-size:' + titlePx + 'px;font-weight:700;margin:' + Math.round(titlePx * 0.28) + 'px 0 0;max-width:100%;width:100%;line-height:1.15;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box">' +
           escapeHtml(item.title) +
         '</h1>' +
-        (body ? '<p style="font-size:' + bodyPx + 'px;margin:' + Math.round(bodyPx * 0.7) + 'px auto 0;max-width:88vw;opacity:0.88;line-height:1.35;font-weight:500">' +
+        (body ? '<p style="font-size:' + bodyPx + 'px;margin:' + Math.round(bodyPx * 0.6) + 'px auto 0;max-width:100%;width:100%;opacity:0.88;line-height:1.35;font-weight:500;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;box-sizing:border-box">' +
           escapeHtml(body) + '</p>' : '') +
       '</div>'
     );
@@ -928,11 +939,38 @@
 
   function playVideoElement(video) {
     if (!video || !video.play) return;
+    function unmute() {
+      try {
+        video.muted = false;
+        video.removeAttribute("muted");
+        video.volume = 1;
+      } catch (e) { /* ignore */ }
+    }
+    function startMuted() {
+      try {
+        video.muted = true;
+        video.setAttribute("muted", "");
+        var mutedPlay = video.play();
+        if (mutedPlay && mutedPlay.then) {
+          mutedPlay
+            .then(function () {
+              unmute();
+              setTimeout(unmute, 250);
+            })
+            .catch(function () { /* leave paused only if muted also blocked */ });
+        }
+      } catch (e2) { /* ignore */ }
+    }
     try {
+      unmute();
       var attempt = video.play();
-      if (attempt && attempt.catch) attempt.catch(function () {});
+      if (attempt && attempt.catch) {
+        attempt.catch(function () {
+          startMuted();
+        });
+      }
     } catch (e) {
-      /* the autoplay attribute remains the fallback */
+      startMuted();
     }
   }
 
@@ -946,6 +984,55 @@
       video.src = "";
       if (video.load) video.load();
     } catch (e2) { /* release the TV video plane */ }
+  }
+
+  function stopAudioElement(audio) {
+    if (!audio) return;
+    audio.onended = null;
+    audio.onerror = null;
+    try { audio.pause(); } catch (e) { /* already stopped */ }
+    try {
+      audio.removeAttribute("src");
+      audio.src = "";
+      if (audio.load) audio.load();
+    } catch (e2) { /* release */ }
+  }
+
+  function playAudioElement(audio) {
+    if (!audio || !audio.play) return;
+    function unmute() {
+      try {
+        audio.muted = false;
+        audio.removeAttribute("muted");
+        audio.volume = 1;
+      } catch (e) { /* ignore */ }
+    }
+    function startMuted() {
+      try {
+        audio.muted = true;
+        audio.setAttribute("muted", "");
+        var mutedPlay = audio.play();
+        if (mutedPlay && mutedPlay.then) {
+          mutedPlay
+            .then(function () {
+              unmute();
+              setTimeout(unmute, 250);
+            })
+            .catch(function () {});
+        }
+      } catch (e2) { /* ignore */ }
+    }
+    try {
+      unmute();
+      var attempt = audio.play();
+      if (attempt && attempt.catch) {
+        attempt.catch(function () {
+          startMuted();
+        });
+      }
+    } catch (e) {
+      startMuted();
+    }
   }
 
   function preloadNextVideo() {
@@ -963,10 +1050,10 @@
 
     var video = document.createElement("video");
     video.id = "v360-video";
-    video.muted = true;
+    video.muted = false;
     video.autoplay = true;
     video.preload = "auto";
-    video.setAttribute("muted", "");
+    video.volume = 1;
     video.setAttribute("playsinline", "");
     video.setAttribute("autoplay", "");
     video.style.cssText = "width:100%;height:100%;object-fit:contain;background:#000";
@@ -1030,6 +1117,58 @@
       stopVideoElement(video);
       advanceSlide();
     }, 8000);
+  }
+
+  function showAudio(item, generation) {
+    var audUrl = buildMediaUrl(item);
+    if (!audUrl) { renderNoContent(); return; }
+    var brandPx = tvFontPx(0.028, 12, 36);
+    var titlePx = tvFontPx(0.08, 28, 120);
+    setHtml(
+      '<div class="slide ' + transitionClass(item.transition) + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'height:100%;width:100%;padding:max(12px,4vh) max(12px,5vw);box-sizing:border-box;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center">' +
+        '<p style="font-size:' + brandPx + 'px;letter-spacing:0.2em;opacity:0.45;margin:0;font-weight:600">VITRINE360 · AUDIO</p>' +
+        '<h1 style="font-size:' + titlePx + 'px;font-weight:700;margin:' + Math.round(titlePx * 0.28) + 'px 0 0;max-width:100%;line-height:1.15;overflow-wrap:anywhere">' +
+          escapeHtml(item.title) +
+        '</h1>' +
+        '<audio id="v360-audio" autoplay preload="auto" style="width:min(92%,480px);margin-top:28px"></audio>' +
+      '</div>'
+    );
+    var audio = document.getElementById("v360-audio");
+    if (!audio) {
+      hold(2000, generation);
+      return;
+    }
+    var duration = Number(item.durationMs);
+    audio.src = audUrl;
+    audio.muted = false;
+    audio.volume = 1;
+
+    if (duration > 0) {
+      audio.onended = function () {
+        if (playState.generation !== generation) return;
+        try {
+          audio.currentTime = 0;
+          playAudioElement(audio);
+        } catch (e) { /* keep until hold */ }
+      };
+      hold(duration, generation);
+    } else {
+      audio.onended = function () {
+        if (playState.generation !== generation) return;
+        advanceSlide();
+      };
+      audio.onerror = function () {
+        hold(2000, generation);
+      };
+      audio.addEventListener("loadedmetadata", function () {
+        var seconds = Number(audio.duration);
+        if (seconds && isFinite(seconds) && seconds > 0.2) {
+          hold(Math.round(seconds * 1000) + 400, generation);
+        }
+      });
+    }
+    playAudioElement(audio);
   }
 
   function transitionClass(value) {
@@ -1193,9 +1332,10 @@
     }
 
     applyHands();
+    /* No trailing comma in call args — Smart TV ES5 parsers reject setInterval(..., 30000,). */
     playState.clockTimer = setInterval(
       applyHands,
-      showSeconds ? 1000 : 30000,
+      showSeconds ? 1000 : 30000
     );
   }
 
@@ -1241,9 +1381,11 @@
     clearClockTimer();
     if (playState.slideTimer) { clearTimeout(playState.slideTimer); playState.slideTimer = null; }
     
-    // Cleanup previous video listeners if any
+    // Cleanup previous video/audio listeners if any
     var oldVid = document.getElementById("v360-video");
     stopVideoElement(oldVid);
+    var oldAud = document.getElementById("v360-audio");
+    stopAudioElement(oldAud);
     if (preloadedVideo) {
       stopVideoElement(preloadedVideo);
       if (preloadedVideo.parentNode) preloadedVideo.parentNode.removeChild(preloadedVideo);
@@ -1261,6 +1403,8 @@
     var previousSlides = document.getElementsByClassName("slide");
     if (item.type === "VIDEO") {
       showVideo(item, previousSlides.length === 0, generation);
+    } else if (item.type === "AUDIO") {
+      showAudio(item, generation);
     } else {
       renderSlide(item, generation);
       if (item.type !== "IMAGE") hold(slideDuration(item), generation);
@@ -1274,9 +1418,32 @@
     if (!items || !items.length) return;
     var fingerprint = playlistFingerprint(items);
     var same = fingerprint === playState.fingerprint && playState.items.length;
+    var prevId = null;
+    if (playState.items.length) {
+      var cur =
+        playState.items[
+          (playState.index - 1 + playState.items.length) % playState.items.length
+        ];
+      prevId = cur && cur.contentId ? cur.contentId : null;
+    }
     playState.items = items;
     playState.fingerprint = fingerprint;
     if (same) return;
+    // Soft update: keep playing the same content when it still exists.
+    var keep = -1;
+    if (prevId) {
+      var i;
+      for (i = 0; i < items.length; i++) {
+        if (items[i].contentId === prevId) {
+          keep = i;
+          break;
+        }
+      }
+    }
+    if (keep >= 0) {
+      playState.index = keep;
+      return;
+    }
     playState.index = 0;
     advanceSlide();
   }

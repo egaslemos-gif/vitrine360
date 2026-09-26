@@ -68,7 +68,7 @@
           root.innerHTML =
             '<video src="' +
             url +
-            '" autoplay muted playsinline loop style="width:100%;height:100%;object-fit:cover"></video>';
+            '" autoplay playsinline loop style="width:100%;height:100%;object-fit:cover"></video>';
         } else {
           root.innerHTML =
             '<img src="' + url + '" alt="" style="width:100%;height:100%;object-fit:cover" />';

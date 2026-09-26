@@ -1,6 +1,11 @@
 import { hasPermission, type Permission, type UserRole } from "@/domain/types";
 
-export type NavSection = "OVERVIEW" | "MANAGEMENT" | "SYSTEM";
+export type NavSection =
+  | "OVERVIEW"
+  | "CONTENT"
+  | "DEVICES"
+  | "PLAYBACK"
+  | "SYSTEM";
 
 export const ADMIN_NAV: {
   href: string;
@@ -15,46 +20,40 @@ export const ADMIN_NAV: {
     section: "OVERVIEW",
   },
   {
-    href: "/admin/devices",
-    label: "Ecrãs",
-    permission: "manage_devices",
-    section: "MANAGEMENT",
-  },
-  {
-    href: "/admin/device-groups",
-    label: "Grupos",
-    permission: "manage_devices",
-    section: "MANAGEMENT",
+    href: "/admin/media",
+    label: "Media",
+    permission: "manage_contents",
+    section: "CONTENT",
   },
   {
     href: "/admin/contents",
     label: "Conteúdos",
     permission: "manage_contents",
-    section: "MANAGEMENT",
-  },
-  {
-    href: "/admin/media",
-    label: "Media",
-    permission: "manage_contents",
-    section: "MANAGEMENT",
+    section: "CONTENT",
   },
   {
     href: "/admin/playlists",
     label: "Playlists",
     permission: "manage_playlists",
-    section: "MANAGEMENT",
+    section: "CONTENT",
+  },
+  {
+    href: "/admin/devices",
+    label: "Ecrãs",
+    permission: "manage_devices",
+    section: "DEVICES",
+  },
+  {
+    href: "/admin/device-groups",
+    label: "Grupos",
+    permission: "manage_devices",
+    section: "DEVICES",
   },
   {
     href: "/admin/schedules",
     label: "Agendamentos",
     permission: "manage_schedules",
-    section: "MANAGEMENT",
-  },
-  {
-    href: "/admin/users",
-    label: "Membros",
-    permission: "manage_users",
-    section: "SYSTEM",
+    section: "PLAYBACK",
   },
   {
     href: "/admin/logs",
@@ -63,8 +62,8 @@ export const ADMIN_NAV: {
     section: "SYSTEM",
   },
   {
-    href: "/admin/settings/workspace",
-    label: "Workspace",
+    href: "/admin/users",
+    label: "Membros",
     permission: "manage_users",
     section: "SYSTEM",
   },
@@ -78,13 +77,17 @@ export const ADMIN_NAV: {
 
 export const NAV_SECTION_ORDER: NavSection[] = [
   "OVERVIEW",
-  "MANAGEMENT",
+  "CONTENT",
+  "DEVICES",
+  "PLAYBACK",
   "SYSTEM",
 ];
 
 export const NAV_SECTION_LABELS: Record<NavSection, string> = {
   OVERVIEW: "Overview",
-  MANAGEMENT: "Management",
+  CONTENT: "Content",
+  DEVICES: "Devices",
+  PLAYBACK: "Playback",
   SYSTEM: "System",
 };
 

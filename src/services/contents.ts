@@ -71,12 +71,32 @@ const ALLOWED_MIME = new Set([
   "image/gif",
   "video/mp4",
   "video/webm",
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/ogg",
+  "audio/webm",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/m4a",
+  "audio/aac",
 ]);
+
+/** Map browser/OS aliases to a canonical allowlisted MIME. */
+export function normalizeMediaMime(mimeType: string): string {
+  const raw = (mimeType || "").trim().toLowerCase();
+  if (!raw) return raw;
+  if (raw === "audio/x-m4a" || raw === "audio/m4a") return "audio/mp4";
+  if (raw === "audio/mp3") return "audio/mpeg";
+  if (raw === "audio/x-wav") return "audio/wav";
+  return raw;
+}
 
 const DELETE_BLOCKED_MSG =
   "Este conteúdo está associado a uma ou mais playlists ou agendamentos e não pode ser eliminado.";
 
-/** IMAGE requires image/*; VIDEO requires video/*. Other types must not attach media. */
+/** IMAGE requires image/*; VIDEO requires video/*; AUDIO requires audio/*. Other types must not attach media. */
 export function assertMediaCompatibleWithType(
   type: ContentType | string,
   mimeType: string,
@@ -97,10 +117,18 @@ export function assertMediaCompatibleWithType(
     }
     return;
   }
+  if (type === "AUDIO") {
+    if (!mimeType.startsWith("audio/")) {
+      throw new Error(
+        "Media asset MIME type is not allowed for AUDIO content (expected audio/*)",
+      );
+    }
+    return;
+  }
   throw new Error(`Content type ${type} does not accept a media asset`);
 }
 
-/** VIDEO may be 0 (natural duration). IMAGE and other timed types require > 0. */
+/** VIDEO/AUDIO may be 0 (natural duration). IMAGE and other timed types require > 0. */
 export function assertContentDuration(
   type: ContentType | string,
   durationMs: number,
@@ -108,7 +136,7 @@ export function assertContentDuration(
   if (!Number.isInteger(durationMs) || durationMs < 0) {
     throw new Error("durationMs must be a non-negative integer");
   }
-  if (type === "VIDEO") return;
+  if (type === "VIDEO" || type === "AUDIO") return;
   if (durationMs <= 0) {
     throw new Error(
       type === "IMAGE"
@@ -459,8 +487,8 @@ export async function createContent(
   if (input.mediaAssetId) {
     asset = await loadTenantMediaAsset(input.mediaAssetId, tenantId);
     assertMediaCompatibleWithType(input.type, asset.mimeType);
-  } else if (input.type === "IMAGE" || input.type === "VIDEO") {
-    throw new Error("mediaAssetId required for IMAGE/VIDEO content");
+  } else if (input.type === "IMAGE" || input.type === "VIDEO" || input.type === "AUDIO") {
+    throw new Error("mediaAssetId required for IMAGE/VIDEO/AUDIO content");
   }
 
   const id = crypto.randomUUID();
@@ -507,6 +535,9 @@ export async function uploadMediaAsset(params: {
   tenantId: string;
   userId?: string;
 }) {
+  const { assertTenantOperable } = await import("@/services/tenant-lifecycle");
+  await assertTenantOperable(params.tenantId);
+
   if (params.data.byteLength > MAX_UPLOAD) {
     throw new Error("File exceeds upload size limit");
   }
@@ -547,12 +578,58 @@ export async function uploadMediaAsset(params: {
       const ext = safeFileExtension(params.fileName);
       const sniffed = sniffMime(params.data, "") || params.mimeType;
       const key = `${params.tenantId}/${id}.${ext}`;
-      const stored = await storage.put({
-        key,
-        data: params.data,
-        mimeType: sniffed,
-        fileName: params.fileName,
-      });
+      const {
+        reserveStorageForUpload,
+        finishStorageReservation,
+        mediaHealOperationId,
+      } = await import("@/services/storage-quota");
+      const expectedNew = params.data.byteLength;
+      const delta = Math.max(0, expectedNew - (existing.fileSize ?? 0));
+      const healOpId = mediaHealOperationId(id);
+      const healReservation =
+        delta > 0
+          ? await reserveStorageForUpload({
+              tenantId: params.tenantId,
+              operationId: healOpId,
+              expectedBytes: delta,
+              operation: "media.heal",
+            })
+          : null;
+
+      let stored;
+      try {
+        stored = await storage.put({
+          key,
+          data: params.data,
+          mimeType: sniffed,
+          fileName: params.fileName,
+        });
+      } catch (err) {
+        if (healReservation) {
+          await finishStorageReservation({
+            tenantId: params.tenantId,
+            operationId: healOpId,
+            actualBytes: 0,
+            outcome: "release",
+          }).catch(() => {});
+        }
+        throw err;
+      }
+
+      const actualDelta = Math.max(0, stored.fileSize - (existing.fileSize ?? 0));
+      if (
+        healReservation &&
+        actualDelta > healReservation.expectedBytes
+      ) {
+        await finishStorageReservation({
+          tenantId: params.tenantId,
+          operationId: healOpId,
+          actualBytes: 0,
+          outcome: "release",
+        }).catch(() => {});
+        throw new Error("healed object exceeds reserved growth");
+      }
+
       await db
         .update(mediaAssets)
         .set({
@@ -567,6 +644,17 @@ export async function uploadMediaAsset(params: {
         .where(
           and(eq(mediaAssets.id, id), eq(mediaAssets.tenantId, params.tenantId)),
         );
+
+      if (healReservation) {
+        // Committed grew via file_size update — release reservation (do not commit).
+        await finishStorageReservation({
+          tenantId: params.tenantId,
+          operationId: healOpId,
+          actualBytes: 0,
+          outcome: "release",
+        }).catch(() => {});
+      }
+
       console.warn("[media] healed stale dedupe asset", {
         idPrefix: id.slice(0, 8),
         storageKeySegments: stored.storageKey.split("/").length,
@@ -592,23 +680,50 @@ export async function uploadMediaAsset(params: {
   // 3. New upload
   const id = crypto.randomUUID();
   const ext = safeFileExtension(params.fileName);
-  const sniffed = sniffMime(params.data, "");
+  const sniffed = normalizeMediaMime(
+    sniffMime(params.data, params.mimeType) || params.mimeType,
+  );
   if (!sniffed || !ALLOWED_MIME.has(sniffed)) {
     throw new Error(
       `MIME type not allowed: ${sniffed || params.mimeType || "unknown"}`,
     );
   }
 
+  const {
+    reserveStorageForUpload,
+    finishStorageReservation,
+    mediaBufferOperationId,
+  } = await import("@/services/storage-quota");
+  const operationId = mediaBufferOperationId(id);
+  const reservation = await reserveStorageForUpload({
+    tenantId: params.tenantId,
+    operationId,
+    expectedBytes: params.data.byteLength,
+    operation: "media.upload",
+  });
+
   const key = `${params.tenantId}/${id}.${ext}`;
   const storage = getMediaStorage();
-  
-  // Actually put to storage
-  const stored = await storage.put({
-    key,
-    data: params.data,
-    mimeType: sniffed,
-    fileName: params.fileName,
-  });
+
+  let stored;
+  try {
+    stored = await storage.put({
+      key,
+      data: params.data,
+      mimeType: sniffed,
+      fileName: params.fileName,
+    });
+  } catch (err) {
+    if (reservation) {
+      await finishStorageReservation({
+        tenantId: params.tenantId,
+        operationId,
+        actualBytes: 0,
+        outcome: "release",
+      }).catch(() => {});
+    }
+    throw err;
+  }
 
   // 4. Try insert with concurrency protection (UNIQUE constraint)
   try {
@@ -647,10 +762,35 @@ export async function uploadMediaAsset(params: {
       if (existing) {
         // Cleanup the orphaned storage object we just created
         await storage.delete(stored.storageKey).catch(() => {});
+        if (reservation) {
+          await finishStorageReservation({
+            tenantId: params.tenantId,
+            operationId,
+            actualBytes: 0,
+            outcome: "release",
+          }).catch(() => {});
+        }
         return existing;
       }
     }
+    if (reservation) {
+      await finishStorageReservation({
+        tenantId: params.tenantId,
+        operationId,
+        actualBytes: 0,
+        outcome: "release",
+      }).catch(() => {});
+    }
     throw error;
+  }
+
+  if (reservation) {
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: stored.fileSize,
+      outcome: "commit",
+    });
   }
 
   await logActivity({
@@ -663,6 +803,456 @@ export async function uploadMediaAsset(params: {
   });
 
   return { id, ...stored };
+}
+
+function normalizeChecksum(raw: string): string {
+  const trimmed = raw.trim().toLowerCase();
+  if (trimmed.startsWith("sha256:")) {
+    const hex = trimmed.slice("sha256:".length);
+    if (!/^[a-f0-9]{64}$/.test(hex)) {
+      throw new Error("Invalid checksum");
+    }
+    return `sha256:${hex}`;
+  }
+  if (!/^[a-f0-9]{64}$/.test(trimmed)) {
+    throw new Error("Invalid checksum");
+  }
+  return `sha256:${trimmed}`;
+}
+
+async function probeExistingAssetReadable(
+  storage: ReturnType<typeof getMediaStorage>,
+  storageKey: string,
+): Promise<boolean> {
+  try {
+    if (typeof storage.headObject === "function") {
+      await storage.headObject(storageKey);
+      return true;
+    }
+    if (typeof storage.getObject === "function") {
+      await storage.getObject(storageKey);
+      return true;
+    }
+    const url = await storage.getUrl(storageKey);
+    const probe = await fetch(url, { method: "HEAD", cache: "no-store" });
+    return probe.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function prepareMediaUpload(params: {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  checksum: string;
+  tenantId: string;
+}) {
+  const { assertTenantOperable } = await import("@/services/tenant-lifecycle");
+  await assertTenantOperable(params.tenantId);
+
+  if (params.fileSize <= 0) {
+    throw new Error("file required");
+  }
+  if (params.fileSize > MAX_UPLOAD) {
+    throw new Error(
+      `File exceeds upload size limit (${MAX_UPLOAD} bytes)`,
+    );
+  }
+  const declaredMime = normalizeMediaMime(
+    params.mimeType || "application/octet-stream",
+  );
+  if (!ALLOWED_MIME.has(declaredMime)) {
+    throw new Error(`MIME type not allowed: ${declaredMime}`);
+  }
+
+  const checksum = normalizeChecksum(params.checksum);
+  const storage = getMediaStorage();
+
+  const [existing] = await db
+    .select()
+    .from(mediaAssets)
+    .where(
+      and(
+        eq(mediaAssets.tenantId, params.tenantId),
+        eq(mediaAssets.checksum, checksum),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    const readable = await probeExistingAssetReadable(
+      storage,
+      existing.storageKey,
+    );
+    if (readable) {
+      return { existing: true as const, asset: existing };
+    }
+  }
+
+  if (typeof storage.createUploadUrl !== "function") {
+    throw new Error("Direct upload not supported");
+  }
+
+  const assetId = existing?.id ?? crypto.randomUUID();
+  const ext = safeFileExtension(params.fileName);
+  const key = `${params.tenantId}/${assetId}.${ext}`;
+  const storageKey = `tenants/${key}`;
+
+  const {
+    reserveStorageForUpload,
+    finishStorageReservation,
+    mediaDirectOperationId,
+    MEDIA_PREPARE_RESERVATION_TTL_MS,
+  } = await import("@/services/storage-quota");
+  const operationId = mediaDirectOperationId(assetId);
+  await reserveStorageForUpload({
+    tenantId: params.tenantId,
+    operationId,
+    expectedBytes: params.fileSize,
+    operation: "media.prepare",
+    expiresAt: new Date(
+      Date.now() + MEDIA_PREPARE_RESERVATION_TTL_MS,
+    ).toISOString(),
+  });
+
+  let signed;
+  try {
+    signed = await storage.createUploadUrl({
+      storageKey,
+      mimeType: declaredMime,
+      expiresIn: 900,
+      contentLength: params.fileSize,
+    });
+  } catch (err) {
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    throw err;
+  }
+
+  return {
+    existing: false as const,
+    assetId,
+    storageKey: signed.storageKey,
+    uploadUrl: signed.uploadUrl,
+    expiresIn: signed.expiresIn,
+    mimeType: declaredMime,
+    fileSize: params.fileSize,
+    contentLength: signed.contentLength,
+    requiredHeaders: signed.requiredHeaders,
+    checksum,
+    fileName: params.fileName,
+  };
+}
+
+export async function completeMediaUpload(params: {
+  assetId: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  checksum: string;
+  tenantId: string;
+  userId?: string;
+}) {
+  const { assertTenantOperable } = await import("@/services/tenant-lifecycle");
+  await assertTenantOperable(params.tenantId);
+
+  if (params.fileSize <= 0) {
+    throw new Error("file required");
+  }
+  if (params.fileSize > MAX_UPLOAD) {
+    throw new Error(
+      `File exceeds upload size limit (${MAX_UPLOAD} bytes)`,
+    );
+  }
+  if (
+    !params.assetId ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      params.assetId,
+    )
+  ) {
+    throw new Error("Invalid asset id");
+  }
+
+  const checksum = normalizeChecksum(params.checksum);
+  const storage = getMediaStorage();
+  const ext = safeFileExtension(params.fileName);
+  const storageKey = `tenants/${params.tenantId}/${params.assetId}.${ext}`;
+
+  const {
+    reserveStorageForUpload,
+    finishStorageReservation,
+    mediaDirectOperationId,
+    mediaHealOperationId,
+    hasActiveStorageReservation,
+  } = await import("@/services/storage-quota");
+  const operationId = mediaDirectOperationId(params.assetId);
+
+  if (typeof storage.headObject !== "function") {
+    throw new Error("Direct upload not supported");
+  }
+
+  let head;
+  try {
+    head = await storage.headObject(storageKey);
+  } catch {
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    throw new Error("Uploaded object not found");
+  }
+
+  // Provider HEAD is the authority for physical size (PI-10L). Fail-closed if unknown.
+  if (
+    typeof head.contentLength !== "number" ||
+    !Number.isInteger(head.contentLength) ||
+    head.contentLength <= 0
+  ) {
+    await storage.delete(storageKey).catch(() => {});
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    throw new Error("Uploaded object size unknown");
+  }
+  const actualBytes = head.contentLength;
+
+  // Reservation amount = prepare expectedBytes (= params.fileSize intent).
+  // actual > reserved → no MediaAsset, release, typed failure.
+  // actual < reserved → commit with actual (excess freed when reservation leaves RESERVED).
+  if (actualBytes > params.fileSize) {
+    await storage.delete(storageKey).catch(() => {});
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    throw new Error("Uploaded file exceeds reserved size");
+  }
+
+  let sniffed = normalizeMediaMime(params.mimeType);
+  if (typeof storage.getObjectRange === "function") {
+    try {
+      const prefix = await storage.getObjectRange(storageKey, 0, 63);
+      sniffed = normalizeMediaMime(
+        sniffMime(prefix, params.mimeType) || params.mimeType,
+      );
+    } catch {
+      sniffed = normalizeMediaMime(params.mimeType);
+    }
+  }
+  if (!ALLOWED_MIME.has(sniffed)) {
+    await storage.delete(storageKey).catch(() => {});
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    throw new Error(`MIME type not allowed: ${sniffed}`);
+  }
+
+  const [existing] = await db
+    .select()
+    .from(mediaAssets)
+    .where(
+      and(
+        eq(mediaAssets.tenantId, params.tenantId),
+        eq(mediaAssets.checksum, checksum),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    if (existing.id !== params.assetId) {
+      await storage.delete(storageKey).catch(() => {});
+    }
+    const readable = await probeExistingAssetReadable(
+      storage,
+      existing.storageKey,
+    );
+    if (readable) {
+      // Dedupe hit — release any prepare reservation (no new committed bytes)
+      await finishStorageReservation({
+        tenantId: params.tenantId,
+        operationId,
+        actualBytes: 0,
+        outcome: "release",
+      }).catch(() => {});
+      return existing;
+    }
+    // Stale asset heal: object missing; may grow file_size — reserve delta if needed
+    const prepareActive = await hasActiveStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+    });
+    const delta = Math.max(0, params.fileSize - (existing.fileSize ?? 0));
+    const healOpId = mediaHealOperationId(existing.id);
+    let healReserved = false;
+    if (delta > 0 && !prepareActive) {
+      await reserveStorageForUpload({
+        tenantId: params.tenantId,
+        operationId: healOpId,
+        expectedBytes: delta,
+        operation: "media.heal",
+      });
+      healReserved = true;
+    }
+
+    await db
+      .update(mediaAssets)
+      .set({
+        fileName: params.fileName,
+        mimeType: sniffed,
+        fileSize: params.fileSize,
+        storageProvider: storage.name,
+        storageKey,
+        url: await storage.getUrl(storageKey),
+        checksum,
+      })
+      .where(
+        and(
+          eq(mediaAssets.id, existing.id),
+          eq(mediaAssets.tenantId, params.tenantId),
+        ),
+      );
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    if (healReserved) {
+      await finishStorageReservation({
+        tenantId: params.tenantId,
+        operationId: healOpId,
+        actualBytes: 0,
+        outcome: "release",
+      }).catch(() => {});
+    }
+    return {
+      ...existing,
+      fileName: params.fileName,
+      mimeType: sniffed,
+      fileSize: params.fileSize,
+      storageProvider: storage.name,
+      storageKey,
+      url: await storage.getUrl(storageKey),
+      checksum,
+    };
+  }
+
+  // Late reserve if flag ON and prepare did not reserve (e.g. flag flipped)
+  await reserveStorageForUpload({
+    tenantId: params.tenantId,
+    operationId,
+    expectedBytes: actualBytes,
+    operation: "media.complete",
+  });
+
+  const url = await storage.getUrl(storageKey);
+
+  try {
+    await db.insert(mediaAssets).values({
+      id: params.assetId,
+      fileName: params.fileName,
+      mimeType: sniffed,
+      fileSize: actualBytes,
+      storageProvider: storage.name,
+      storageKey,
+      url,
+      checksum,
+      tenantId: params.tenantId,
+    });
+  } catch (error: unknown) {
+    const err =
+      error && typeof error === "object"
+        ? (error as {
+            message?: string;
+            code?: string;
+            cause?: { message?: string; code?: string };
+          })
+        : null;
+    const msg = err?.message || "";
+    const causeMsg = err?.cause?.message || "";
+    const code = err?.code || err?.cause?.code || "";
+
+    if (
+      code.includes("SQLITE_CONSTRAINT") ||
+      msg.includes("UNIQUE") ||
+      causeMsg.includes("UNIQUE")
+    ) {
+      const [race] = await db
+        .select()
+        .from(mediaAssets)
+        .where(
+          and(
+            eq(mediaAssets.tenantId, params.tenantId),
+            eq(mediaAssets.checksum, checksum),
+          ),
+        )
+        .limit(1);
+      if (race) {
+        await storage.delete(storageKey).catch(() => {});
+        await finishStorageReservation({
+          tenantId: params.tenantId,
+          operationId,
+          actualBytes: 0,
+          outcome: "release",
+        }).catch(() => {});
+        return race;
+      }
+    }
+    await finishStorageReservation({
+      tenantId: params.tenantId,
+      operationId,
+      actualBytes: 0,
+      outcome: "release",
+    }).catch(() => {});
+    throw error;
+  }
+
+  await finishStorageReservation({
+    tenantId: params.tenantId,
+    operationId,
+    actualBytes,
+    outcome: "commit",
+  });
+
+  await logActivity({
+    userId: params.userId,
+    tenantId: params.tenantId,
+    action: "media.uploaded",
+    resource: "media_asset",
+    resourceId: params.assetId,
+    metadata: {
+      fileName: params.fileName,
+      mimeType: sniffed,
+      direct: true,
+    },
+  });
+
+  return {
+    id: params.assetId,
+    fileName: params.fileName,
+    mimeType: sniffed,
+    fileSize: actualBytes,
+    storageProvider: storage.name,
+    storageKey,
+    url,
+    checksum,
+    tenantId: params.tenantId,
+  };
 }
 
 export async function listMediaAssets(tenantId: string) {

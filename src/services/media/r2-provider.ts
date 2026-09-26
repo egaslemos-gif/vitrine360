@@ -1,12 +1,19 @@
 import { createHash } from "node:crypto";
-import { 
-  S3Client, 
-  PutObjectCommand, 
+import {
+  S3Client,
+  PutObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand
+  GetObjectCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import type { MediaStorageProvider, StoredObject, StoredObjectBytes } from "./types";
+import type {
+  MediaStorageProvider,
+  ObjectHead,
+  PresignedUpload,
+  StoredObject,
+  StoredObjectBytes,
+} from "./types";
 
 let r2Client: S3Client | null = null;
 
@@ -99,7 +106,7 @@ export class R2StorageProvider implements MediaStorageProvider {
 
     // 7 days expiration for presigned URL (maximum allowed by AWS Signature V4)
     // The web player should sync and download the asset via IndexedDB before this expires.
-    const expiresIn = 604800; 
+    const expiresIn = 604800;
 
     try {
       const url = await getSignedUrl(client, command, { expiresIn });
@@ -107,6 +114,75 @@ export class R2StorageProvider implements MediaStorageProvider {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       throw new Error(`Failed to generate R2 presigned URL: ${message}`);
+    }
+  }
+
+  async createUploadUrl(params: {
+    storageKey: string;
+    mimeType: string;
+    expiresIn?: number;
+    contentLength: number;
+  }): Promise<PresignedUpload> {
+    const client = getR2Client();
+    const bucket = getBucketName();
+    const expiresIn = params.expiresIn ?? 900;
+
+    if (
+      !Number.isInteger(params.contentLength) ||
+      !Number.isFinite(params.contentLength) ||
+      params.contentLength <= 0
+    ) {
+      throw new Error("contentLength must be a positive integer");
+    }
+
+    // Bind Key + ContentType + ContentLength into the SigV4 signature so a
+    // client cannot PUT an arbitrarily larger object with the same URL (PI-10L).
+    // Exact length match is required by S3/R2 for signed ContentLength.
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: params.storageKey,
+      ContentType: params.mimeType,
+      ContentLength: params.contentLength,
+    });
+
+    try {
+      const uploadUrl = await getSignedUrl(client, command, {
+        expiresIn,
+        signableHeaders: new Set(["content-type", "content-length"]),
+      });
+      return {
+        uploadUrl,
+        storageKey: params.storageKey,
+        expiresIn,
+        contentLength: params.contentLength,
+        requiredHeaders: {
+          "Content-Type": params.mimeType,
+          "Content-Length": String(params.contentLength),
+        },
+      };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Failed to generate R2 upload URL: ${message}`);
+    }
+  }
+
+  async headObject(storageKey: string): Promise<ObjectHead> {
+    const client = getR2Client();
+    const bucket = getBucketName();
+    const command = new HeadObjectCommand({
+      Bucket: bucket,
+      Key: storageKey,
+    });
+
+    try {
+      const out = await client.send(command);
+      return {
+        contentType: out.ContentType,
+        contentLength: out.ContentLength,
+      };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Failed to head R2 object: ${message}`);
     }
   }
 
@@ -132,6 +208,31 @@ export class R2StorageProvider implements MediaStorageProvider {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       throw new Error(`Failed to read R2 object: ${message}`);
+    }
+  }
+
+  async getObjectRange(
+    storageKey: string,
+    start: number,
+    end: number,
+  ): Promise<Buffer> {
+    const client = getR2Client();
+    const bucket = getBucketName();
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: storageKey,
+      Range: `bytes=${start}-${end}`,
+    });
+
+    try {
+      const out = await client.send(command);
+      if (!out.Body) {
+        throw new Error("Empty R2 object body");
+      }
+      return Buffer.from(await out.Body.transformToByteArray());
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Failed to read R2 object range: ${message}`);
     }
   }
 

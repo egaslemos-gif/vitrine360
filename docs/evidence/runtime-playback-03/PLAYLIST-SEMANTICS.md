@@ -1,0 +1,2 @@
+﻿# PLAYLIST-SEMANTICS
+NEXT/PREVIOUS/RESTART/STOP/repeat in PlaybackController only.

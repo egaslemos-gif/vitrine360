@@ -473,7 +473,7 @@ function ScheduleEditDialog({
       <ModalPanel
         size="lg"
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] overflow-y-auto"
+        className="max-h-[90vh] w-[min(100%,42rem)] overflow-x-hidden overflow-y-auto"
       >
         <h2 className="mb-4 text-xl font-bold">Editar agendamento</h2>
         <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">

@@ -80,6 +80,16 @@ export type DeviceRuntimeObservability = {
     type: string | null;
     available: boolean;
   };
+  /** Observed playback from client heartbeat — language: OBSERVED. */
+  playback: {
+    observedStatus: string | null;
+    sessionId: string | null;
+    playlistItemId: string | null;
+    generation: number | null;
+    positionMs: number | null;
+    durationMs: number | null;
+    errorCode: string | null;
+  };
   diagnostics: RuntimePolicyActualDiagnostic[];
   diagnosticCounts: {
     errors: number;
@@ -98,6 +108,20 @@ export type PlayerStatePayload = {
   contentId?: string | null;
   state?: string | null;
   runtime?: string | null;
+  sessionId?: string | null;
+  /** Observed playback compact snapshot — not authority. */
+  playback?: {
+    status?: string | null;
+    contentId?: string | null;
+    contentType?: string | null;
+    playlistId?: string | null;
+    playlistItemId?: string | null;
+    generation?: number | null;
+    positionMs?: number | null;
+    durationMs?: number | null;
+    errorCode?: string | null;
+    observedAt?: string | null;
+  } | null;
   runtimeState?: Record<string, unknown> | null;
   policy?: {
     policySource?: string | null;
@@ -106,6 +130,7 @@ export type PlayerStatePayload = {
   } | null;
   diagnostics?: RuntimePolicyActualDiagnostic[] | string[] | null;
   observedAt?: string | null;
+  receivedAt?: string | null;
 };
 
 export function presenceToLabel(presence: Presence): ObservabilityPresenceLabel {
@@ -371,6 +396,38 @@ export function deriveDeviceRuntimeObservability(params: {
       title: contentAvailable ? meta?.title ?? null : null,
       type: contentAvailable ? meta?.type ?? null : null,
       available: contentAvailable,
+    },
+    playback: {
+      observedStatus:
+        typeof payload?.playback?.status === "string"
+          ? payload.playback.status
+          : typeof payload?.state === "string"
+            ? payload.state
+            : null,
+      sessionId:
+        typeof payload?.sessionId === "string" ? payload.sessionId : null,
+      playlistItemId:
+        typeof payload?.playback?.playlistItemId === "string"
+          ? payload.playback.playlistItemId
+          : null,
+      generation:
+        typeof payload?.playback?.generation === "number"
+          ? payload.playback.generation
+          : null,
+      positionMs:
+        typeof payload?.playback?.positionMs === "number"
+          ? payload.playback.positionMs
+          : null,
+      durationMs:
+        payload?.playback?.durationMs === null
+          ? null
+          : typeof payload?.playback?.durationMs === "number"
+            ? payload.playback.durationMs
+            : null,
+      errorCode:
+        typeof payload?.playback?.errorCode === "string"
+          ? payload.playback.errorCode
+          : null,
     },
     diagnostics,
     diagnosticCounts: {
