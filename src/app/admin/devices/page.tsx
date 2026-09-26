@@ -31,14 +31,14 @@ export default async function DevicesPage() {
   const withPlaylist = activeDevices.filter((d) => d.currentPlaylistId).length;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-8">
       <PageHeader
         title="Ecrãs"
         description="Gerencie os dispositivos que apresentam as suas experiências."
         actions={
           <a
             href="#registar-ecra"
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-sm font-semibold text-[var(--color-primary-foreground)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-sm font-semibold text-[var(--color-primary-foreground)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] sm:w-auto"
           >
             + Registar Ecrã
           </a>

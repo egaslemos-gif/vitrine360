@@ -10,7 +10,7 @@ export function Card({
       className={cn(
         // Do NOT default to w-full — inside flex centering (login, empty states)
         // percentage width on the flex item collapses (cyclic %).
-        "rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-[var(--shadow-card)] transition-shadow duration-300",
+        "rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-[var(--shadow-card)] ring-1 ring-black/[0.03] transition-[box-shadow,border-color,transform] duration-200 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-elevated)]",
         className,
       )}
       {...props}

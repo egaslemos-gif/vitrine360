@@ -71,13 +71,13 @@ export function MobileNav({
 
   return (
     <>
-      <header className="z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-[var(--color-border-subtle)] bg-[var(--color-surface)]/90 px-4 shadow-[var(--shadow-subtle)] backdrop-blur-xl md:hidden">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-primary)] shadow-sm">
-            <span className="text-xs font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
+      <header className="z-40 flex h-12 w-full shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 shadow-[var(--shadow-subtle)] md:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-primary)] shadow-sm">
+            <span className="text-[10px] font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
           </div>
           <p
-            className="text-lg font-bold tracking-tight text-[var(--color-primary)]"
+            className="text-base font-bold tracking-tight text-[var(--color-primary)]"
             style={{ fontFamily: "var(--font-fraunces), serif" }}
           >
             Vitrine360
@@ -85,7 +85,7 @@ export function MobileNav({
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           aria-label="Abrir menu"
         >
           <Menu className="h-5 w-5" />

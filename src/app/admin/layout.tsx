@@ -45,7 +45,7 @@ export default async function AdminLayout({
         workspaces={workspaces}
       />
 
-      <div className="flex min-h-0 flex-1 gap-3 p-3 sm:gap-4 sm:p-4 md:gap-5 md:p-5">
+      <div className="flex min-h-0 flex-1 gap-2 p-2 sm:gap-3 sm:p-3 md:gap-5 md:p-5">
         <DesktopSidebar
           userName={session.name}
           userEmail={session.email}
@@ -56,9 +56,9 @@ export default async function AdminLayout({
           workspaces={workspaces}
         />
 
-        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-border-subtle)] bg-[var(--color-workspace)] shadow-[var(--shadow-subtle)]">
+        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-workspace)] shadow-[var(--shadow-subtle)] md:rounded-[var(--radius-2xl)]">
           <div className="admin-main-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
-            <div className="ui-content-canvas mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
+            <div className="ui-content-canvas mx-auto w-full max-w-7xl px-3 py-3 sm:px-5 sm:py-5 md:px-8 md:py-6">
               {children}
             </div>
           </div>

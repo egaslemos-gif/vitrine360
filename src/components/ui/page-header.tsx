@@ -2,9 +2,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Enhanced admin page header — large greeting-style title.
- * Inspired by EduSphere "Hello, Anna / Your Custom Syllabus" pattern.
- * Sticky via `.admin-page-header` in globals.css.
+ * Compact operational page header.
+ * Sticky only on md+ (see `.admin-page-header` in globals.css).
  */
 export function PageHeader({
   title,
@@ -23,19 +22,21 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "admin-page-header flex flex-col gap-3 pb-5 pt-3 sm:flex-row sm:items-end sm:justify-between",
+        "admin-page-header flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3",
         className,
       )}
     >
       <div className="min-w-0 flex-1">
         {greeting ? (
-          <p className="text-sm font-medium text-[var(--color-text-secondary)]">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)] sm:text-sm">
             {greeting}
           </p>
         ) : null}
-        <h1 className="ui-page-title mt-0.5">{title}</h1>
+        <h1 className="ui-page-title mt-0">{title}</h1>
         {description ? (
-          <p className="ui-secondary mt-1.5 max-w-xl">{description}</p>
+          <p className="ui-secondary mt-1 max-w-xl line-clamp-2 sm:line-clamp-none">
+            {description}
+          </p>
         ) : null}
       </div>
       {actions ? (
