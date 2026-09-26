@@ -36,6 +36,7 @@ import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PlaylistTimedPreview } from "./playlist-timed-preview";
+import { PlaylistItemThumb } from "./playlist-item-thumb";
 import { TRANSITIONS, type Transition } from "@/domain/types";
 import { useEffect, useRef } from "react";
 import { TypeBadge } from "@/components/ui/type-badge";
@@ -143,18 +144,14 @@ function SortableItem({
       >
         <GripVertical className="h-5 w-5" />
       </div>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--color-muted)]">
-        {item.content.mediaUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.content.mediaUrl}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <TypeBadge contentType={item.content.type} className="scale-90" />
-        )}
-      </div>
+      <PlaylistItemThumb
+        content={{
+          title: item.content.title,
+          type: item.content.type,
+          payload: item.content.payload,
+          mediaUrl: item.content.mediaUrl,
+        }}
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{item.content.title}</p>
         <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted-foreground)]">

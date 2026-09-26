@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,8 +14,17 @@ import {
   type PreviewAspect,
 } from "@/components/ui/preview-viewport";
 import { TypeBadge } from "@/components/ui/type-badge";
-import { Play, Pause, SkipBack, SkipForward, RotateCcw } from "lucide-react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  RotateCcw,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { ContentVisual } from "@/features/contents/content-visual";
+import { cn } from "@/lib/utils";
 
 export type PreviewItem = {
   id: string;
@@ -41,8 +56,11 @@ export function PlaylistTimedPreview({
   const [playing, setPlaying] = useState(false);
   const [tick, setTick] = useState(0);
   const [aspectRatio, setAspectRatio] = useState<PreviewAspect>("16/9");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [expandedFallback, setExpandedFallback] = useState(false);
   const startedRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const shellRef = useRef<HTMLDivElement | null>(null);
 
   const index = Math.min(
     Math.max(selectedIndex, 0),
@@ -50,6 +68,52 @@ export function PlaylistTimedPreview({
   );
   const current = items[index];
   const elapsed = playing ? tick : 0;
+  const fullscreenActive = isFullscreen || expandedFallback;
+
+  useEffect(() => {
+    function onFsChange() {
+      const active = Boolean(document.fullscreenElement);
+      setIsFullscreen(active);
+      if (active) setExpandedFallback(false);
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  useEffect(() => {
+    if (!expandedFallback) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setExpandedFallback(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expandedFallback]);
+
+  const toggleFullscreen = useCallback(async () => {
+    const el = shellRef.current;
+    if (!el) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+        setExpandedFallback(false);
+        return;
+      }
+      if (expandedFallback) {
+        setExpandedFallback(false);
+        return;
+      }
+      if (el.requestFullscreen) {
+        await el.requestFullscreen();
+        setIsFullscreen(true);
+        return;
+      }
+      setExpandedFallback(true);
+    } catch {
+      setExpandedFallback((v) => !v);
+    }
+  }, [expandedFallback]);
 
   useEffect(() => {
     if (!playing || !current) return;
@@ -57,7 +121,10 @@ export function PlaylistTimedPreview({
     startedRef.current = Date.now();
     const resetId = window.setTimeout(() => setTick(0), 0);
 
-    if (current.type === "VIDEO" && current.durationMs === 0) {
+    if (
+      (current.type === "VIDEO" || current.type === "AUDIO") &&
+      current.durationMs === 0
+    ) {
       return () => window.clearTimeout(resetId);
     }
 
@@ -80,7 +147,11 @@ export function PlaylistTimedPreview({
     if (!el) return;
 
     const handleEnded = () => {
-      if (playing && current?.type === "VIDEO" && current.durationMs === 0) {
+      if (
+        playing &&
+        (current?.type === "VIDEO" || current?.type === "AUDIO") &&
+        current.durationMs === 0
+      ) {
         onIndexChange((index + 1) % items.length);
       }
     };
@@ -129,52 +200,152 @@ export function PlaylistTimedPreview({
   }
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-[var(--color-border)] shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-muted)]/30 px-3 py-2">
-        <AspectSelector value={aspectRatio} onChange={setAspectRatio} />
-        <TypeBadge contentType={current?.type} />
+    <div
+      ref={shellRef}
+      className={cn(
+        "flex flex-col overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm",
+        expandedFallback &&
+          "fixed inset-0 z-[120] rounded-none border-0 bg-black",
+        isFullscreen && "h-full bg-black",
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-muted)]/30 px-3 py-2",
+          fullscreenActive && "border-white/10 bg-black/80 text-white",
+        )}
+      >
+        <AspectSelector
+          value={aspectRatio}
+          onChange={setAspectRatio}
+          dark={fullscreenActive}
+        />
+        <div className="flex items-center gap-2">
+          <TypeBadge contentType={current?.type} />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label={
+              fullscreenActive
+                ? "Sair de ecrã inteiro"
+                : "Pré-visualizar em ecrã inteiro"
+            }
+            title={
+              fullscreenActive
+                ? "Sair de ecrã inteiro"
+                : "Pré-visualizar em ecrã inteiro"
+            }
+            onClick={() => void toggleFullscreen()}
+            className={cn(
+              "h-8 w-8",
+              fullscreenActive
+                ? "text-white hover:bg-white/10 hover:text-white"
+                : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+            )}
+          >
+            {fullscreenActive ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
-      <PreviewViewport aspectRatio={aspectRatio}>
-        <div className="relative h-full w-full text-white">
-          <div className={`player-slide-${current?.transition || "fade"} h-full w-full`}>
-            <Slide item={current!} videoRef={videoRef} playing={playing} />
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-4 py-2 text-[11px] font-medium tracking-wider text-white">
-            <span className="flex items-center gap-2 rounded-md bg-black/40 px-2 py-1 backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
-              PREVIEW {index + 1}/{items.length}
-            </span>
-          </div>
+      <div
+        className={cn(
+          "relative min-h-0 flex-1",
+          fullscreenActive && "flex items-center justify-center bg-black p-2 sm:p-4",
+        )}
+      >
+        <div
+          className={cn(
+            "w-full",
+            fullscreenActive && "mx-auto max-h-full max-w-6xl",
+          )}
+        >
+          <PreviewViewport
+            aspectRatio={aspectRatio}
+            className={fullscreenActive ? "[&>div]:border-white/10" : undefined}
+          >
+            <div className="relative h-full w-full text-white">
+              <div
+                className={`player-slide-${current?.transition || "fade"} h-full w-full`}
+              >
+                <Slide
+                  item={current!}
+                  videoRef={videoRef}
+                  playing={playing}
+                  onNaturalEnd={() => onIndexChange((index + 1) % items.length)}
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-4 py-2 text-[11px] font-medium tracking-wider text-white">
+                <span className="flex items-center gap-2 rounded-md bg-black/40 px-2 py-1 backdrop-blur-sm">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-success)]" />
+                  PREVIEW {index + 1}/{items.length}
+                </span>
+              </div>
+            </div>
+          </PreviewViewport>
         </div>
-      </PreviewViewport>
+      </div>
 
-      <div className="flex flex-col bg-[var(--color-card)]">
-        <div className="group relative h-1 w-full cursor-pointer bg-[var(--color-muted)]">
+      <div
+        className={cn(
+          "flex flex-col",
+          fullscreenActive ? "bg-black/90 text-white" : "bg-[var(--color-card)]",
+        )}
+      >
+        <div
+          className={cn(
+            "group relative h-1 w-full cursor-pointer",
+            fullscreenActive ? "bg-white/15" : "bg-[var(--color-muted)]",
+          )}
+        >
           <div
             className="absolute inset-y-0 left-0 bg-[var(--color-primary)] transition-[width] duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2.5">
-          <div className="flex w-1/3 min-w-0 flex-col">
-            <span className="truncate pr-4 text-xs font-semibold text-[var(--color-foreground)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 sm:px-4">
+          <div className="flex min-w-0 flex-1 flex-col sm:w-1/3 sm:flex-none">
+            <span
+              className={cn(
+                "truncate pr-2 text-xs font-semibold",
+                fullscreenActive
+                  ? "text-white"
+                  : "text-[var(--color-foreground)]",
+              )}
+            >
               {current?.title || "Sem título"}
             </span>
-            <span className="text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+            <span
+              className={cn(
+                "text-[10px] tabular-nums",
+                fullscreenActive
+                  ? "text-white/60"
+                  : "text-[var(--color-muted-foreground)]",
+              )}
+            >
               {formatMs(elapsed)} / {formatMs(current?.durationMs ?? 0)}
             </span>
           </div>
 
-          <div className="flex w-1/3 items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-1 sm:w-1/3">
             <Button
               type="button"
               size="icon"
               variant="ghost"
               aria-label="Anterior"
               onClick={() => go(-1)}
-              className="h-8 w-8 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              className={cn(
+                "h-8 w-8",
+                fullscreenActive
+                  ? "text-white/70 hover:bg-white/10 hover:text-white"
+                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+              )}
             >
               <SkipBack className="h-4 w-4" fill="currentColor" />
             </Button>
@@ -203,13 +374,18 @@ export function PlaylistTimedPreview({
               variant="ghost"
               aria-label="Seguinte"
               onClick={() => go(1)}
-              className="h-8 w-8 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              className={cn(
+                "h-8 w-8",
+                fullscreenActive
+                  ? "text-white/70 hover:bg-white/10 hover:text-white"
+                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+              )}
             >
               <SkipForward className="h-4 w-4" fill="currentColor" />
             </Button>
           </div>
 
-          <div className="flex w-1/3 items-center justify-end">
+          <div className="flex flex-1 items-center justify-end gap-1 sm:w-1/3 sm:flex-none">
             <Button
               type="button"
               size="sm"
@@ -219,10 +395,38 @@ export function PlaylistTimedPreview({
                 setTick(0);
                 onIndexChange(0);
               }}
-              className="h-8 text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              className={cn(
+                "h-8 text-xs",
+                fullscreenActive
+                  ? "text-white/70 hover:bg-white/10 hover:text-white"
+                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+              )}
             >
               <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-              Reiniciar
+              <span className="hidden sm:inline">Reiniciar</span>
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={
+                fullscreenActive
+                  ? "Sair de ecrã inteiro"
+                  : "Pré-visualizar em ecrã inteiro"
+              }
+              onClick={() => void toggleFullscreen()}
+              className={cn(
+                "h-8 w-8 sm:hidden",
+                fullscreenActive
+                  ? "text-white/70 hover:bg-white/10 hover:text-white"
+                  : "text-[var(--color-muted-foreground)]",
+              )}
+            >
+              {fullscreenActive ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -234,20 +438,33 @@ export function PlaylistTimedPreview({
 function AspectSelector({
   value,
   onChange,
+  dark,
 }: {
   value: PreviewAspect;
   onChange: (v: PreviewAspect) => void;
+  dark?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <Label htmlFor="preview-aspect" className="text-xs whitespace-nowrap">
+    <div className="flex min-w-0 items-center gap-2">
+      <Label
+        htmlFor="preview-aspect"
+        className={cn(
+          "text-xs whitespace-nowrap",
+          dark && "text-white/70",
+        )}
+      >
         Aspecto
       </Label>
       <select
         id="preview-aspect"
         value={value}
         onChange={(e) => onChange(e.target.value as PreviewAspect)}
-        className="h-8 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-2 text-xs"
+        className={cn(
+          "h-8 max-w-[10rem] truncate rounded-md border px-2 text-xs sm:max-w-none",
+          dark
+            ? "border-white/20 bg-black/40 text-white"
+            : "border-[var(--color-border)] bg-[var(--color-card)]",
+        )}
         aria-label="Proporção do viewport de pré-visualização"
       >
         {ASPECT_OPTIONS.map((o) => (
@@ -264,10 +481,12 @@ function Slide({
   item,
   videoRef,
   playing,
+  onNaturalEnd,
 }: {
   item: PreviewItem;
   videoRef: RefObject<HTMLVideoElement | null>;
   playing: boolean;
+  onNaturalEnd?: () => void;
 }) {
   const body =
     (item.payload.body as string) ||
@@ -295,10 +514,41 @@ function Slide({
           ref={videoRef}
           src={item.mediaUrl}
           className="h-full w-full object-contain"
-          muted
           playsInline
           loop={item.durationMs > 60_000}
           autoPlay={playing}
+        />
+      </div>
+    );
+  }
+
+  if (item.type === "AUDIO" && item.mediaUrl) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-[#0b1220] via-[#132033] to-[#1a2740] px-6 text-center">
+        <p className="text-xs uppercase tracking-[0.25em] text-white/40">
+          VITRINE360 · AUDIO
+        </p>
+        <p className="text-xl font-semibold text-white">{item.title}</p>
+        <div className="flex h-10 w-full max-w-xs items-end justify-center gap-1">
+          {[28, 48, 36, 62, 40, 54, 32, 58, 44, 50].map((h, i) => (
+            <span
+              key={i}
+              className={cn(
+                "w-1.5 rounded-full bg-[var(--color-type-audio)]/80",
+                playing && "animate-pulse",
+              )}
+              style={{ height: `${h}%` }}
+            />
+          ))}
+        </div>
+        <audio
+          src={item.mediaUrl}
+          autoPlay={playing}
+          controls
+          className="w-full max-w-md"
+          onEnded={() => {
+            if (playing && item.durationMs === 0) onNaturalEnd?.();
+          }}
         />
       </div>
     );
