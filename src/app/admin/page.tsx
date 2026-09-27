@@ -271,53 +271,57 @@ export default async function AdminDashboardPage() {
               <CardContent className="p-0">
                 {/* Player Preview */}
                 <div
-                  className="ui-player-canvas relative flex aspect-[16/10] items-center justify-center overflow-hidden"
+                  className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-[#0f0e13]"
                   aria-hidden
                 >
-                  {/* Animated gradient background */}
+                  {/* Subtle inner shadow for depth */}
+                  <div className="absolute inset-0 z-10 shadow-[inset_0_4px_24px_rgba(0,0,0,0.4)] pointer-events-none" />
+
+                  {/* Dark, rich radial gradient background mimicking a screen glow */}
                   <div
                     className="absolute inset-0"
                     style={{
                       background:
-                        "radial-gradient(ellipse 120% 80% at 20% 20%, rgba(139,111,247,0.35), transparent 60%), radial-gradient(ellipse 80% 60% at 80% 70%, rgba(59,130,246,0.2), transparent 50%), radial-gradient(ellipse at center, color-mix(in oklab, var(--color-player-primary) 12%, transparent), transparent 70%)",
+                        "radial-gradient(circle at 50% 40%, rgba(109, 74, 255, 0.15) 0%, rgba(15, 14, 19, 1) 70%)",
                     }}
                   />
 
-                  {/* Decorative grid lines */}
+                  {/* Decorative subtle grid */}
                   <div
-                    className="absolute inset-0 opacity-[0.04]"
+                    className="absolute inset-0 opacity-[0.03]"
                     style={{
                       backgroundImage:
-                        "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-                      backgroundSize: "40px 40px",
+                        "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
+                      backgroundSize: "32px 32px",
+                      backgroundPosition: "center center",
                     }}
                   />
 
-                  <div className="relative z-[1] text-center px-4">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg">
-                      <MonitorPlay className="h-7 w-7 text-[var(--color-player-primary)]" />
+                  {/* Floating glassmorphic control center */}
+                  <div className="relative z-[1] flex flex-col items-center justify-center px-6 py-5 rounded-[1.25rem] bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary)] shadow-[0_0_24px_rgba(109,74,255,0.4)] transition-transform hover:scale-105 cursor-pointer">
+                      <MonitorPlay className="h-5 w-5 text-white ml-0.5" />
                     </div>
-                    <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-[var(--color-player-muted)]">
+                    
+                    <p className="mt-4 text-[10px] font-semibold uppercase tracking-widest text-white/50">
                       Now playing
                     </p>
-                    <p className="mt-1.5 text-base font-semibold text-[var(--color-player-text)]">
+                    <p className="mt-1 text-sm font-medium text-white max-w-[200px] truncate">
                       {nowPlayingDevice
                         ? (nowPlayingDevice.name ?? "Ecrã")
                         : "Sem ecrã"}
                     </p>
 
-                    {/* Timeline */}
-                    <div className="relative mx-auto mt-5 h-1.5 w-32 overflow-visible rounded-full bg-white/15">
-                      <div className="h-full w-1/3 rounded-full bg-[var(--color-player-primary)] shadow-[0_0_8px_rgba(139,111,247,0.4)]" />
-                      <span
-                        className="absolute top-1/2 left-1/3 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-player-primary)_45%,transparent)]"
-                        aria-hidden
-                      />
+                    {/* Minimalist Timeline */}
+                    <div className="mt-5 w-40">
+                      <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full w-1/3 rounded-full bg-[var(--color-primary)]" />
+                      </div>
+                      <div className="mt-2 flex justify-between text-[10px] font-medium tabular-nums text-white/40">
+                        <span>0:00</span>
+                        <span>0:00</span>
+                      </div>
                     </div>
-
-                    <p className="mt-3 text-[11px] font-medium tabular-nums text-[var(--color-player-muted)]">
-                      0:00 / 0:00
-                    </p>
                   </div>
                 </div>
 

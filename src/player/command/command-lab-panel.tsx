@@ -216,6 +216,7 @@ export function CommandLabPanel({
                     observation: compactPlaybackObservation(observation),
                     timeline: {
                       ...correlation.timeline,
+                      // eslint-disable-next-line react-hooks/purity
                       observedAt: Date.now(),
                     },
                   }

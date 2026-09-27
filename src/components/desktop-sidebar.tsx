@@ -68,10 +68,9 @@ export function DesktopSidebar({
         isCollapsed ? "w-[72px] items-center" : "w-60"
       }`}
       style={{
-        background:
-          "linear-gradient(180deg, var(--color-sidebar) 0%, color-mix(in oklab, var(--color-sidebar) 90%, var(--color-primary-soft)) 100%)",
-        border: "1px solid var(--color-border-subtle)",
-        boxShadow: "var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.6)",
+        background: "rgba(255, 255, 255, 0.72)",
+        border: "1px solid rgba(120, 100, 160, 0.08)",
+        boxShadow: "0 1px 3px rgba(30, 20, 60, 0.03), 0 4px 16px rgba(30, 20, 60, 0.04)",
       }}
     >
       {/* Logo */}
@@ -136,8 +135,8 @@ export function DesktopSidebar({
                   aria-current={isActive ? "page" : undefined}
                   className={`group relative flex shrink-0 items-center rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
                     isActive
-                      ? "bg-[var(--color-primary)] text-white shadow-md"
-                      : "text-[var(--color-text-secondary)] hover:bg-white/60 hover:text-[var(--color-text-primary)] hover:shadow-sm"
+                      ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)] shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:bg-black/[0.03] hover:text-[var(--color-text-primary)]"
                   } ${isCollapsed ? "justify-center px-0" : "gap-3 px-3"}`}
                 >
                   <Icon
@@ -151,7 +150,7 @@ export function DesktopSidebar({
                   {!isCollapsed && <span>{item.label}</span>}
                   {isActive && !isCollapsed && (
                     <span
-                      className="absolute right-1.5 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-white/40"
+                      className="absolute right-1.5 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-[var(--color-primary)]/30"
                       aria-hidden
                     />
                   )}

@@ -576,23 +576,25 @@ export function DeviceListManager({
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[var(--color-primary)] text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
-          <span className="font-medium text-sm">{selectedIds.size} ecrã{selectedIds.size > 1 ? "s" : ""} selecionado{selectedIds.size > 1 ? "s" : ""}</span>
-          <div className="w-px h-4 bg-white/30" />
-          <button 
-            onClick={() => setBulkDeleteOpen(true)}
-            className="flex items-center text-sm font-medium hover:text-red-200 transition-colors"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Remover
-          </button>
-          <button 
-            onClick={() => setSelectedIds(new Set())}
-            className="ml-2 p-1 hover:bg-white/10 rounded-full transition-colors"
-            title="Cancelar seleção"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className="sticky bottom-6 mt-4 flex justify-center pointer-events-none z-40">
+          <div className="bg-[var(--color-primary)] text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 pointer-events-auto">
+            <span className="font-medium text-sm">{selectedIds.size} ecrã{selectedIds.size > 1 ? "s" : ""} selecionado{selectedIds.size > 1 ? "s" : ""}</span>
+            <div className="w-px h-4 bg-white/30" />
+            <button 
+              onClick={() => setBulkDeleteOpen(true)}
+              className="flex items-center text-sm font-medium hover:text-red-200 transition-colors"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Remover
+            </button>
+            <button 
+              onClick={() => setSelectedIds(new Set())}
+              className="ml-2 p-1 hover:bg-white/10 rounded-full transition-colors"
+              title="Cancelar seleção"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

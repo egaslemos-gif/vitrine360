@@ -304,26 +304,18 @@ export function InteractivePlayerDemo({
     >
       <div
         className={cn(
-          "ui-demo-app-shell relative overflow-hidden rounded-[1.35rem]",
+          "ui-demo-app-shell relative h-full w-full overflow-hidden bg-white ring-1 ring-black/5",
           isFullscreen &&
-            "flex h-full min-h-0 w-full max-w-none flex-1 flex-col rounded-none border-0 shadow-none backdrop-blur-none",
+            "flex h-full min-h-0 w-full max-w-none flex-1 flex-col rounded-none border-0 shadow-none ring-0 backdrop-blur-none bg-[#0a0a0f]",
         )}
-        style={
-          isFullscreen
-            ? {
-                background:
-                  "radial-gradient(ellipse 70% 50% at 20% 0%, rgba(88,80,160,0.35), transparent 55%), radial-gradient(ellipse 60% 45% at 90% 100%, rgba(59,40,120,0.28), transparent 50%), #0a0a12",
-              }
-            : undefined
-        }
       >
         {!isFullscreen ? (
           <div
-            className="pointer-events-none absolute inset-0 opacity-90"
+            className="pointer-events-none absolute inset-0 opacity-[0.4]"
             aria-hidden
             style={{
               background:
-                "radial-gradient(ellipse 80% 60% at 15% 10%, rgba(147,197,253,0.45), transparent 55%), radial-gradient(ellipse 70% 55% at 90% 85%, rgba(196,181,253,0.4), transparent 50%), linear-gradient(145deg, rgba(255,255,255,0.55), rgba(237,233,254,0.35))",
+                "linear-gradient(145deg, rgba(255,255,255,0.7), rgba(248,248,251,0.2))",
             }}
           />
         ) : null}
@@ -346,40 +338,27 @@ export function InteractivePlayerDemo({
           >
             <div
               className={cn(
-                "flex items-center justify-between gap-2 border-b px-4 py-3 backdrop-blur-md",
+                "flex items-center justify-between gap-2 border-b px-4 py-2.5",
                 isFullscreen
-                  ? "shrink-0 border-white/10 bg-black/35"
-                  : "border-white/50 bg-white/35",
+                  ? "border-white/10 bg-black/40 backdrop-blur-md shrink-0"
+                  : "border-black/[0.04] bg-white/80 backdrop-blur-md",
               )}
             >
               <div className="min-w-0">
                 <p
                   id={labelId}
                   className={cn(
-                    "truncate text-[15px] font-semibold tracking-tight",
-                    isFullscreen
-                      ? "text-white"
-                      : "text-[var(--color-text-primary)]",
+                    "truncate text-[13px] font-semibold tracking-tight",
+                    isFullscreen ? "text-white" : "text-[#131316]"
                   )}
                 >
                   Vitrine360 Player
                 </p>
-                <p
-                  className={cn(
-                    "mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-medium",
-                    isFullscreen
-                      ? "text-white/65"
-                      : "text-[var(--color-text-secondary)]",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-sm",
-                      isFullscreen
-                        ? "bg-[var(--color-primary)] text-white ring-1 ring-white/20"
-                        : "bg-white/70 text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/15",
-                    )}
-                  >
+                <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium">
+                  <span className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-[0.08em]",
+                    isFullscreen ? "bg-white/10 text-white/70" : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                  )}>
                     Live demo
                   </span>
                   <StatusDot status={status} light={isFullscreen} />
@@ -387,10 +366,8 @@ export function InteractivePlayerDemo({
               </div>
               <div
                 className={cn(
-                  "hidden shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ring-1 sm:block",
-                  isFullscreen
-                    ? "bg-white/10 text-white/70 ring-white/15"
-                    : "bg-white/55 text-[var(--color-text-secondary)] ring-white/70",
+                  "hidden shrink-0 text-[10px] font-medium sm:block",
+                  isFullscreen ? "text-white/40" : "text-[var(--color-text-muted)]"
                 )}
                 aria-hidden
               >
@@ -457,20 +434,16 @@ export function InteractivePlayerDemo({
           {showPlaylist ? (
             <aside
               className={cn(
-                "border-t backdrop-blur-md lg:border-l lg:border-t-0",
+                "p-3 flex flex-col min-h-0",
                 isFullscreen
-                  ? "flex min-h-0 flex-col border-white/10 bg-black/45 p-3"
-                  : "border-white/50 bg-white/30 p-3",
+                  ? "border-l border-white/5 bg-black/40 backdrop-blur-md"
+                  : "bg-transparent",
               )}
             >
-              <p
-                className={cn(
-                  "shrink-0 px-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
-                  isFullscreen
-                    ? "text-white/50"
-                    : "text-[var(--color-text-muted)]",
-                )}
-              >
+              <p className={cn(
+                "shrink-0 px-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                isFullscreen ? "text-white/50" : "text-[var(--color-text-muted)]"
+              )}>
                 Playlist
               </p>
               <ul
@@ -486,23 +459,19 @@ export function InteractivePlayerDemo({
                   const rowProgress = active ? progress : 0;
                   return (
                     <li key={row.id}>
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={active}
-                        onClick={() => selectItem(i)}
-                        className={cn(
-                          "flex w-full min-h-11 items-center gap-2.5 rounded-2xl px-2 py-2 text-left transition-all",
-                          isFullscreen
-                            ? active
-                              ? "bg-white/14 shadow-sm ring-1 ring-[var(--color-primary)]/50"
-                              : "hover:bg-white/8"
-                            : active
-                              ? "bg-white/80 shadow-sm ring-1 ring-[var(--color-primary)]/30"
-                              : "hover:bg-white/55",
-                        )}
-                      >
-                        <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-black/5">
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={active}
+                          onClick={() => selectItem(i)}
+                          className={cn(
+                            "flex w-full min-h-[44px] items-center gap-3 rounded-[10px] px-2.5 py-2 text-left transition-colors",
+                            isFullscreen
+                              ? active ? "bg-white/10" : "hover:bg-white/5"
+                              : active ? "bg-[var(--color-primary)]/[0.06]" : "hover:bg-black/[0.02]",
+                          )}
+                        >
+                          <span className="relative h-10 w-[52px] shrink-0 overflow-hidden rounded-[8px] bg-black/5">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={row.src}
@@ -526,31 +495,27 @@ export function InteractivePlayerDemo({
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-1.5">
-                            <span
-                              className={cn(
-                                "block truncate text-[13px] font-semibold",
-                                isFullscreen
-                                  ? "text-white"
-                                  : "text-[var(--color-text-primary)]",
-                              )}
-                            >
+                            <span className={cn(
+                              "block truncate text-[13px]",
+                              active ? "font-semibold" : "font-medium",
+                              isFullscreen ? "text-white" : active ? "text-[var(--color-primary)]" : "text-[#131316]"
+                            )}>
                               {row.title}
                             </span>
                             {active && status === "PLAYING" ? (
                               <span
-                                className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)]"
+                                className={cn(
+                                  "h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)]",
+                                  isFullscreen && "shadow-[0_0_6px_var(--color-success)]"
+                                )}
                                 aria-hidden
                               />
                             ) : null}
                           </span>
-                          <span
-                            className={cn(
-                              "mt-0.5 block text-[11px] font-medium",
-                              isFullscreen
-                                ? "text-white/50"
-                                : "text-[var(--color-text-muted)]",
-                            )}
-                          >
+                          <span className={cn(
+                            "mt-0.5 block text-[11px] font-medium",
+                            isFullscreen ? "text-white/50" : "text-[var(--color-text-muted)]"
+                          )}>
                             {String(i + 1).padStart(2, "0")} · {row.type} ·{" "}
                             {formatDemoTime(row.duration * 1000)}
                           </span>
@@ -559,9 +524,7 @@ export function InteractivePlayerDemo({
                           <Play
                             className={cn(
                               "h-3.5 w-3.5 shrink-0",
-                              isFullscreen
-                                ? "text-[var(--color-primary-soft)]"
-                                : "text-[var(--color-primary)]",
+                              isFullscreen ? "text-white/70" : "text-[var(--color-primary)]/70"
                             )}
                             aria-hidden
                           />
@@ -571,14 +534,10 @@ export function InteractivePlayerDemo({
                   );
                 })}
               </ul>
-              <p
-                className={cn(
-                  "mt-3 shrink-0 px-1 text-[10px] leading-relaxed",
-                  isFullscreen
-                    ? "text-white/40"
-                    : "text-[var(--color-text-muted)]",
-                )}
-              >
+              <p className={cn(
+                "mt-4 shrink-0 px-1 text-[10px] leading-relaxed text-center",
+                isFullscreen ? "text-white/30" : "text-[var(--color-text-muted)]/60"
+              )}>
                 Local product demo — no device commands, no database writes.
               </p>
             </aside>
@@ -698,20 +657,23 @@ function ControlBar({
   return (
     <div
       className={cn(
-        "glass-player-controls pointer-events-auto mx-auto w-full px-2.5 py-1.5 sm:px-3 sm:py-2",
-        isFullscreen ? "max-w-2xl" : "max-w-md sm:max-w-lg",
+        "pointer-events-auto mx-auto w-full rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 backdrop-blur-xl border transition-all",
+        isFullscreen 
+          ? "max-w-2xl bg-black/50 border-white/10" 
+          : "max-w-md sm:max-w-lg bg-white/70 border-white shadow-[0_8px_32px_rgba(0,0,0,0.12)]",
       )}
       role="group"
       aria-label="Player controls"
     >
       <div className="flex flex-nowrap items-center justify-center gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <IconBtn label="Previous media" onClick={onPrevious}>
+        <IconBtn label="Previous media" onClick={onPrevious} isFullscreen={isFullscreen}>
           <SkipBack className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
         <IconBtn
           label={status === "PLAYING" ? "Pause" : "Play"}
           onClick={onPlayPause}
           primary
+          isFullscreen={isFullscreen}
         >
           {status === "PLAYING" ? (
             <Pause className="h-4 w-4" aria-hidden />
@@ -719,16 +681,16 @@ function ControlBar({
             <Play className="h-4 w-4" aria-hidden />
           )}
         </IconBtn>
-        <IconBtn label="Stop" onClick={onStop}>
+        <IconBtn label="Stop" onClick={onStop} isFullscreen={isFullscreen}>
           <Square className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
-        <IconBtn label="Next media" onClick={onNext}>
+        <IconBtn label="Next media" onClick={onNext} isFullscreen={isFullscreen}>
           <SkipForward className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
-        <IconBtn label="Restart" onClick={onRestart}>
+        <IconBtn label="Restart" onClick={onRestart} isFullscreen={isFullscreen}>
           <RotateCcw className="h-3.5 w-3.5" aria-hidden />
         </IconBtn>
-        <IconBtn label={muted || volume === 0 ? "Unmute" : "Mute"} onClick={onMute}>
+        <IconBtn label={muted || volume === 0 ? "Unmute" : "Mute"} onClick={onMute} isFullscreen={isFullscreen}>
           {muted || volume === 0 ? (
             <VolumeX className="h-3.5 w-3.5" aria-hidden />
           ) : (
@@ -750,6 +712,7 @@ function ControlBar({
         <IconBtn
           label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           onClick={onFullscreen}
+          isFullscreen={isFullscreen}
         >
           {isFullscreen ? (
             <Minimize2 className="h-3.5 w-3.5" aria-hidden />
@@ -760,7 +723,10 @@ function ControlBar({
       </div>
 
       <div className="mt-1.5 flex items-center gap-2 px-0.5">
-        <span className="ui-mono shrink-0 text-[10px] tabular-nums text-[var(--color-player-muted)]">
+        <span className={cn(
+          "ui-mono shrink-0 text-[10px] tabular-nums",
+          isFullscreen ? "text-white/60" : "text-[var(--color-text-muted)]"
+        )}>
           {formatDemoTime(positionMs)}
         </span>
         <div
@@ -819,7 +785,10 @@ function ControlBar({
             />
           </div>
         </div>
-        <span className="ui-mono shrink-0 text-[10px] tabular-nums text-[var(--color-player-muted)]">
+        <span className={cn(
+          "ui-mono shrink-0 text-[10px] tabular-nums",
+          isFullscreen ? "text-white/60" : "text-[var(--color-text-muted)]"
+        )}>
           {formatDemoTime(durationMs)}
         </span>
       </div>
@@ -832,22 +801,31 @@ function IconBtn({
   onClick,
   primary,
   children,
+  className,
+  isFullscreen,
 }: {
   label: string;
   onClick: () => void;
   primary?: boolean;
   children: ReactNode;
+  className?: string;
+  isFullscreen?: boolean;
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
       className={cn(
-        "ui-icon-btn",
-        primary ? "ui-icon-btn-primary" : "text-[var(--color-player-text)]",
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
+        primary
+          ? "bg-[var(--color-primary)] text-white shadow-sm hover:bg-[var(--color-primary-hover)]"
+          : isFullscreen
+            ? "text-white/60 hover:bg-white/10 hover:text-white"
+            : "text-[var(--color-text-secondary)] hover:bg-black/5 hover:text-[var(--color-foreground)]",
+        className,
       )}
+      onClick={onClick}
+      title={label}
+      aria-label={label}
     >
       {children}
     </button>

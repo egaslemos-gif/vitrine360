@@ -19,6 +19,7 @@ async function runTests() {
       if (result === false) throw new Error("Returned false");
       console.log(`✅ ${name}`);
       passed++;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(`❌ ${name}`);
       console.error(err.message);

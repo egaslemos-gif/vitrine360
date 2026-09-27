@@ -240,6 +240,7 @@ export default function PlaybackLabClient() {
         tenantId={LAB_TENANT}
         deviceId={LAB_DEVICE}
         sessionId={sessionId}
+        // eslint-disable-next-line react-hooks/purity
         observation={playbackObservationFromState(snap, Date.now())}
       />
       <PlaybackChrome
