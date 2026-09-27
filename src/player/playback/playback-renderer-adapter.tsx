@@ -156,8 +156,6 @@ export function PlaybackRendererAdapter({
   useEffect(() => {
     const el = mediaRef.current;
     if (!el) return;
-    el.volume = state.volume;
-    el.muted = state.muted;
 
     const onPlayFail = () => {
       controller.dispatch({
@@ -170,6 +168,12 @@ export function PlaybackRendererAdapter({
     };
 
     if (status === "PAUSED" || status === "STOPPED") {
+      try {
+        el.volume = state.volume;
+        el.muted = state.muted;
+      } catch {
+        /* ignore */
+      }
       if (!el.paused) el.pause();
       if (status === "STOPPED") {
         try {
@@ -179,9 +183,22 @@ export function PlaybackRendererAdapter({
         }
       }
     } else if (status === "PLAYING") {
-      if (el.paused) ensureMediaPlayback(el, { onUnrecoverable: onPlayFail });
-      el.volume = state.volume;
-      el.muted = state.muted;
+      // Do not force muted/volume while starting — that undoes muted autoplay
+      // fallback after browser reload (audio stays paused forever).
+      if (el.paused) {
+        ensureMediaPlayback(el, {
+          onUnrecoverable: onPlayFail,
+          desiredMuted: state.muted,
+          desiredVolume: state.volume,
+        });
+      } else {
+        try {
+          el.volume = state.volume;
+          el.muted = state.muted;
+        } catch {
+          /* ignore */
+        }
+      }
     }
   }, [status, state.volume, state.muted, generation, controller]);
 
@@ -393,8 +410,7 @@ function Slide({
     }
   }, [item.type, item.durationMs, url, generation, onMediaEvent, still]);
 
-  void volume;
-  void muted;
+  // volume/muted applied via ensureMediaPlayback while starting.
 
   if (still && url) {
     return (
@@ -434,7 +450,11 @@ function Slide({
           ref={(el) => {
             mediaRef.current = el;
             if (el && status === "PLAYING") {
-              ensureMediaPlayback(el, { onUnrecoverable: emitPlayFail });
+              ensureMediaPlayback(el, {
+                onUnrecoverable: emitPlayFail,
+                desiredMuted: muted,
+                desiredVolume: volume,
+              });
             }
           }}
           onLoadedMetadata={(e) => {
@@ -452,16 +472,24 @@ function Slide({
                   : natural,
               generation,
             });
-            ensureMediaPlayback(el, { onUnrecoverable: emitPlayFail });
+            ensureMediaPlayback(el, {
+              onUnrecoverable: emitPlayFail,
+              desiredMuted: muted,
+              desiredVolume: volume,
+            });
           }}
           onLoadedData={(e) =>
             ensureMediaPlayback(e.currentTarget, {
               onUnrecoverable: emitPlayFail,
+              desiredMuted: muted,
+              desiredVolume: volume,
             })
           }
           onCanPlay={(e) =>
             ensureMediaPlayback(e.currentTarget, {
               onUnrecoverable: emitPlayFail,
+              desiredMuted: muted,
+              desiredVolume: volume,
             })
           }
           onTimeUpdate={(e) => {
@@ -517,7 +545,11 @@ function Slide({
           ref={(el) => {
             mediaRef.current = el;
             if (el && status === "PLAYING") {
-              ensureMediaPlayback(el, { onUnrecoverable: emitPlayFail });
+              ensureMediaPlayback(el, {
+                onUnrecoverable: emitPlayFail,
+                desiredMuted: muted,
+                desiredVolume: volume,
+              });
             }
           }}
           onLoadedMetadata={(e) => {
@@ -535,16 +567,24 @@ function Slide({
                   : natural,
               generation,
             });
-            ensureMediaPlayback(el, { onUnrecoverable: emitPlayFail });
+            ensureMediaPlayback(el, {
+              onUnrecoverable: emitPlayFail,
+              desiredMuted: muted,
+              desiredVolume: volume,
+            });
           }}
           onLoadedData={(e) =>
             ensureMediaPlayback(e.currentTarget, {
               onUnrecoverable: emitPlayFail,
+              desiredMuted: muted,
+              desiredVolume: volume,
             })
           }
           onCanPlay={(e) =>
             ensureMediaPlayback(e.currentTarget, {
               onUnrecoverable: emitPlayFail,
+              desiredMuted: muted,
+              desiredVolume: volume,
             })
           }
           onTimeUpdate={(e) => {

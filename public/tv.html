@@ -77,7 +77,7 @@
   <body>
     <div id="root">
       <p class="muted" style="font-size: 28px; margin: 0">A iniciar…</p>
-      <p class="muted" style="font-size: 14px; margin-top: 16px" id="ver">v0.1.22-smarttv-static</p>
+      <p class="muted" style="font-size: 14px; margin-top: 16px" id="ver">v0.1.23-smarttv-static</p>
     </div>
     <script>
       window.onerror = function (msg, src, line, col) {
@@ -95,7 +95,7 @@
     <script>
       if (navigator.serviceWorker) {
         navigator.serviceWorker
-          .register("/tv-sw.js?v=055")
+          .register("/tv-sw.js?v=056")
           .then(function (registration) {
             if (navigator.onLine && registration.update) {
               registration.update();
@@ -106,6 +106,6 @@
           });
       }
     </script>
-    <script src="/tv.js?v=055"></script>
+    <script src="/tv.js?v=056"></script>
   </body>
 </html>

@@ -946,6 +946,14 @@
         video.volume = 1;
       } catch (e) { /* ignore */ }
     }
+    function remuteAndPlay() {
+      try {
+        video.muted = true;
+        video.setAttribute("muted", "");
+        var again = video.play();
+        if (again && again.catch) again.catch(function () {});
+      } catch (e3) { /* ignore */ }
+    }
     function startMuted() {
       try {
         video.muted = true;
@@ -955,7 +963,13 @@
           mutedPlay
             .then(function () {
               unmute();
-              setTimeout(unmute, 250);
+              if (video.paused) {
+                remuteAndPlay();
+              } else {
+                setTimeout(function () {
+                  if (!video.paused && video.muted) unmute();
+                }, 250);
+              }
             })
             .catch(function () { /* leave paused only if muted also blocked */ });
         }
@@ -1007,6 +1021,14 @@
         audio.volume = 1;
       } catch (e) { /* ignore */ }
     }
+    function remuteAndPlay() {
+      try {
+        audio.muted = true;
+        audio.setAttribute("muted", "");
+        var again = audio.play();
+        if (again && again.catch) again.catch(function () {});
+      } catch (e3) { /* ignore */ }
+    }
     function startMuted() {
       try {
         audio.muted = true;
@@ -1016,7 +1038,13 @@
           mutedPlay
             .then(function () {
               unmute();
-              setTimeout(unmute, 250);
+              if (audio.paused) {
+                remuteAndPlay();
+              } else {
+                setTimeout(function () {
+                  if (!audio.paused && audio.muted) unmute();
+                }, 250);
+              }
             })
             .catch(function () {});
         }
