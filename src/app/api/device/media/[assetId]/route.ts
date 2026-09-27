@@ -22,7 +22,11 @@ export async function GET(
   const limited = enforceRateLimit(req, "device-media", 300, 60_000);
   if (limited) return limited;
 
-  const device = await authenticateDevice(req.headers.get("authorization"));
+  const authHeader = req.headers.get("authorization");
+  const tokenParam = req.nextUrl.searchParams.get("token");
+  const token = authHeader ?? (tokenParam ? `Bearer ${tokenParam}` : null);
+
+  const device = await authenticateDevice(token);
   if (!device?.tenantId) return jsonError("Unauthorized", 401);
 
   const { assetId } = await ctx.params;

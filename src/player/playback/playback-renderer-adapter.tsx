@@ -132,7 +132,7 @@ export function PlaybackRendererAdapter({
       generation: gen,
       durationMs: duration,
       startPositionMs: startPosition,
-      now: () => performance.now(),
+      now: () => Date.now(),
       onTick: (elapsed, tickGen) => {
         if (controller.getGeneration() !== tickGen) return;
         if (controller.getState().status !== "PLAYING") {
@@ -366,6 +366,14 @@ function Slide({
           setUrl(assetUrl ?? null);
           return;
         }
+
+        // Smart TVs (Hisense Vidaa, old WebOS) fail to stream video via blob URL
+        // because they require HTTP byte-range requests directly from the <video> tag.
+        if (item.type === "VIDEO" && !offlineUrl) {
+          setUrl(`${path}?token=${config.deviceToken}`);
+          return;
+        }
+
         const res = await fetch(path, {
           headers: { Authorization: `Bearer ${config.deviceToken}` },
         });
