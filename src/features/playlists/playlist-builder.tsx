@@ -356,10 +356,10 @@ export function PlaylistBuilder({
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (over && active.id !== over.id) {
+      setHasUnsavedChanges(true);
       setItems((items) => {
         const oldIndex = items.findIndex((i) => i.id === active.id);
         const newIndex = items.findIndex((i) => i.id === over.id);
-        setHasUnsavedChanges(true);
         return arrayMove(items, oldIndex, newIndex);
       });
     }

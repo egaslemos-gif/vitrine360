@@ -34,7 +34,6 @@ export async function updatePlaylistDetailsAction(
 
   await updatePlaylistDetails(playlistId, data, user.tenantId, user.id);
   revalidatePath("/admin/playlists");
-  revalidatePath(`/admin/playlists/${playlistId}`);
 }
 
 export async function duplicatePlaylistAction(playlistId: string) {
@@ -63,7 +62,6 @@ export async function addPlaylistItemAction(
     tenantId: user.tenantId,
     userId: user.id,
   });
-  revalidatePath(`/admin/playlists/${playlistId}`);
 }
 
 export async function removePlaylistItemAction(
@@ -73,7 +71,6 @@ export async function removePlaylistItemAction(
   const user = await requireSession("manage_playlists");
 
   await removePlaylistItem(playlistId, itemId, user.tenantId, user.id);
-  revalidatePath(`/admin/playlists/${playlistId}`);
 }
 
 export async function reorderPlaylistItemsAction(
@@ -83,7 +80,6 @@ export async function reorderPlaylistItemsAction(
   const user = await requireSession("manage_playlists");
 
   await reorderPlaylistItems(playlistId, orderedItemIds, user.tenantId, user.id);
-  revalidatePath(`/admin/playlists/${playlistId}`);
 }
 
 export async function updatePlaylistItemAction(
@@ -99,5 +95,4 @@ export async function updatePlaylistItemAction(
   const user = await requireSession("manage_playlists");
 
   await updatePlaylistItem(playlistId, itemId, updates, user.tenantId, user.id);
-  revalidatePath(`/admin/playlists/${playlistId}`);
 }
