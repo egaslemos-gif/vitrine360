@@ -21,25 +21,9 @@ export const metadata: Metadata = {
   },
 };
 
-/** Runs before React — Sraf freezes on Next hydration / IDB / SW. */
-const SMART_TV_BOOT_REDIRECT = `
-(function(){
-  try {
-    var ua = navigator.userAgent || "";
-    var force = /[?&]tv=1(?:&|$)/.test(location.search);
-    if (force || /Sraf|Web0S|Tizen|SmartTV|NetRange|HbbTV|Maple|Viera|Hisense|VIDAA/i.test(ua)) {
-          if (location.pathname.indexOf("player-smarttv") === -1) {
-            location.replace("/tv.html?v=055");
-          }
-    }
-  } catch (e) {}
-})();
-`;
-
 export default function PlayerPage() {
   return (
     <PlayerRuntimeShell>
-      <script dangerouslySetInnerHTML={{ __html: SMART_TV_BOOT_REDIRECT }} />
       <ServiceWorkerRegister />
       <PlayerApp />
     </PlayerRuntimeShell>

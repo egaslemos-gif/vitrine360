@@ -130,22 +130,22 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_80%,rgba(92,124,255,0.08),transparent_40%)]" />
           </div>
 
-          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-16 sm:gap-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-12 lg:py-24">
+          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-8 sm:gap-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-12 lg:py-24">
             <div className="max-w-[520px]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
                 Digital Display & Presentation
               </p>
 
-              <h1 className="mt-3 max-w-[600px] text-[2rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#131316] sm:text-[2.5rem] lg:text-[2.75rem] xl:text-[3.15rem]">
+              <h1 className="mt-2 max-w-[600px] text-[2rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#131316] sm:mt-3 sm:text-[2.5rem] lg:text-[2.75rem] xl:text-[3.15rem]">
                 Turn every screen into a digital experience.
               </h1>
 
-              <p className="mt-4 max-w-[480px] text-[16px] leading-[1.55] text-[var(--color-text-secondary)] sm:text-[17.5px]">
+              <p className="mt-3 max-w-[480px] text-[15px] leading-[1.5] text-[var(--color-text-secondary)] sm:mt-4 sm:text-[17.5px] sm:leading-[1.55]">
                 Create, distribute, play and control digital content across
                 displays and interactive devices.
               </p>
 
-              <div className="mt-6 flex flex-col items-stretch gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-4">
+              <div className="mt-5 flex flex-col items-stretch gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-4">
                 <CtaLink href={primaryHref} size="lg" className="w-full sm:w-[160px] rounded-xl bg-gradient-to-b from-[var(--color-primary)] to-[#5335e9] hover:from-[#5335e9] hover:to-[var(--color-primary)] text-white shadow-[0_6px_20px_rgba(109,74,255,0.3)] font-semibold h-12 sm:h-14 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(109,74,255,0.4)]">
                   {primaryLabel}
                 </CtaLink>
@@ -157,7 +157,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                 </a>
               </div>
 
-              <div className="mt-6 text-[12px] font-medium tracking-wide text-[var(--color-text-muted)] sm:text-[13px]">
+              <div className="mt-5 text-[11px] font-medium tracking-wide text-[var(--color-text-muted)] sm:mt-6 sm:text-[13px]">
                 Offline-first &nbsp;·&nbsp; Multi-screen &nbsp;·&nbsp; Remote control
               </div>
             </div>

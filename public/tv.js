@@ -514,15 +514,11 @@
   }
 
   function cacheVideoAsset(asset, cacheUrl) {
-    return readStoredAsset(asset).then(function (storedBlob) {
-      if (storedBlob) return blobObjectUrl(asset, storedBlob);
-      if (!navigator.onLine) return asset.url;
-      return loadAssetBlob(cacheUrl).then(function (blob) {
-        return storeAsset(asset, blob).then(function () {
-          return blobObjectUrl(asset, blob);
-        });
-      });
-    });
+    var url = asset.offlineUrl || asset.url;
+    if (isSameOriginUrl(url) && playState.token) {
+      url += (url.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(playState.token);
+    }
+    return Promise.resolve(url);
   }
 
   function cacheAsset(asset) {
@@ -1039,97 +1035,11 @@
       return;
     }
 
-    var asset0 = item.assets && item.assets[0];
-    var gifFetchUrl =
-      asset0 && asset0.offlineUrl ? String(asset0.offlineUrl) : imgUrl;
-
-    function paintStaticFromBlob(blob) {
-      if (playState.generation !== generation) return;
-      var blobUrl = null;
-      try {
-        blobUrl =
-          (window.URL && URL.createObjectURL)
-            ? URL.createObjectURL(blob)
-            : null;
-      } catch (eBlob) {
-        blobUrl = null;
-      }
-      if (!blobUrl) {
-        renderGifTitleCard(item);
-        return;
-      }
-      var loader = new Image();
-      loader.onload = function () {
-        if (playState.generation !== generation) {
-          try {
-            URL.revokeObjectURL(blobUrl);
-          } catch (eRev) {
-            /* ignore */
-          }
-          return;
-        }
-        var staticUrl = null;
-        var outW = 0;
-        var outH = 0;
-        try {
-          var canvas = document.createElement("canvas");
-          var w = loader.naturalWidth || loader.width || 1;
-          var h = loader.naturalHeight || loader.height || 1;
-          // Cap decode cost on low-end TVs
-          var maxEdge = 1280;
-          if (w > maxEdge || h > maxEdge) {
-            var scale = Math.min(maxEdge / w, maxEdge / h);
-            w = Math.max(1, Math.round(w * scale));
-            h = Math.max(1, Math.round(h * scale));
-          }
-          canvas.width = w;
-          canvas.height = h;
-          outW = w;
-          outH = h;
-          var ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(loader, 0, 0, w, h);
-            staticUrl = canvas.toDataURL("image/jpeg", 0.8);
-          }
-        } catch (eCanvas) {
-          staticUrl = null;
-        }
-        try {
-          URL.revokeObjectURL(blobUrl);
-        } catch (eRev2) {
-          /* ignore */
-        }
-        if (staticUrl) {
-          mountContainedImage(stageShell, staticUrl, outW, outH, item.title);
-          return;
-        }
-        renderGifTitleCard(item);
-      };
-      loader.onerror = function () {
-        try {
-          URL.revokeObjectURL(blobUrl);
-        } catch (eRev3) {
-          /* ignore */
-        }
-        if (playState.generation !== generation) return;
-        renderGifTitleCard(item);
-      };
-      loader.src = blobUrl;
+    if (isGifItem(item)) {
+      var assetMeta = assetPixelSize(item);
+      mountContainedImage(stageShell, imgUrl, assetMeta.w, assetMeta.h, item.title);
+      return;
     }
-
-    loadAssetBlob(gifFetchUrl)
-      .then(paintStaticFromBlob)
-      .catch(function () {
-        if (gifFetchUrl === imgUrl) {
-          if (playState.generation === generation) renderGifTitleCard(item);
-          return;
-        }
-        loadAssetBlob(imgUrl)
-          .then(paintStaticFromBlob)
-          .catch(function () {
-            if (playState.generation === generation) renderGifTitleCard(item);
-          });
-      });
   }
 
   function playlistFingerprint(items) {
