@@ -644,6 +644,153 @@
     return { w: Number(asset.width) || 0, h: Number(asset.height) || 0 };
   }
 
+  /**
+   * JPEG EXIF Orientation (1..8). Returns 1 when missing/unreadable.
+   * Hisense Sraf often ignores EXIF — we bake orientation into pixels instead.
+   */
+  function readJpegExifOrientation(arrayBuffer) {
+    try {
+      var view = new DataView(arrayBuffer);
+      if (view.byteLength < 4 || view.getUint16(0, false) !== 0xffd8) return 1;
+      var offset = 2;
+      var length = view.byteLength;
+      while (offset + 4 <= length) {
+        var marker = view.getUint16(offset, false);
+        offset += 2;
+        if (marker === 0xffda) break;
+        if ((marker & 0xff00) !== 0xff00) break;
+        if (offset + 2 > length) break;
+        var size = view.getUint16(offset, false);
+        if (size < 2 || offset + size > length) break;
+        if (marker === 0xffe1 && size >= 14) {
+          var start = offset + 2;
+          if (
+            view.getUint32(start, false) === 0x45786966 &&
+            view.getUint16(start + 4, false) === 0x0000
+          ) {
+            var tiff = start + 6;
+            var endian = view.getUint16(tiff, false);
+            var little = endian === 0x4949;
+            if (endian !== 0x4949 && endian !== 0x4d4d) {
+              offset += size;
+              continue;
+            }
+            if (view.getUint16(tiff + 2, little) !== 0x002a) {
+              offset += size;
+              continue;
+            }
+            var ifd0 = tiff + view.getUint32(tiff + 4, little);
+            if (ifd0 + 2 > length) {
+              offset += size;
+              continue;
+            }
+            var entries = view.getUint16(ifd0, little);
+            var i;
+            for (i = 0; i < entries; i++) {
+              var entry = ifd0 + 2 + i * 12;
+              if (entry + 12 > length) break;
+              if (view.getUint16(entry, little) === 0x0112) {
+                var ori = view.getUint16(entry + 8, little);
+                if (ori >= 1 && ori <= 8) return ori;
+                return 1;
+              }
+            }
+          }
+        }
+        offset += size;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    return 1;
+  }
+
+  function orientedDisplaySize(nw, nh, orient) {
+    if (orient >= 5 && orient <= 8) return { w: nh, h: nw };
+    return { w: nw, h: nh };
+  }
+
+  /** Draw Image into canvas applying EXIF orientation. Caps max edge for TV RAM. */
+  function bakeOrientedImage(img, orient, maxEdge) {
+    var nw = img.naturalWidth || img.width || 0;
+    var nh = img.naturalHeight || img.height || 0;
+    if (nw < 1 || nh < 1) return null;
+    var cap = maxEdge > 0 ? maxEdge : 1920;
+    var edge = Math.max(nw, nh);
+    var scale = edge > cap ? cap / edge : 1;
+    var srcW = Math.max(1, Math.round(nw * scale));
+    var srcH = Math.max(1, Math.round(nh * scale));
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    if (orient >= 5 && orient <= 8) {
+      canvas.width = srcH;
+      canvas.height = srcW;
+    } else {
+      canvas.width = srcW;
+      canvas.height = srcH;
+    }
+    switch (orient) {
+      case 2:
+        ctx.setTransform(-1, 0, 0, 1, srcW, 0);
+        break;
+      case 3:
+        ctx.setTransform(-1, 0, 0, -1, srcW, srcH);
+        break;
+      case 4:
+        ctx.setTransform(1, 0, 0, -1, 0, srcH);
+        break;
+      case 5:
+        ctx.setTransform(0, 1, 1, 0, 0, 0);
+        break;
+      case 6:
+        ctx.setTransform(0, 1, -1, 0, srcH, 0);
+        break;
+      case 7:
+        ctx.setTransform(0, -1, -1, 0, srcH, srcW);
+        break;
+      case 8:
+        ctx.setTransform(0, -1, 1, 0, 0, srcW);
+        break;
+      default:
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        break;
+    }
+    try {
+      ctx.drawImage(img, 0, 0, srcW, srcH);
+      return {
+        url: canvas.toDataURL("image/jpeg", 0.92),
+        w: canvas.width,
+        h: canvas.height,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function mountContainedImage(stageHtml, src, nw, nh, alt) {
+    setHtml(stageHtml);
+    var host = document.getElementById("root");
+    if (!host) return;
+    var stage = host.querySelector(".slide");
+    var img = host.querySelector("img.v360-still");
+    if (!stage || !img) return;
+    img.alt = alt || "";
+    img.onload = function () {
+      var w = nw || img.naturalWidth || img.width;
+      var h = nh || img.naturalHeight || img.height;
+      if (!placeContained(img, w, h)) {
+        img.style.cssText =
+          "position:relative;max-width:100%;max-height:100%;width:auto;height:auto;" +
+          "object-fit:contain;image-orientation:none";
+      }
+    };
+    img.onerror = function () {
+      /* hold() already armed */
+    };
+    img.src = src;
+  }
+
   function slideDuration(item) {
     var duration = Number(item && item.durationMs);
     if (duration > 0) return duration;
@@ -688,27 +835,212 @@
       return;
     }
     var duration = slideDuration(item);
-    // Arm advance BEFORE any GIF decode / DOM work.
+    // Arm advance BEFORE any decode / DOM work.
     hold(duration, generation);
 
+    var stageShell =
+      '<div class="slide ' +
+      transitionClass(item.transition) +
+      '" style="position:relative;width:100%;height:100%;background:#000;overflow:hidden">' +
+      '<img class="v360-still" alt="" style="opacity:0;image-orientation:none" />' +
+      "</div>";
+
     if (!isGifItem(item)) {
-      setHtml(
-        '<div class="slide ' +
-          transitionClass(item.transition) +
-          '" style="background:#000;display:flex;align-items:center;justify-content:center">' +
-          '<img src="' +
-          escapeHtml(imgUrl) +
-          '" alt="' +
-          escapeHtml(item.title) +
-          '"' +
-          ' style="position:relative;width:100%;height:100%;object-fit:contain" />' +
-          "</div>"
-      );
+      var assetMeta = assetPixelSize(item);
+      var fetchUrl =
+        item.assets && item.assets[0] && item.assets[0].offlineUrl
+          ? String(item.assets[0].offlineUrl)
+          : imgUrl;
+
+      function paintStill(arrayBuffer, blob) {
+        if (playState.generation !== generation) return;
+        var orient = 1;
+        try {
+          orient = readJpegExifOrientation(arrayBuffer);
+        } catch (eOri) {
+          orient = 1;
+        }
+        var blobUrl = null;
+        try {
+          blobUrl =
+            blob && window.URL && URL.createObjectURL
+              ? URL.createObjectURL(blob)
+              : null;
+        } catch (eBlob) {
+          blobUrl = null;
+        }
+        if (!blobUrl) {
+          // Last resort: direct URL + placeContained (no EXIF bake).
+          mountContainedImage(
+            stageShell,
+            imgUrl,
+            assetMeta.w,
+            assetMeta.h,
+            item.title
+          );
+          return;
+        }
+        var loader = new Image();
+        loader.onload = function () {
+          if (playState.generation !== generation) {
+            try {
+              URL.revokeObjectURL(blobUrl);
+            } catch (eR) {
+              /* ignore */
+            }
+            return;
+          }
+          var baked = null;
+          try {
+            baked = bakeOrientedImage(loader, orient, 1920);
+          } catch (eBake) {
+            baked = null;
+          }
+          try {
+            URL.revokeObjectURL(blobUrl);
+          } catch (eR2) {
+            /* ignore */
+          }
+          if (baked && baked.url) {
+            mountContainedImage(
+              stageShell,
+              baked.url,
+              baked.w,
+              baked.h,
+              item.title
+            );
+            return;
+          }
+          // Bake failed — size box from natural pixels without CSS stretch.
+          var nw = loader.naturalWidth || assetMeta.w || 0;
+          var nh = loader.naturalHeight || assetMeta.h || 0;
+          var disp = orientedDisplaySize(nw, nh, orient);
+          mountContainedImage(
+            stageShell,
+            imgUrl,
+            disp.w,
+            disp.h,
+            item.title
+          );
+        };
+        loader.onerror = function () {
+          try {
+            URL.revokeObjectURL(blobUrl);
+          } catch (eR3) {
+            /* ignore */
+          }
+          if (playState.generation !== generation) return;
+          mountContainedImage(
+            stageShell,
+            imgUrl,
+            assetMeta.w,
+            assetMeta.h,
+            item.title
+          );
+        };
+        loader.src = blobUrl;
+      }
+
+      loadAssetBlob(fetchUrl)
+        .then(function (blob) {
+          if (!blob || playState.generation !== generation) {
+            mountContainedImage(
+              stageShell,
+              imgUrl,
+              assetMeta.w,
+              assetMeta.h,
+              item.title
+            );
+            return;
+          }
+          if (blob.arrayBuffer) {
+            return blob.arrayBuffer().then(function (buf) {
+              paintStill(buf, blob);
+            });
+          }
+          // Legacy: FileReader for ArrayBuffer
+          return new Promise(function (resolve) {
+            try {
+              var reader = new FileReader();
+              reader.onload = function () {
+                paintStill(reader.result, blob);
+                resolve();
+              };
+              reader.onerror = function () {
+                mountContainedImage(
+                  stageShell,
+                  imgUrl,
+                  assetMeta.w,
+                  assetMeta.h,
+                  item.title
+                );
+                resolve();
+              };
+              reader.readAsArrayBuffer(blob);
+            } catch (eFr) {
+              mountContainedImage(
+                stageShell,
+                imgUrl,
+                assetMeta.w,
+                assetMeta.h,
+                item.title
+              );
+              resolve();
+            }
+          });
+        })
+        .catch(function () {
+          if (playState.generation !== generation) return;
+          if (fetchUrl !== imgUrl) {
+            loadAssetBlob(imgUrl)
+              .then(function (blob) {
+                if (!blob) {
+                  mountContainedImage(
+                    stageShell,
+                    imgUrl,
+                    assetMeta.w,
+                    assetMeta.h,
+                    item.title
+                  );
+                  return;
+                }
+                if (blob.arrayBuffer) {
+                  return blob.arrayBuffer().then(function (buf) {
+                    paintStill(buf, blob);
+                  });
+                }
+                mountContainedImage(
+                  stageShell,
+                  imgUrl,
+                  assetMeta.w,
+                  assetMeta.h,
+                  item.title
+                );
+              })
+              .catch(function () {
+                mountContainedImage(
+                  stageShell,
+                  imgUrl,
+                  assetMeta.w,
+                  assetMeta.h,
+                  item.title
+                );
+              });
+            return;
+          }
+          mountContainedImage(
+            stageShell,
+            imgUrl,
+            assetMeta.w,
+            assetMeta.h,
+            item.title
+          );
+        });
       return;
     }
 
     var asset0 = item.assets && item.assets[0];
-    var fetchUrl =
+    var gifFetchUrl =
       asset0 && asset0.offlineUrl ? String(asset0.offlineUrl) : imgUrl;
 
     function paintStaticFromBlob(blob) {
@@ -737,6 +1069,8 @@
           return;
         }
         var staticUrl = null;
+        var outW = 0;
+        var outH = 0;
         try {
           var canvas = document.createElement("canvas");
           var w = loader.naturalWidth || loader.width || 1;
@@ -750,6 +1084,8 @@
           }
           canvas.width = w;
           canvas.height = h;
+          outW = w;
+          outH = h;
           var ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(loader, 0, 0, w, h);
@@ -764,18 +1100,7 @@
           /* ignore */
         }
         if (staticUrl) {
-          setHtml(
-            '<div class="slide ' +
-              transitionClass(item.transition) +
-              '" style="background:#000;display:flex;align-items:center;justify-content:center">' +
-              '<img src="' +
-              staticUrl +
-              '" alt="' +
-              escapeHtml(item.title) +
-              '"' +
-              ' style="position:relative;width:100%;height:100%;object-fit:contain" />' +
-              "</div>"
-          );
+          mountContainedImage(stageShell, staticUrl, outW, outH, item.title);
           return;
         }
         renderGifTitleCard(item);
@@ -792,11 +1117,10 @@
       loader.src = blobUrl;
     }
 
-    loadAssetBlob(fetchUrl)
+    loadAssetBlob(gifFetchUrl)
       .then(paintStaticFromBlob)
       .catch(function () {
-        // Fallback: try remote URL once; if that also stalls, hold() still advances.
-        if (fetchUrl === imgUrl) {
+        if (gifFetchUrl === imgUrl) {
           if (playState.generation === generation) renderGifTitleCard(item);
           return;
         }
@@ -864,6 +1188,8 @@
     el.style.maxHeight = "none";
     el.style.margin = "0";
     el.style.opacity = "1";
+    el.style.objectFit = "fill";
+    el.style.imageOrientation = "none";
     el.setAttribute("width", String(w));
     el.setAttribute("height", String(h));
     return true;

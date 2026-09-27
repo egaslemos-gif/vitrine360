@@ -84,6 +84,8 @@ function mediaStyleFor(fitMode?: string): CSSProperties {
     height: "100%",
     objectFit: resolveObjectFit(fitMode),
     objectPosition: "center center",
+    // Honor EXIF so portrait phone photos stay upright (Chrome/TV WebViews).
+    imageOrientation: "from-image",
     background: "transparent",
   };
 }
