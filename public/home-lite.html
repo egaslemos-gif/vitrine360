@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <title>Vitrine360 — Digital Display</title>
+    <!--
+      Smart TV / Sraf lite home.
+      No Tailwind, no CSS nesting, no color-mix/oklch, no backdrop-filter.
+      Plain flex + hex colors so Hisense Open Browser can paint the page.
+    -->
+    <style type="text/css">
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #0b1220;
+        color: #ffffff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      body {
+        min-height: 100%;
+      }
+      a { color: inherit; text-decoration: none; }
+      .wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 28px 24px 48px;
+        box-sizing: border-box;
+      }
+      .brand {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #a78bfa;
+        margin: 0;
+      }
+      .tag {
+        margin: 8px 0 0;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.5);
+      }
+      .hero {
+        margin-top: 48px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 36px;
+        line-height: 1.2;
+        font-weight: 700;
+        max-width: 16em;
+      }
+      .lead {
+        margin: 18px 0 0;
+        font-size: 18px;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.72);
+        max-width: 32em;
+      }
+      .actions {
+        margin-top: 32px;
+        overflow: hidden;
+      }
+      .btn {
+        display: inline-block;
+        margin: 0 12px 12px 0;
+        padding: 14px 22px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        box-sizing: border-box;
+        min-width: 160px;
+        text-align: center;
+      }
+      .btn-primary {
+        background: #6d4aff;
+        color: #ffffff;
+        border-color: #6d4aff;
+      }
+      .btn-secondary {
+        background: transparent;
+        color: #ffffff;
+        border-color: rgba(255,255,255,0.28);
+      }
+      .note {
+        margin-top: 28px;
+        padding: 14px 16px;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.04);
+        font-size: 14px;
+        line-height: 1.45;
+        color: rgba(255,255,255,0.65);
+      }
+      .list {
+        margin: 36px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .list li {
+        margin: 0 0 10px;
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        font-size: 15px;
+      }
+      .foot {
+        margin-top: 40px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="brand">Vitrine360</p>
+      <p class="tag">Digital Display &amp; Presentation</p>
+
+      <div class="hero">
+        <h1>Turn every screen into a digital experience.</h1>
+        <p class="lead">
+          Create, distribute, play and control digital content across displays
+          and interactive devices.
+        </p>
+
+        <div class="actions">
+          <a class="btn btn-primary" href="/tv.html">Abrir Player (TV)</a>
+          <a class="btn btn-secondary" href="/admin/login">Entrar na consola</a>
+        </div>
+
+        <p class="note">
+          Este ecrã usa uma versão simplificada da página inicial, optimizada
+          para browsers de Smart TV (Sraf / Hisense / webOS / Tizen). O CSS
+          moderno da landing completa não é suportado neste dispositivo.
+        </p>
+      </div>
+
+      <ul class="list">
+        <li>Offline-first device runtime</li>
+        <li>Playlists, media e distribuição multi-ecrã</li>
+        <li>Player dedicado para TV: /tv.html</li>
+      </ul>
+
+      <p class="foot">© 2026 Vitrine360 · home-lite</p>
+    </div>
+  </body>
+</html>

@@ -1,8 +1,6 @@
 /**
  * RUNTIME-EXPERIENCE-05 — Dedicated Experience Origin host guard.
- *
- * When the request Host matches EXPERIENCE_ORIGIN / EXPERIENCE_ORIGIN_HOSTS,
- * only `/x/*` package-serving paths are allowed. Privileged app routes are denied.
+ * + Smart TV home rewrite (Sraf cannot paint Tailwind v4 marketing CSS).
  *
  * Next.js 16: `proxy.ts` (not deprecated `middleware.ts`).
  */
@@ -14,8 +12,23 @@ import {
   isExperienceOriginHost,
   parseExperienceOriginConfig,
 } from "@/domain/experience-origin";
+import { isFragileSmartTvUserAgent } from "@/lib/fragile-smart-tv";
 
 export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const ua = request.headers.get("user-agent");
+
+  // Marketing homepage uses Tailwind v4 / modern CSS that Sraf cannot parse.
+  // Serve a static lite home (same pattern as /tv.html for the player).
+  if (
+    (pathname === "/" || pathname === "") &&
+    isFragileSmartTvUserAgent(ua)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/home-lite.html";
+    return NextResponse.rewrite(url);
+  }
+
   const config = parseExperienceOriginConfig({
     EXPERIENCE_ORIGIN: process.env.EXPERIENCE_ORIGIN,
     EXPERIENCE_ORIGIN_HOSTS: process.env.EXPERIENCE_ORIGIN_HOSTS,
@@ -25,7 +38,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const { pathname } = request.nextUrl;
   if (isAllowedPathOnExperienceOrigin(pathname)) {
     return NextResponse.next();
   }
