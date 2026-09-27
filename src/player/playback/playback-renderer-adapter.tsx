@@ -472,7 +472,7 @@ function Slide({
           style={fit}
           autoPlay
           playsInline
-          muted={muted}
+          muted={true}
           preload="auto"
           loop={loop}
           ref={(el) => {
@@ -567,7 +567,7 @@ function Slide({
           key={url}
           src={url}
           autoPlay
-          muted={muted}
+          muted={true}
           preload="auto"
           controls={false}
           playsInline
