@@ -93,6 +93,7 @@ export async function updatePlaylistItemAction(
     durationOverrideMs?: number | null;
     transition?: string;
     fitMode?: string;
+    active?: boolean;
   },
 ) {
   const user = await requireSession("manage_playlists");

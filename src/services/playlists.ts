@@ -22,12 +22,14 @@ export const updatePlaylistItemSchema = z
     durationOverrideMs: z.number().int().positive().nullable().optional(),
     transition: transitionSchema.optional(),
     fitMode: z.string().min(1).max(40).optional(),
+    active: z.boolean().optional(),
   })
   .refine(
     (data) =>
       data.durationOverrideMs !== undefined ||
       data.transition !== undefined ||
-      data.fitMode !== undefined,
+      data.fitMode !== undefined ||
+      data.active !== undefined,
     { message: "Nenhuma alteração fornecida" },
   );
 
@@ -284,6 +286,7 @@ export async function updatePlaylistItem(
     durationOverrideMs?: number | null;
     transition?: string;
     fitMode?: string;
+    active?: boolean;
   },
   tenantId: string,
   userId?: string,
@@ -301,6 +304,7 @@ export async function updatePlaylistItem(
     durationOverrideMs?: number | null;
     transition?: Transition;
     fitMode?: string;
+    active?: boolean;
   } = {};
   if (parsed.durationOverrideMs !== undefined) {
     patch.durationOverrideMs = parsed.durationOverrideMs;
@@ -310,6 +314,9 @@ export async function updatePlaylistItem(
   }
   if (parsed.fitMode !== undefined) {
     patch.fitMode = parsed.fitMode;
+  }
+  if (parsed.active !== undefined) {
+    patch.active = parsed.active;
   }
 
   await db

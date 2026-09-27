@@ -19,7 +19,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Settings2, Plus, ArrowLeft, Check } from "lucide-react";
+import { GripVertical, Trash2, Settings2, Plus, ArrowLeft, Check, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +48,7 @@ type PlaylistItem = {
   durationOverrideMs: number | null;
   transition: Transition | string;
   fitMode: string;
+  active: boolean;
   content: {
     title: string;
     type: string;
@@ -80,6 +81,7 @@ function SortableItem({
   onRemove,
   onUpdateDuration,
   onUpdatePresentation,
+  onUpdateActive,
 }: {
   item: PlaylistItem;
   selected: boolean;
@@ -87,6 +89,7 @@ function SortableItem({
   onRemove: (id: string) => void;
   onUpdateDuration: (id: string, duration: number | null) => Promise<void>;
   onUpdatePresentation: (id: string, transition: string, fitMode: string) => Promise<void>;
+  onUpdateActive: (id: string, active: boolean) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: item.id });
@@ -109,6 +112,7 @@ function SortableItem({
   const [selectedTransition, setSelectedTransition] = useState(item.transition || "fade");
   const [selectedFitMode, setSelectedFitMode] = useState(item.fitMode || "black");
   const [isSavingPresentation, setIsSavingPresentation] = useState(false);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
 
   function formatDur(ms: number) {
     const total = Math.max(0, Math.round(ms / 1000));
@@ -131,9 +135,10 @@ function SortableItem({
         }
       }}
       className={
-        selected
+        (selected
           ? "group mb-2 flex cursor-pointer items-center gap-3 rounded-md border border-[var(--color-type-image)]/40 bg-[var(--color-type-image)]/10 p-3 shadow-sm"
-          : "group mb-2 flex cursor-pointer items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-sm"
+          : "group mb-2 flex cursor-pointer items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-sm") +
+        (!item.active ? " opacity-50 grayscale-[50%]" : "")
       }
     >
       <div
@@ -167,6 +172,23 @@ function SortableItem({
       </div>
 
       <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        disabled={isTogglingActive}
+        onClick={async () => {
+          setIsTogglingActive(true);
+          try {
+            await onUpdateActive(item.id, !item.active);
+          } finally {
+            setIsTogglingActive(false);
+          }
+        }}
+        title={item.active ? "Ocultar da apresentação" : "Mostrar na apresentação"}
+      >
+        {item.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+      </Button>
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -425,6 +447,24 @@ export function PlaylistBuilder({
     }
   }
 
+  async function handleUpdateActive(
+    itemId: string,
+    active: boolean,
+  ) {
+    try {
+      await updatePlaylistItemAction(playlist.id, itemId, { active });
+      setItems((prev) =>
+        prev.map((i) => (i.id === itemId ? { ...i, active } : i)),
+      );
+      flashSaved();
+    } catch (err) {
+      setSaveMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Não foi possível atualizar o estado do item.",
+      });
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="admin-page-header flex flex-col gap-3 pb-4 pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -551,6 +591,7 @@ export function PlaylistBuilder({
                         onRemove={handleRemoveItem}
                         onUpdateDuration={handleUpdateDuration}
                         onUpdatePresentation={handleUpdatePresentation}
+                        onUpdateActive={handleUpdateActive}
                       />
                     ))}
                   </SortableContext>
