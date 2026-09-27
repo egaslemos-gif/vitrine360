@@ -1,50 +1,50 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* UI/UX-03 — Application surface hierarchy */
-  /* L0 App background */
-  --color-background: #f4f1fa;
+  /* UI-POLISH-01 — Soft SaaS Glass token system */
+  /* L0 App background — near-white with imperceptible lilac warmth */
+  --color-background: #f8f7fb;
   --color-app-bg: var(--color-background);
-  /* L1 Workspace + sidebar — clearly tinted vs white cards */
-  --color-workspace: #ebe6f5;
+  /* L1 Workspace + sidebar — very light, not tinted */
+  --color-workspace: #f3f2f7;
   --color-workspace-bg: var(--color-workspace);
-  --color-sidebar: #e4dff2;
+  --color-sidebar: #f6f5fa;
   --color-background-secondary: var(--color-sidebar);
   --color-foreground: #18181b;
-  /* L2 Surface / card — pure white over tinted workspace */
+  /* L2 Surface / card — pure white */
   --color-card: #ffffff;
   --color-card-foreground: #18181b;
   --color-surface: var(--color-card);
-  --color-surface-muted: #f1edf8;
-  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #f5f4f8;
+  --color-surface-elevated: rgba(255, 255, 255, 0.92);
   --color-primary: #6d4aff;
   --color-primary-foreground: #ffffff;
-  --color-primary-hover: #5136c9;
-  --color-primary-soft: #eee9ff;
+  --color-primary-hover: #5b3de6;
+  --color-primary-soft: #f0ecff;
   --color-primary-strong: #5136c9;
   --color-primary-light: #8b6ff7;
-  --color-secondary: #f1eefa;
+  --color-secondary: #f4f2fa;
   --color-secondary-foreground: #3f3f46;
-  --color-muted: #f1eefa;
-  --color-muted-foreground: #666672;
-  --color-accent: #eee9ff;
+  --color-muted: #f4f2fa;
+  --color-muted-foreground: #71717a;
+  --color-accent: #f0ecff;
   --color-accent-foreground: #5136c9;
   --color-destructive: #ef4444;
-  --color-border-subtle: #e2dceb;
-  --color-border: #d5cde3;
+  --color-border-subtle: rgba(120, 100, 160, 0.08);
+  --color-border: rgba(120, 100, 160, 0.12);
   --color-border-default: var(--color-border);
-  --color-border-strong: #c4b8d9;
-  --color-input: #e6e1ef;
+  --color-border-strong: rgba(120, 100, 160, 0.18);
+  --color-input: #ededf2;
   --color-ring: #6d4aff;
   --color-success: #22a06b;
   --color-warning: #f59e0b;
   --color-danger: var(--color-destructive);
   --color-info: #3b82f6;
-  --color-neutral: #666672;
-  --color-row-hover: #f6f3fb;
-  --color-row-selected: #eee9ff;
+  --color-neutral: #71717a;
+  --color-row-hover: rgba(109, 74, 255, 0.03);
+  --color-row-selected: rgba(109, 74, 255, 0.06);
   --color-text-primary: var(--color-foreground);
-  --color-text-secondary: #666672;
+  --color-text-secondary: #71717a;
   --color-text-muted: var(--color-muted-foreground);
   /* Colorful media accents (badges / small accents only) */
   --color-type-image: #3b82f6;
@@ -71,19 +71,19 @@
   --color-preview-bg: var(--color-player);
   --radius-sm: 0.625rem; /* 10 */
   --radius-md: 0.875rem; /* 14 */
-  --radius-lg: 1.125rem; /* 18 */
-  --radius-xl: 1.25rem; /* 20 — application cards */
-  --radius-2xl: 1.5rem; /* 24 — large media / dialogs */
-  --shadow-subtle: 0 1px 3px rgba(30, 20, 60, 0.04),
-    0 1px 2px rgba(30, 20, 60, 0.03);
-  --shadow-card: 0 1px 2px rgba(30, 20, 60, 0.04),
-    0 4px 14px rgba(30, 20, 60, 0.07);
-  --shadow-elevated: 0 8px 28px rgba(30, 20, 60, 0.1);
-  --shadow-floating: 0 14px 40px rgba(30, 20, 60, 0.12);
-  --shadow-modal: 0 18px 48px rgba(30, 20, 60, 0.12),
-    0 4px 12px rgba(30, 20, 60, 0.06);
-  --shadow-glass: 0 8px 32px rgba(81, 54, 201, 0.08),
-    0 2px 8px rgba(24, 24, 27, 0.04);
+  --radius-lg: 1rem; /* 16 */
+  --radius-xl: 1.125rem; /* 18 — application cards */
+  --radius-2xl: 1.25rem; /* 20 — large media / dialogs */
+  /* Shadow system: three tiers — soft, card, floating */
+  --shadow-subtle: 0 1px 2px rgba(30, 20, 60, 0.03);
+  --shadow-card: 0 1px 3px rgba(30, 20, 60, 0.03),
+    0 4px 16px rgba(30, 20, 60, 0.04);
+  --shadow-elevated: 0 4px 20px rgba(30, 20, 60, 0.06);
+  --shadow-floating: 0 8px 30px rgba(30, 20, 60, 0.10);
+  --shadow-modal: 0 16px 48px rgba(30, 20, 60, 0.12),
+    0 4px 12px rgba(30, 20, 60, 0.04);
+  --shadow-glass: 0 4px 20px rgba(81, 54, 201, 0.05),
+    0 1px 4px rgba(24, 24, 27, 0.03);
   /*
    * Spacing: keep numeric scale only. Named --spacing-sm/md/lg/xl/2xl collide with
    * Tailwind max-w-* (which falls back to spacing tokens) and collapse layouts to 8–48px.
@@ -113,7 +113,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
-    background: linear-gradient(135deg, #f4f1fa 0%, #ece7f6 30%, #f0edf8 60%, #f4f1fa 100%);
+    background: #f8f7fb;
     background-attachment: fixed;
   }
 
@@ -173,6 +173,7 @@ html.player-runtime .player-media {
   margin: 0;
   object-fit: contain;
   object-position: center center;
+  image-orientation: from-image;
   background: transparent;
   pointer-events: none;
 }
@@ -247,7 +248,7 @@ html.player-runtime .player-media {
     padding-inline: 2rem;
     padding-top: 0.5rem;
     padding-bottom: 0.875rem;
-    background: color-mix(in oklab, var(--color-workspace) 88%, white);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--color-border-subtle);
@@ -344,13 +345,13 @@ html.player-runtime .player-media {
 .ui-workspace {
   background: var(--color-workspace);
   border: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: none;
 }
 
 .ui-sidebar-panel {
   background: var(--color-sidebar);
   border: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: none;
 }
 
 .ui-surface-card {
@@ -527,23 +528,23 @@ html.dark .admin-page-header {
  * Core layout remains usable without backdrop-filter.
  */
 .glass-panel {
-  background: var(--color-workspace);
+  background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-elevated);
+  box-shadow: var(--shadow-subtle);
 }
 
 .glass-card {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
 }
 
 .glass-control {
-  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-subtle);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .glass-overlay {
