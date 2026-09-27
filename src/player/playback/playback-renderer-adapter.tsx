@@ -395,8 +395,14 @@ function Slide({
           headers: { Authorization: `Bearer ${config.deviceToken}` },
         });
         if (!res.ok) throw new Error(`media ${res.status}`);
-        const blob = await res.blob();
+        let blob = await res.blob();
         if (cancelled) return;
+        
+        // Force image/gif MIME type to ensure Chromium/Opera animate the blob correctly
+        if (assetUrl?.toLowerCase().endsWith(".gif") && blob.type !== "image/gif") {
+          blob = new Blob([blob], { type: "image/gif" });
+        }
+
         if (assetChecksum) {
           void putAssetBlob(assetId, blob, assetChecksum).catch(() => undefined);
         }

@@ -1315,7 +1315,8 @@
 
     var video = document.createElement("video");
     video.id = "v360-video";
-    video.muted = false;
+    video.muted = true;
+    video.setAttribute("muted", "");
     video.autoplay = true;
     video.preload = "auto";
     video.volume = 1;
@@ -1358,7 +1359,7 @@
     function reveal() {
       if (revealed || playState.generation !== generation) return;
       revealed = true;
-      layer.style.left = "0";
+      layer.style.left = "0px";
       if (!replaceAll) {
         var slides = host.getElementsByClassName("slide");
         var i;
