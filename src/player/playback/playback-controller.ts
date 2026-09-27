@@ -486,6 +486,10 @@ export class PlaybackController {
     generation: number,
   ): void {
     if (generation !== this.state.generation) return;
+    if (code === "MEDIA_PLAY_ERROR") {
+      this.commit({ status: "PAUSED", error: null });
+      return;
+    }
     this.commit({
       status: "ERROR",
       error: {
