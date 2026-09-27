@@ -1310,8 +1310,8 @@
     var host = document.getElementById("root");
     var layer = document.createElement("div");
     layer.className = "slide";
-    // Legacy Sraf bug: display:none stops media pipeline. Use opacity:0.01 instead.
-    layer.style.cssText = "background:#000;z-index:2;opacity:0.01;display:flex;align-items:center;justify-content:center";
+    // Legacy Sraf bug: display:none stops media pipeline. Position off-screen instead.
+    layer.style.cssText = "background:#000;z-index:2;position:absolute;left:-10000px;opacity:1;display:flex;align-items:center;justify-content:center";
 
     var video = document.createElement("video");
     video.id = "v360-video";
@@ -1358,7 +1358,7 @@
     function reveal() {
       if (revealed || playState.generation !== generation) return;
       revealed = true;
-      layer.style.opacity = "1";
+      layer.style.left = "0";
       if (!replaceAll) {
         var slides = host.getElementsByClassName("slide");
         var i;

@@ -157,8 +157,8 @@ function SortableItem({
           mediaUrl: item.content.mediaUrl,
         }}
       />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{item.content.title}</p>
+      <div className={`min-w-0 flex-1 transition-opacity ${item.active === false ? "opacity-50 grayscale" : ""}`}>
+        <p className={`truncate text-sm font-medium ${item.active === false ? "line-through" : ""}`}>{item.content.title}</p>
         <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
           <TypeBadge contentType={item.content.type} />
           <span className="tabular-nums">
@@ -175,20 +175,21 @@ function SortableItem({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        className={`h-8 w-8 ${item.active === false ? "text-destructive hover:text-destructive/80" : "text-muted-foreground hover:text-foreground"}`}
         disabled={isTogglingActive}
         onClick={async () => {
           setIsTogglingActive(true);
           try {
-            await onUpdateActive(item.id, !item.active);
+            await onUpdateActive(item.id, item.active === false ? true : false);
           } finally {
             setIsTogglingActive(false);
           }
         }}
-        title={item.active ? "Ocultar da apresentação" : "Mostrar na apresentação"}
+        title={item.active === false ? "Mostrar na apresentação" : "Ocultar da apresentação"}
       >
-        {item.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+        {item.active === false ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </Button>
+      <div className="w-px h-4 bg-border mx-1" />
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">

@@ -320,6 +320,23 @@ function Slide({
   const nativeEnded = usesNativeMediaEnded(item);
   const still = isStillMedia(item);
   const fit = mediaStyleFor(item.fitMode);
+  
+  const localMediaRef = useRef<HTMLMediaElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      const el = localMediaRef.current;
+      if (el) {
+        try {
+          el.pause();
+          el.removeAttribute("src");
+          el.load();
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, []);
 
   const emitPlayFail = useCallback(() => {
     onMediaEvent({
@@ -459,6 +476,7 @@ function Slide({
           preload="auto"
           loop={loop}
           ref={(el) => {
+            localMediaRef.current = el;
             mediaRef.current = el;
             if (el && status === "PLAYING") {
               ensureMediaPlayback(el, {
@@ -557,6 +575,7 @@ function Slide({
           style={{ position: "absolute", width: 1, height: 1, opacity: 0.01, pointerEvents: "none" }}
           aria-hidden
           ref={(el) => {
+            localMediaRef.current = el;
             mediaRef.current = el;
             if (el && status === "PLAYING") {
               ensureMediaPlayback(el, {
