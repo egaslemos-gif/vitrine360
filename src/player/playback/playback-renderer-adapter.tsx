@@ -544,15 +544,17 @@ function Slide({
           durationMs={durationMs}
           status={status}
         />
-        <audio
+        {/* We use <video> instead of <audio> because modern browsers (Chromium, Safari) strictly block muted <audio> autoplay, which breaks the playlist loop. <video muted playsInline> is permitted to autoplay. */}
+        <video
           key={url}
           src={url}
           autoPlay
           muted={muted}
           preload="auto"
           controls={false}
+          playsInline
           loop={loop}
-          style={{ position: "absolute", width: 0, height: 0, opacity: 0 }}
+          style={{ position: "absolute", width: 1, height: 1, opacity: 0.01, pointerEvents: "none" }}
           aria-hidden
           ref={(el) => {
             mediaRef.current = el;
