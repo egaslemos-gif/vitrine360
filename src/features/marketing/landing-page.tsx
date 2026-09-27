@@ -74,21 +74,21 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
-      <header className="glass-panel sticky top-0 z-40 border-b border-white/50">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <header className="sticky top-0 z-40 border-b border-black/[0.04] bg-white/70 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex min-w-0 items-baseline gap-2">
             <span
-              className="truncate text-xl font-semibold tracking-tight text-[var(--color-primary)]"
+              className="truncate text-[20px] font-bold tracking-tight text-[var(--color-primary)]"
               style={{ fontFamily: "var(--font-display), serif" }}
             >
               Vitrine360
             </span>
-            <span className="hidden text-xs text-[var(--color-muted-foreground)] sm:inline">
+            <span className="hidden text-xs text-[var(--color-text-muted)] sm:inline font-medium">
               Digital Display & Presentation
             </span>
           </Link>
           <nav
-            className="hidden items-center gap-6 text-sm text-[var(--color-text-secondary)] md:flex"
+            className="hidden items-center gap-6 text-[13px] font-medium text-[var(--color-text-secondary)] md:flex"
             aria-label="Product"
           >
             <a href="#product" className="hover:text-[var(--color-foreground)]">
@@ -104,16 +104,16 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               Resources
             </a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {!signedIn && (
               <Link
                 href="/admin/login"
-                className="hidden text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-foreground)] sm:inline"
+                className="hidden text-[13px] font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-foreground)] sm:inline"
               >
                 Sign in
               </Link>
             )}
-            <CtaLink href={primaryHref} size="sm">
+            <CtaLink href={primaryHref} size="sm" className="rounded-lg bg-[var(--color-primary)] font-medium text-white hover:bg-[var(--color-primary-hover)] shadow-[0_2px_8px_rgba(109,74,255,0.25)]">
               {primaryLabel}
             </CtaLink>
           </div>
@@ -121,55 +121,55 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
       </header>
 
       <main>
-        <section className="relative overflow-hidden border-b border-[var(--color-border)]">
+        <section className="relative overflow-hidden border-b border-[var(--color-border-subtle)] bg-[#F8F8FB]">
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden
-            style={{
-              background:
-                "radial-gradient(ellipse 90% 70% at 82% 8%, rgba(147,197,253,0.55), transparent 58%), radial-gradient(ellipse 55% 45% at 8% 88%, rgba(196,181,253,0.5), transparent 60%), linear-gradient(160deg, #eef4ff 0%, #f4f0ff 48%, #faf8ff 100%)",
-            }}
-          />
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-12 lg:pb-20 lg:pt-16">
-            <div className="max-w-xl">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,rgba(124,92,255,0.08),transparent_40%)]" />
+          </div>
+
+          {/* Fit first viewport: CTAs + “Offline-first · …” visible without scroll */}
+          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-12 lg:py-8 lg:min-h-[calc(100dvh-3.5rem)] lg:max-h-[calc(100dvh-3.5rem)]">
+            <div className="max-w-[520px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
                 Digital Display & Presentation
               </p>
-              <p
-                className="mt-3 text-4xl font-bold tracking-[-0.03em] text-[var(--color-primary)] sm:text-5xl"
-                style={{ fontFamily: "var(--font-display), serif" }}
-              >
-                Vitrine360
-              </p>
-              <h1 className="mt-4 text-[2.5rem] font-bold leading-[1.05] tracking-[-0.03em] text-[var(--color-foreground)] sm:text-5xl lg:text-[3.75rem] lg:leading-[1.02]">
+
+              <h1 className="mt-3 max-w-[600px] text-[2rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#131316] sm:text-[2.5rem] lg:text-[2.75rem] xl:text-[3.15rem]">
                 Turn every screen into a digital experience.
               </h1>
-              <p className="mt-5 max-w-md text-[17px] leading-relaxed text-[var(--color-text-secondary)] sm:text-[19px]">
+
+              <p className="mt-3 max-w-[480px] text-[16px] leading-[1.55] text-[var(--color-text-secondary)] sm:text-[17px]">
                 Create, distribute, play and control digital content across
                 displays and interactive devices.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <CtaLink href={primaryHref} size="lg">
+
+              <div className="mt-5 flex flex-col items-stretch gap-2.5 sm:mt-6 sm:flex-row sm:items-center sm:gap-3">
+                <CtaLink href={primaryHref} size="lg" className="w-full sm:w-[150px] rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white shadow-[0_4px_14px_rgba(109,74,255,0.25)] font-medium h-11 sm:h-12 transition-all hover:-translate-y-0.5">
                   {primaryLabel}
                 </CtaLink>
                 <a
                   href="#player-demo"
-                  className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+                  className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-[170px] rounded-xl h-11 sm:h-12 font-medium text-[#131316] border-[var(--color-border)] bg-white/60 backdrop-blur-sm transition-all hover:bg-white hover:border-[var(--color-border-strong)] hover:shadow-sm")}
                 >
-                  Explore the platform
+                  Explore platform
                 </a>
               </div>
-              <p className="mt-5 text-xs text-[var(--color-text-muted)]">
-                Try the interactive player → Play, Next, Seek, Mute
-              </p>
+
+              <div className="mt-4 text-[12px] font-medium tracking-wide text-[var(--color-text-muted)] sm:text-[13px]">
+                Offline-first &nbsp;·&nbsp; Multi-screen &nbsp;·&nbsp; Remote control
+              </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-2xl lg:mx-0 lg:max-w-none">
+            <div className="relative mx-auto w-full max-w-[640px] lg:mx-0 lg:ml-auto lg:max-w-[min(640px,42vw)]">
               <div
-                className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent_70%)]"
+                className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(circle_at_center,rgba(109,74,255,0.06),transparent_65%)] sm:-inset-6 sm:rounded-[2.5rem]"
                 aria-hidden
               />
-              <InteractivePlayerDemo size="hero" showPlaylist className="relative" />
+              <div className="relative rounded-[20px] border border-[rgba(255,255,255,0.9)] bg-[rgba(255,255,255,0.88)] p-1.5 shadow-[0_24px_70px_rgba(30,20,60,0.10)] sm:rounded-[24px] sm:p-2">
+                <InteractivePlayerDemo size="hero" showPlaylist className="relative rounded-[14px] overflow-hidden bg-white sm:rounded-[16px]" />
+              </div>
             </div>
           </div>
         </section>
