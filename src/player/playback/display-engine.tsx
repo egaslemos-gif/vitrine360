@@ -20,6 +20,7 @@ import {
 import { PlaybackController } from "@/player/playback/playback-controller";
 import { usePlaybackState } from "@/player/playback/use-playback-state";
 import { PlaybackRendererAdapter } from "@/player/playback/playback-renderer-adapter";
+import { DiagnosticOverlay } from "@/player/playback/diagnostic-overlay";
 import {
   playlistFingerprint,
   toPlaylistItems,
@@ -211,6 +212,7 @@ export const DisplayEngine = forwardRef<
           state={state}
           item={item}
         />
+        <DiagnosticOverlay state={state} item={item} />
       </div>
     </div>
   );
