@@ -130,7 +130,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_80%,rgba(92,124,255,0.08),transparent_40%)]" />
           </div>
 
-          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-6 pb-10 sm:gap-10 sm:px-6 sm:pt-8 sm:pb-12 lg:items-start lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-10 lg:pt-8 lg:pb-12">
+          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-6 pb-10 sm:gap-10 sm:px-6 sm:pt-8 sm:pb-12 xl:items-start xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] xl:gap-10 xl:pt-8 xl:pb-12">
             <div className="flex flex-col max-w-[520px]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
                 Digital Display & Presentation
@@ -161,7 +161,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                 Offline-first &nbsp;·&nbsp; Multi-screen &nbsp;·&nbsp; Remote control
               </div>
 
-              <div className="mt-12 lg:mt-16 grid grid-cols-3 divide-x divide-black/[0.08] border-t border-black/[0.08] pt-6 sm:mt-16 sm:pt-8">
+              <div className="mt-12 xl:mt-16 grid grid-cols-3 divide-x divide-black/[0.08] border-t border-black/[0.08] pt-6 sm:mt-16 sm:pt-8">
                 <div className="flex flex-col pr-4">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
                     01 <span className="text-[var(--color-primary)]">Create</span>
@@ -183,13 +183,13 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-[640px] lg:mx-0 lg:ml-auto lg:max-w-[min(700px,46vw)]">
+            <div className="relative mx-auto w-full max-w-[640px] xl:mx-0 xl:ml-auto xl:max-w-[min(700px,46vw)] xl:mt-2">
               <div
                 className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(circle_at_center,rgba(109,74,255,0.08),transparent_65%)] sm:-inset-6 sm:rounded-[2.5rem]"
                 aria-hidden
               />
-              <div className="relative rounded-[20px] border border-[rgba(255,255,255,0.9)] bg-[rgba(255,255,255,0.88)] p-1.5 shadow-[0_24px_70px_rgba(30,20,60,0.12)] sm:rounded-[24px] sm:p-2 transition-transform duration-500 hover:-translate-y-1 hover:shadow-[0_32px_80px_rgba(30,20,60,0.16)]">
-                <InteractivePlayerDemo size="hero" showPlaylist className="relative rounded-[14px] overflow-hidden bg-white sm:rounded-[16px]" />
+              <div className="relative rounded-[24px] border border-[rgba(255,255,255,0.9)] bg-[rgba(255,255,255,0.88)] shadow-[0_12px_32px_rgba(30,20,60,0.08)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(30,20,60,0.12)]">
+                <InteractivePlayerDemo size="hero" showPlaylist className="relative rounded-[23px] overflow-hidden bg-white" />
               </div>
             </div>
           </div>

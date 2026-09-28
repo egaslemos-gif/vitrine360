@@ -304,7 +304,7 @@ export function InteractivePlayerDemo({
     >
       <div
         className={cn(
-          "ui-demo-app-shell relative h-full w-full overflow-hidden bg-white ring-1 ring-black/5",
+          "ui-demo-app-shell relative w-full overflow-hidden bg-white ring-1 ring-black/5",
           isFullscreen &&
             "flex h-full min-h-0 w-full max-w-none flex-1 flex-col rounded-none border-0 shadow-none ring-0 backdrop-blur-none bg-[#0a0a0f]",
         )}
@@ -323,7 +323,7 @@ export function InteractivePlayerDemo({
         {/* Header moved outside the grid to span full width and avoid stretching issues */}
         <div
           className={cn(
-            "flex items-center justify-between gap-2 border-b px-4 py-2.5",
+            "flex items-center justify-between gap-2 border-b px-4 py-3 sm:py-3.5",
             isFullscreen
               ? "border-white/10 bg-black/40 backdrop-blur-md shrink-0"
               : "border-black/[0.04] bg-white/80 backdrop-blur-md relative z-10",
@@ -364,16 +364,16 @@ export function InteractivePlayerDemo({
           className={cn(
             "relative min-w-0",
             showPlaylist && !isFullscreen
-              ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1.7fr)_minmax(240px,1fr)]"
+              ? "flex flex-col xl:grid xl:grid-cols-[minmax(0,1.85fr)_minmax(200px,1fr)] xl:items-start"
               : "flex flex-col",
             isFullscreen &&
-              "h-full min-h-0 flex-1 grid grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]",
+              "h-full min-h-0 flex-1 grid grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]",
           )}
         >
           <div
             className={cn(
               "min-w-0 relative w-full",
-              isFullscreen ? "flex min-h-0 flex-col" : "lg:flex lg:flex-col",
+              isFullscreen ? "flex min-h-0 flex-col" : "xl:flex xl:flex-col p-2 sm:p-3 xl:p-4",
             )}
           >
             <div
@@ -381,7 +381,7 @@ export function InteractivePlayerDemo({
                 "ui-player-canvas relative overflow-hidden w-full",
                 isFullscreen
                   ? "min-h-0 flex-1"
-                  : "aspect-video lg:aspect-[5/4]",
+                  : "aspect-video rounded-[10px] shadow-sm border border-black/5",
               )}
             >
               <MediaSurface
@@ -434,27 +434,27 @@ export function InteractivePlayerDemo({
             <aside
               className={cn(
                 "flex flex-col relative",
-                !isFullscreen && "lg:self-center",
+                !isFullscreen && "xl:self-start",
                 isFullscreen
                   ? "border-l border-white/5 bg-black/40 backdrop-blur-md"
-                  : "bg-transparent lg:border-l lg:border-black/[0.04]",
+                  : "bg-transparent xl:border-l xl:border-black/[0.04]",
               )}
             >
               <div
                 className={cn(
                   "flex flex-col",
-                  !isFullscreen ? "p-3 lg:p-5" : "p-3"
+                  !isFullscreen ? "p-3 xl:p-4" : "p-3"
                 )}
               >
                 <p className={cn(
-                  "shrink-0 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] lg:mb-1",
+                  "shrink-0 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] xl:mb-1",
                   isFullscreen ? "text-white/50" : "text-[var(--color-text-muted)]"
                 )}>
                   Playlist
                 </p>
                 <ul
                   className={cn(
-                    "mt-2 lg:mt-3 space-y-1.5 lg:space-y-2",
+                    "mt-2 xl:mt-3 space-y-1.5 xl:space-y-2",
                     "overflow-x-hidden pr-0.5",
                     isFullscreen ? "min-h-0 flex-1 overflow-y-auto" : "flex flex-col",
                   )}
@@ -472,7 +472,7 @@ export function InteractivePlayerDemo({
                           aria-selected={active}
                           onClick={() => selectItem(i)}
                           className={cn(
-                            "flex w-full min-h-[48px] lg:min-h-[56px] items-center gap-3 lg:gap-4 rounded-[10px] px-2.5 lg:px-3 py-2 text-left transition-colors",
+                            "flex w-full min-h-[48px] xl:min-h-[56px] items-center gap-3 xl:gap-4 rounded-[10px] px-2.5 xl:px-3 py-2 text-left transition-colors",
                             isFullscreen
                               ? active ? "bg-white/10" : "hover:bg-white/5"
                               : active ? "bg-[var(--color-primary)]/[0.06]" : "hover:bg-black/[0.02]",
@@ -503,7 +503,7 @@ export function InteractivePlayerDemo({
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-1.5">
                             <span className={cn(
-                              "block truncate text-[13px] lg:text-[14px]",
+                              "block truncate text-[13px] xl:text-[14px]",
                               active ? "font-semibold" : "font-medium",
                               isFullscreen ? "text-white" : active ? "text-[var(--color-primary)]" : "text-[#131316]"
                             )}>
@@ -542,7 +542,7 @@ export function InteractivePlayerDemo({
                 })}
               </ul>
               <div className={cn(
-                "mt-4 lg:mt-5 pt-3 lg:pt-3 border-t",
+                "mt-4 xl:mt-5 pt-3 xl:pt-3 border-t",
                 isFullscreen ? "border-white/5" : "border-black/[0.04]"
               )}>
                 <p className={cn(
