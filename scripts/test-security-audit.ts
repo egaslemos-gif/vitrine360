@@ -67,9 +67,9 @@ async function main() {
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
     "base64",
   );
-  assert.equal(sniffMime(png, "application/octet-stream"), "image/png");
-  assert.equal(sniffMime(Buffer.from("not-image"), "text/plain"), "text/plain");
-  assert.equal(sniffMime(Buffer.from("MZ-fake-exe"), ""), "");
+  assert.equal(sniffMime(png), "image/png");
+  assert.equal(sniffMime(Buffer.from("not-image")), null);
+  assert.equal(sniffMime(Buffer.from("MZ-fake-exe")), null);
 
   console.log("2. Password hashing + JWT");
   const hash = await hashPassword("SecretPass1!");
@@ -139,6 +139,8 @@ async function main() {
       }),
   );
 
+  console.log("3b. MIME Validation & Upload");
+  // A. MIME declarado válido + assinatura válida
   const assetA = await uploadMediaAsset({
     fileName: "a.png",
     mimeType: "image/png",
@@ -148,15 +150,83 @@ async function main() {
   assert.equal(await getMediaAsset(assetA.id, tenantB), null);
   assert.ok(await getMediaAsset(assetA.id, tenantA));
 
-  // Reject disguised executable as image
+  // B. MIME declarado inválido + assinatura válida -> ACCEPT with detected MIME
+  const assetB = await uploadMediaAsset({
+    fileName: "b.xyz",
+    mimeType: "application/xyz",
+    data: png,
+    tenantId: tenantA,
+  });
+  assert.equal(assetB.mimeType, "image/png");
+
+  // C. MIME declarado de imagem + assinatura de executável -> REJECT
   await assert.rejects(() =>
     uploadMediaAsset({
       fileName: "evil.png",
       mimeType: "image/png",
       data: Buffer.from("MZ-fake-exe"),
       tenantId: tenantA,
-    }),
+    })
   );
+
+  // D. MIME declarado de vídeo + conteúdo incompatível -> REJECT
+  await assert.rejects(() =>
+    uploadMediaAsset({
+      fileName: "evil.mp4",
+      mimeType: "video/mp4",
+      data: Buffer.from("just-text-not-video"),
+      tenantId: tenantA,
+    })
+  );
+
+  // E. extensão enganosa + assinatura incompatível -> REJECT
+  await assert.rejects(() =>
+    uploadMediaAsset({
+      fileName: "test.mp4",
+      mimeType: "video/mp4",
+      data: Buffer.from("just-text-not-video"),
+      tenantId: tenantA,
+    })
+  );
+
+  // F. magic number desconhecido + fallback fornecido -> REJECT
+  await assert.rejects(() =>
+    uploadMediaAsset({
+      fileName: "fake.svg",
+      mimeType: "image/svg+xml",
+      data: Buffer.from("<svg></svg>"),
+      tenantId: tenantA,
+    })
+  );
+
+  // G. ficheiro vazio -> REJECT
+  await assert.rejects(() =>
+    uploadMediaAsset({
+      fileName: "empty.png",
+      mimeType: "image/png",
+      data: Buffer.alloc(0),
+      tenantId: tenantA,
+    })
+  );
+
+  // H. ficheiro truncado -> REJECT
+  await assert.rejects(() =>
+    uploadMediaAsset({
+      fileName: "trunc.png",
+      mimeType: "image/png",
+      data: Buffer.from([0x89, 0x50]), // Too short for png magic number
+      tenantId: tenantA,
+    })
+  );
+
+  // I. content type ausente -> ACCEPT se assinatura for válida
+  const assetI = await uploadMediaAsset({
+    fileName: "test.mp3",
+    mimeType: "",
+    data: Buffer.from([0xff, 0xe0, 0x00, 0x00]), // MPEG audio frame sync
+    tenantId: tenantA,
+  });
+  assert.equal(assetI.mimeType, "audio/mpeg");
 
   console.log("4. Device claim / token / disable / wrong tenant");
   const pairingA = await startDevicePairing();

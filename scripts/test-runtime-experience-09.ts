@@ -259,7 +259,7 @@ function main() {
   console.log("CONTENT-EXP-018 react player");
   {
     const eng = fs.readFileSync(
-      path.join(ROOT, "src/player/playback/display-engine.tsx"),
+      path.join(ROOT, "src/player/playback/playback-renderer-adapter.tsx"),
       "utf8",
     );
     assert.ok(eng.includes('item.type === "EXPERIENCE"'));

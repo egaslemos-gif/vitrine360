@@ -70,8 +70,8 @@ async function main() {
 
   // GIF-001 sniff
   console.log("GIF-001 sniffMime image/gif");
-  assert.equal(sniffMime(GIF, ""), "image/gif");
-  assert.equal(sniffMime(GIF, "x.gif"), "image/gif");
+  assert.equal(sniffMime(GIF), "image/gif");
+  assert.equal(sniffMime(GIF), "image/gif");
 
   // GIF-002 Media Library filter
   console.log("GIF-002 Media Library gif filter");

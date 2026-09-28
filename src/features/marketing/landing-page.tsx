@@ -130,8 +130,8 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_80%,rgba(92,124,255,0.08),transparent_40%)]" />
           </div>
 
-          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-8 sm:gap-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-12 lg:py-24">
-            <div className="max-w-[520px]">
+          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-6 pb-10 sm:gap-10 sm:px-6 sm:pt-8 sm:pb-12 lg:items-start lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-10 lg:pt-8 lg:pb-12">
+            <div className="flex flex-col max-w-[520px]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
                 Digital Display & Presentation
               </p>
@@ -140,12 +140,12 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                 Turn every screen into a digital experience.
               </h1>
 
-              <p className="mt-3 max-w-[480px] text-[15px] leading-[1.5] text-[var(--color-text-secondary)] sm:mt-4 sm:text-[17.5px] sm:leading-[1.55]">
+              <p className="mt-2 max-w-[480px] text-[15px] leading-[1.5] text-[var(--color-text-secondary)] sm:mt-3 sm:text-[17.5px] sm:leading-[1.55]">
                 Create, distribute, play and control digital content across
                 displays and interactive devices.
               </p>
 
-              <div className="mt-5 flex flex-col items-stretch gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-4">
+              <div className="mt-5 flex flex-col items-stretch gap-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-4">
                 <CtaLink href={primaryHref} size="lg" className="w-full sm:w-[160px] rounded-xl bg-gradient-to-b from-[var(--color-primary)] to-[#5335e9] hover:from-[#5335e9] hover:to-[var(--color-primary)] text-white shadow-[0_6px_20px_rgba(109,74,255,0.3)] font-semibold h-12 sm:h-14 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(109,74,255,0.4)]">
                   {primaryLabel}
                 </CtaLink>
@@ -157,12 +157,33 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                 </a>
               </div>
 
-              <div className="mt-5 text-[11px] font-medium tracking-wide text-[var(--color-text-muted)] sm:mt-6 sm:text-[13px]">
+              <div className="mt-4 text-[11px] font-medium tracking-wide text-[var(--color-text-muted)] sm:mt-5 sm:text-[13px]">
                 Offline-first &nbsp;·&nbsp; Multi-screen &nbsp;·&nbsp; Remote control
+              </div>
+
+              <div className="mt-12 lg:mt-16 grid grid-cols-3 divide-x divide-black/[0.08] border-t border-black/[0.08] pt-6 sm:mt-16 sm:pt-8">
+                <div className="flex flex-col pr-4">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+                    01 <span className="text-[var(--color-primary)]">Create</span>
+                  </span>
+                  <span className="mt-1 text-[14px] font-semibold tracking-tight text-[#131316]">Content</span>
+                </div>
+                <div className="flex flex-col px-4 sm:px-6">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+                    02 <span className="text-[var(--color-primary)]">Distribute</span>
+                  </span>
+                  <span className="mt-1 text-[14px] font-semibold tracking-tight text-[#131316]">Screens</span>
+                </div>
+                <div className="flex flex-col pl-4 sm:pl-6">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+                    03 <span className="text-[var(--color-primary)]">Control</span>
+                  </span>
+                  <span className="mt-1 text-[14px] font-semibold tracking-tight text-[#131316]">Devices</span>
+                </div>
               </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-[640px] lg:mx-0 lg:ml-auto lg:max-w-[min(640px,42vw)]">
+            <div className="relative mx-auto w-full max-w-[640px] lg:mx-0 lg:ml-auto lg:max-w-[min(700px,46vw)]">
               <div
                 className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(circle_at_center,rgba(109,74,255,0.08),transparent_65%)] sm:-inset-6 sm:rounded-[2.5rem]"
                 aria-hidden

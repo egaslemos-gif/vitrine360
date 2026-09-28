@@ -1,6 +1,6 @@
 # RUNTIME-PLAYBACK-05 — TEST REPORT
 
-Passed: 54/54
+Passed: 61/61
 
 | ID | Name | Result |
 |----|------|--------|
@@ -57,4 +57,11 @@ Passed: 54/54
 | MEDIA-051 | error overlay safe copy | PASS |
 | MEDIA-052 | lab fixtures | PASS |
 | MEDIA-053 | fitMode | PASS |
-| MEDIA-054 | retry via controller | PASS |
+| MEDIA-054-A | Autoplay rejection -> PAUSED | PASS |
+| MEDIA-054-D | Terminal decode error -> ERROR | PASS |
+| MEDIA-054-E | ERROR retry behavior | PASS |
+| MEDIA-054-F | PAUSED autoplay retry | PASS |
+| MEDIA-054-B | Muted fallback succeeds -> PLAYING | PASS |
+| MEDIA-054-C | Muted fallback fails -> PAUSED | PASS |
+| MEDIA-054-G | No media element reconstruction for PAUSED retry | PASS |
+| MEDIA-054-H | Existing playback progression unaffected | PASS |

@@ -172,8 +172,8 @@ export function runClockLegacyParityTests() {
   // Shell / SW cache-bust aligned with VERSION
   const html = readFileSync(join(root, "public/tv.html"), "utf8");
   const sw = readFileSync(join(root, "public/tv-sw.js"), "utf8");
-  assert.ok(html.includes("tv.js?v=055"), "shell cache-bust v055");
-  assert.ok(sw.includes("v055"), "service worker v055");
+  assert.ok(html.includes("tv.js?v=057"), "shell cache-bust v057");
+  assert.ok(sw.includes("v057"), "service worker v057");
   assert.ok(tv.includes("0.1.27-smarttv-static"), "tv VERSION 0.1.27");
   assert.ok(
     tv.includes("Math.min(Number(h), Number(w)"),

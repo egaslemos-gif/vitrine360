@@ -588,7 +588,7 @@ function main(): void {
     assert.ok(adapter.includes("resolveObjectFit") || adapter.includes("fitMode"));
   });
 
-  test("MEDIA-054", "retry via controller", () => {
+  test("MEDIA-054-A", "Autoplay rejection -> PAUSED", () => {
     const c = load([item("V", "VIDEO", 0)]);
     const gen = ready(c, 3000);
     c.dispatch({
@@ -598,11 +598,108 @@ function main(): void {
       recoverable: true,
       generation: gen,
     });
+    // Contract: MEDIA_PLAY_ERROR (Autoplay blocked) gracefully degrades to PAUSED.
+    assert.equal(c.getState().status, "PAUSED");
+  });
+
+  test("MEDIA-054-D", "Terminal decode error -> ERROR", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    c.dispatch({
+      type: "MEDIA_ERROR",
+      code: MEDIA_ERROR_CODES.MEDIA_DECODE_ERROR,
+      message: "Decode failed",
+      recoverable: false,
+      generation: gen,
+    });
+    // Contract: Terminal failure degrades to ERROR.
+    assert.equal(c.getState().status, "ERROR");
+  });
+
+  test("MEDIA-054-E", "ERROR retry behavior", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    c.dispatch({
+      type: "MEDIA_ERROR",
+      code: MEDIA_ERROR_CODES.MEDIA_DECODE_ERROR,
+      message: "Decode failed",
+      recoverable: false,
+      generation: gen,
+    });
     assert.equal(c.getState().status, "ERROR");
     c.dispatch({ type: "PLAY" });
-    assert.ok(
-      c.getState().status === "LOADING" || c.getState().status === "PLAYING",
-    );
+    // Contract: PLAY from ERROR reloads the item
+    assert.equal(c.getState().status, "LOADING");
+  });
+
+  test("MEDIA-054-F", "PAUSED autoplay retry", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    c.dispatch({
+      type: "MEDIA_ERROR",
+      code: MEDIA_ERROR_CODES.MEDIA_PLAY_ERROR,
+      message: "Playback could not start",
+      recoverable: true,
+      generation: gen,
+    });
+    assert.equal(c.getState().status, "PAUSED");
+    c.dispatch({ type: "PLAY" });
+    // Contract: PLAY from PAUSED (due to autoplay block) resumes PLAYING
+    assert.equal(c.getState().status, "PLAYING");
+  });
+
+  test("MEDIA-054-B", "Muted fallback succeeds -> PLAYING", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    // If muted fallback succeeds, no MEDIA_ERROR is dispatched.
+    // The state naturally remains PLAYING.
+    assert.equal(c.getState().status, "PLAYING");
+  });
+
+  test("MEDIA-054-C", "Muted fallback fails -> PAUSED", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    // If muted fallback fails, ensureMediaPlayback calls onUnrecoverable
+    c.dispatch({
+      type: "MEDIA_ERROR",
+      code: MEDIA_ERROR_CODES.MEDIA_PLAY_ERROR,
+      message: "muted_autoplay_denied",
+      recoverable: true,
+      generation: gen,
+    });
+    assert.equal(c.getState().status, "PAUSED");
+  });
+
+  test("MEDIA-054-G", "No media element reconstruction for PAUSED retry", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    c.dispatch({
+      type: "MEDIA_ERROR",
+      code: MEDIA_ERROR_CODES.MEDIA_PLAY_ERROR,
+      message: "Playback could not start",
+      recoverable: true,
+      generation: gen,
+    });
+    assert.equal(c.getState().status, "PAUSED");
+    const idBefore = c.getState().currentContentId;
+    c.dispatch({ type: "PLAY" });
+    assert.equal(c.getState().status, "PLAYING");
+    assert.equal(c.getState().currentContentId, idBefore); // Item was NOT restarted from scratch
+  });
+
+  test("MEDIA-054-H", "Existing playback progression unaffected", () => {
+    const c = load([item("V", "VIDEO", 0)]);
+    const gen = ready(c, 3000);
+    // Simulate time passing before the error
+    c.dispatch({ type: "MEDIA_TIME_UPDATE", positionMs: 1500, generation: gen });
+    c.dispatch({
+      type: "MEDIA_ERROR",
+      code: MEDIA_ERROR_CODES.MEDIA_PLAY_ERROR,
+      message: "Playback could not start",
+      recoverable: true,
+      generation: gen,
+    });
+    assert.equal(c.getState().positionMs, 1500); // Position is retained in PAUSED
   });
 
   const failed = results.filter((r) => !r.pass);

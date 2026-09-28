@@ -33,7 +33,7 @@ export function safeFileExtension(fileName: string): string {
   return ext;
 }
 
-export function sniffMime(data: Buffer, fallback: string): string {
+export function sniffMime(data: Buffer): string | null {
   if (data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {
     return "image/jpeg";
   }
@@ -90,15 +90,12 @@ export function sniffMime(data: Buffer, fallback: string): string {
   if (data.length >= 12 && data.toString("ascii", 4, 8) === "ftyp") {
     const brand = data.toString("ascii", 8, 12);
     if (
-    brand.startsWith("M4A") ||
-    brand.startsWith("m4a") ||
-    /^(M4A |m4a |mp4a)/i.test(brand) ||
-    fallback === "audio/x-m4a" ||
-    fallback === "audio/m4a" ||
-    fallback.startsWith("audio/")
-  ) {
-    return "audio/mp4";
-  }
+      brand.startsWith("M4A") ||
+      brand.startsWith("m4a") ||
+      /^(M4A |m4a |mp4a)/i.test(brand)
+    ) {
+      return "audio/mp4";
+    }
     return "video/mp4";
   }
   if (
@@ -108,7 +105,10 @@ export function sniffMime(data: Buffer, fallback: string): string {
     data[2] === 0xdf &&
     data[3] === 0xa3
   ) {
-    return fallback.startsWith("audio/") ? "audio/webm" : "video/webm";
+    // Both webm audio and video use the same magic number. We'll return video/webm
+    // and rely on the client's explicit intention if they want it treated as audio/webm
+    // in the normalize step, or we can just return video/webm and let it be.
+    return "video/webm";
   }
-  return fallback;
+  return null;
 }

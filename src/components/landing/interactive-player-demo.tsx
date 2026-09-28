@@ -320,69 +320,68 @@ export function InteractivePlayerDemo({
           />
         ) : null}
 
+        {/* Header moved outside the grid to span full width and avoid stretching issues */}
         <div
           className={cn(
-            "relative grid min-w-0",
-            showPlaylist
-              ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(220px,0.7fr)]"
-              : "grid-cols-1",
+            "flex items-center justify-between gap-2 border-b px-4 py-2.5",
+            isFullscreen
+              ? "border-white/10 bg-black/40 backdrop-blur-md shrink-0"
+              : "border-black/[0.04] bg-white/80 backdrop-blur-md relative z-10",
+          )}
+        >
+          <div className="min-w-0">
+            <p
+              id={labelId}
+              className={cn(
+                "truncate text-[13px] font-semibold tracking-tight",
+                isFullscreen ? "text-white" : "text-[#131316]"
+              )}
+            >
+              Vitrine360 Player
+            </p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium">
+              <span className={cn(
+                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-[0.08em]",
+                isFullscreen ? "bg-white/10 text-white/70" : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+              )}>
+                Live demo
+              </span>
+              <StatusDot status={status} light={isFullscreen} />
+            </p>
+          </div>
+          <div
+            className={cn(
+              "hidden shrink-0 text-[10px] font-medium sm:block",
+              isFullscreen ? "text-white/40" : "text-[var(--color-text-muted)]"
+            )}
+            aria-hidden
+          >
+            Local only
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "relative min-w-0",
+            showPlaylist && !isFullscreen
+              ? "flex flex-col lg:grid lg:grid-cols-[minmax(0,1.7fr)_minmax(240px,1fr)]"
+              : "flex flex-col",
             isFullscreen &&
-              "h-full min-h-0 flex-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]",
+              "h-full min-h-0 flex-1 grid grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]",
           )}
         >
           <div
             className={cn(
-              "min-w-0",
-              isFullscreen && "flex min-h-0 flex-col",
+              "min-w-0 relative w-full",
+              isFullscreen ? "flex min-h-0 flex-col" : "lg:flex lg:flex-col",
             )}
           >
             <div
               className={cn(
-                "flex items-center justify-between gap-2 border-b px-4 py-2.5",
-                isFullscreen
-                  ? "border-white/10 bg-black/40 backdrop-blur-md shrink-0"
-                  : "border-black/[0.04] bg-white/80 backdrop-blur-md",
-              )}
-            >
-              <div className="min-w-0">
-                <p
-                  id={labelId}
-                  className={cn(
-                    "truncate text-[13px] font-semibold tracking-tight",
-                    isFullscreen ? "text-white" : "text-[#131316]"
-                  )}
-                >
-                  Vitrine360 Player
-                </p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium">
-                  <span className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-[0.08em]",
-                    isFullscreen ? "bg-white/10 text-white/70" : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                  )}>
-                    Live demo
-                  </span>
-                  <StatusDot status={status} light={isFullscreen} />
-                </p>
-              </div>
-              <div
-                className={cn(
-                  "hidden shrink-0 text-[10px] font-medium sm:block",
-                  isFullscreen ? "text-white/40" : "text-[var(--color-text-muted)]"
-                )}
-                aria-hidden
-              >
-                Local only
-              </div>
-            </div>
-
-            <div
-              className={cn(
-                "ui-player-canvas relative overflow-hidden",
+                "ui-player-canvas relative overflow-hidden w-full",
                 isFullscreen
                   ? "min-h-0 flex-1"
-                  : showcase
-                    ? "aspect-[16/10] sm:aspect-video"
-                    : "aspect-video",
+                  : "aspect-video lg:aspect-[5/4]",
               )}
             >
               <MediaSurface
@@ -434,23 +433,31 @@ export function InteractivePlayerDemo({
           {showPlaylist ? (
             <aside
               className={cn(
-                "p-3 flex flex-col min-h-0",
+                "flex flex-col relative",
+                !isFullscreen && "lg:self-center",
                 isFullscreen
                   ? "border-l border-white/5 bg-black/40 backdrop-blur-md"
-                  : "bg-transparent",
+                  : "bg-transparent lg:border-l lg:border-black/[0.04]",
               )}
             >
-              <p className={cn(
-                "shrink-0 px-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
-                isFullscreen ? "text-white/50" : "text-[var(--color-text-muted)]"
-              )}>
-                Playlist
-              </p>
-              <ul
+              <div
                 className={cn(
-                  "mt-2 space-y-1.5",
-                  isFullscreen && "min-h-0 flex-1 overflow-y-auto pr-0.5",
+                  "flex flex-col",
+                  !isFullscreen ? "p-3 lg:p-5" : "p-3"
                 )}
+              >
+                <p className={cn(
+                  "shrink-0 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] lg:mb-1",
+                  isFullscreen ? "text-white/50" : "text-[var(--color-text-muted)]"
+                )}>
+                  Playlist
+                </p>
+                <ul
+                  className={cn(
+                    "mt-2 lg:mt-3 space-y-1.5 lg:space-y-2",
+                    "overflow-x-hidden pr-0.5",
+                    isFullscreen ? "min-h-0 flex-1 overflow-y-auto" : "flex flex-col",
+                  )}
                 role="listbox"
                 aria-label="Demo playlist"
               >
@@ -465,13 +472,13 @@ export function InteractivePlayerDemo({
                           aria-selected={active}
                           onClick={() => selectItem(i)}
                           className={cn(
-                            "flex w-full min-h-[44px] items-center gap-3 rounded-[10px] px-2.5 py-2 text-left transition-colors",
+                            "flex w-full min-h-[48px] lg:min-h-[56px] items-center gap-3 lg:gap-4 rounded-[10px] px-2.5 lg:px-3 py-2 text-left transition-colors",
                             isFullscreen
                               ? active ? "bg-white/10" : "hover:bg-white/5"
                               : active ? "bg-[var(--color-primary)]/[0.06]" : "hover:bg-black/[0.02]",
                           )}
                         >
-                          <span className="relative h-10 w-[52px] shrink-0 overflow-hidden rounded-[8px] bg-black/5">
+                          <span className="relative h-[36px] w-[64px] lg:h-[42px] lg:w-[74px] shrink-0 overflow-hidden rounded-[6px] lg:rounded-[8px] bg-black/5">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={row.src}
@@ -496,7 +503,7 @@ export function InteractivePlayerDemo({
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-1.5">
                             <span className={cn(
-                              "block truncate text-[13px]",
+                              "block truncate text-[13px] lg:text-[14px]",
                               active ? "font-semibold" : "font-medium",
                               isFullscreen ? "text-white" : active ? "text-[var(--color-primary)]" : "text-[#131316]"
                             )}>
@@ -534,12 +541,18 @@ export function InteractivePlayerDemo({
                   );
                 })}
               </ul>
-              <p className={cn(
-                "mt-4 shrink-0 px-1 text-[10px] leading-relaxed text-center",
-                isFullscreen ? "text-white/30" : "text-[var(--color-text-muted)]/60"
+              <div className={cn(
+                "mt-4 lg:mt-5 pt-3 lg:pt-3 border-t",
+                isFullscreen ? "border-white/5" : "border-black/[0.04]"
               )}>
-                Local product demo — no device commands, no database writes.
-              </p>
+                <p className={cn(
+                  "shrink-0 px-1 text-[10px] leading-relaxed text-center",
+                  isFullscreen ? "text-white/30" : "text-[var(--color-text-muted)]/60"
+                )}>
+                  Local product demo — no device commands, no database writes.
+                </p>
+              </div>
+              </div>
             </aside>
           ) : null}
         </div>
@@ -582,13 +595,13 @@ function MediaSurface({
   playing: boolean;
 }) {
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-black">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={item.src}
         alt=""
         className={cn(
-          "h-full w-full object-cover transition-transform duration-700 ease-out",
+          "h-full w-full object-contain transition-transform duration-700 ease-out",
           playing && "scale-[1.02]",
         )}
         draggable={false}

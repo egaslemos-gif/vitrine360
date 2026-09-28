@@ -576,7 +576,26 @@ export async function uploadMediaAsset(params: {
     } catch {
       const id = existing.id;
       const ext = safeFileExtension(params.fileName);
-      const sniffed = sniffMime(params.data, "") || params.mimeType;
+      
+      const rawSniffed = sniffMime(params.data);
+      if (!rawSniffed) {
+        throw new Error(`MIME type not allowed: invalid media signature for ${params.mimeType}`);
+      }
+      
+      // If WebM or MP4 is detected, we can trust the client's distinction between audio and video
+      // if it falls within the same container family.
+      let finalMime = rawSniffed;
+      if (rawSniffed === "video/webm" && params.mimeType.startsWith("audio/")) {
+        finalMime = "audio/webm";
+      } else if (rawSniffed === "video/mp4" && params.mimeType.startsWith("audio/")) {
+        finalMime = "audio/mp4";
+      }
+
+      const sniffed = normalizeMediaMime(finalMime);
+      if (!ALLOWED_MIME.has(sniffed)) {
+        throw new Error(`MIME type not allowed: ${sniffed}`);
+      }
+
       const key = `${params.tenantId}/${id}.${ext}`;
       const {
         reserveStorageForUpload,
@@ -680,13 +699,22 @@ export async function uploadMediaAsset(params: {
   // 3. New upload
   const id = crypto.randomUUID();
   const ext = safeFileExtension(params.fileName);
-  const sniffed = normalizeMediaMime(
-    sniffMime(params.data, params.mimeType) || params.mimeType,
-  );
-  if (!sniffed || !ALLOWED_MIME.has(sniffed)) {
-    throw new Error(
-      `MIME type not allowed: ${sniffed || params.mimeType || "unknown"}`,
-    );
+  
+  const rawSniffed = sniffMime(params.data);
+  if (!rawSniffed) {
+    throw new Error(`MIME type not allowed: invalid media signature for ${params.mimeType}`);
+  }
+  
+  let finalMime = rawSniffed;
+  if (rawSniffed === "video/webm" && params.mimeType.startsWith("audio/")) {
+    finalMime = "audio/webm";
+  } else if (rawSniffed === "video/mp4" && params.mimeType.startsWith("audio/")) {
+    finalMime = "audio/mp4";
+  }
+
+  const sniffed = normalizeMediaMime(finalMime);
+  if (!ALLOWED_MIME.has(sniffed)) {
+    throw new Error(`MIME type not allowed: ${sniffed}`);
   }
 
   const {
@@ -1045,7 +1073,7 @@ export async function completeMediaUpload(params: {
     try {
       const prefix = await storage.getObjectRange(storageKey, 0, 63);
       sniffed = normalizeMediaMime(
-        sniffMime(prefix, params.mimeType) || params.mimeType,
+        sniffMime(prefix) || params.mimeType,
       );
     } catch {
       sniffed = normalizeMediaMime(params.mimeType);

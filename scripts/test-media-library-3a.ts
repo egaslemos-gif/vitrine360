@@ -55,8 +55,8 @@ async function main() {
 
   // --- Filter helpers (no DB) ---
   console.log("1–8. Filters + usage helpers");
-  assert.equal(sniffMime(GIF, ""), "image/gif");
-  assert.equal(sniffMime(MP4, ""), "video/mp4");
+  assert.equal(sniffMime(GIF), "image/gif");
+  assert.equal(sniffMime(MP4), "video/mp4");
   assert.equal(isGifMime("image/gif"), true);
   assert.equal(isImageMime("image/png"), true);
   assert.equal(isImageMime("image/gif"), false);
