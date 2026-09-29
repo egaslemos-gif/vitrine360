@@ -323,6 +323,20 @@ function Slide({
   
   const localMediaRef = useRef<HTMLMediaElement | null>(null);
 
+  const logVideoDiag = useCallback((eventName: string, extra?: string) => {
+    if (process.env.NODE_ENV !== "development" || item.type !== "VIDEO") return;
+    const el = localMediaRef.current as HTMLVideoElement | null;
+    let base = `[VIDEO-DIAG] ${eventName}`;
+    if (extra) base += ` | ${extra}`;
+    if (!el) {
+      console.log(base);
+      return;
+    }
+    const safeSrc = (el.src || "").replace(/token=[^&]+/, "token=***");
+    const safeCurrentSrc = (el.currentSrc || "").replace(/token=[^&]+/, "token=***");
+    console.log(`${base} | src=${safeSrc} | currentSrc=${safeCurrentSrc} | readyState=${el.readyState} | networkState=${el.networkState} | w=${el.videoWidth} h=${el.videoHeight} | dur=${el.duration} | cur=${el.currentTime} | paused=${el.paused} | muted=${el.muted} | autoplay=${el.autoplay} | preload=${el.preload} | err.code=${el.error?.code} err.msg=${el.error?.message}`);
+  }, [item.type]);
+
   useEffect(() => {
     return () => {
       const el = localMediaRef.current;
@@ -360,6 +374,21 @@ function Slide({
         const payloadUrl = item.payload?.url;
         setUrl(typeof payloadUrl === "string" ? payloadUrl : null);
         return;
+      }
+
+      // PLAYBACK-HISENSE-VIDEO-01: Smart TVs (Hisense Vidaa) fail to stream video via blob URL.
+      // If we are online, bypass IndexedDB and force a direct HTTP byte-range request.
+      if (item.type === "VIDEO" && navigator.onLine) {
+        try {
+          const config = await getConfig();
+          if (config?.deviceToken) {
+            const directPath = `/api/device/media/${encodeURIComponent(assetId)}?token=${config.deviceToken}`;
+            if (!cancelled) setUrl(directPath);
+            return;
+          }
+        } catch {
+          /* fallback to normal logic */
+        }
       }
       const objectUrl = await createObjectUrl(assetId).catch(() => null);
       if (cancelled) {
@@ -407,6 +436,9 @@ function Slide({
           void putAssetBlob(assetId, blob, assetChecksum).catch(() => undefined);
         }
         const blobUrl = URL.createObjectURL(blob);
+        if (process.env.NODE_ENV === "development" && item.type === "VIDEO") {
+          console.log(`[VIDEO-DIAG] BLOB CREATED | blob.type=${blob.type} | blob.size=${blob.size} | objectURL=${blobUrl.substring(0, 40)}...`);
+        }
         revoked = blobUrl;
         setUrl(blobUrl);
       } catch {
@@ -492,7 +524,9 @@ function Slide({
               });
             }
           }}
+          onLoadStart={() => logVideoDiag("loadstart")}
           onLoadedMetadata={(e) => {
+            logVideoDiag("loadedmetadata");
             const el = e.currentTarget;
             const natural =
               Number.isFinite(el.duration) && el.duration > 0
@@ -513,20 +547,26 @@ function Slide({
               desiredVolume: volume,
             });
           }}
-          onLoadedData={(e) =>
+          onLoadedData={(e) => {
+            logVideoDiag("loadeddata");
             ensureMediaPlayback(e.currentTarget, {
               onUnrecoverable: emitPlayFail,
               desiredMuted: muted,
               desiredVolume: volume,
-            })
-          }
-          onCanPlay={(e) =>
+            });
+          }}
+          onCanPlay={(e) => {
+            logVideoDiag("canplay");
+            if (process.env.NODE_ENV === "development" && e.currentTarget instanceof HTMLVideoElement) {
+              const canMp4 = e.currentTarget.canPlayType("video/mp4");
+              logVideoDiag(`canPlayType("video/mp4") = "${canMp4}"`);
+            }
             ensureMediaPlayback(e.currentTarget, {
               onUnrecoverable: emitPlayFail,
               desiredMuted: muted,
               desiredVolume: volume,
-            })
-          }
+            });
+          }}
           onTimeUpdate={(e) => {
             onMediaEvent({
               type: "MEDIA_TIME_UPDATE",
@@ -534,12 +574,21 @@ function Slide({
               generation,
             });
           }}
+          onCanPlayThrough={() => logVideoDiag("canplaythrough")}
+          onPlay={() => logVideoDiag("play")}
+          onPlaying={() => logVideoDiag("playing")}
+          onPause={() => logVideoDiag("pause")}
+          onWaiting={() => logVideoDiag("waiting")}
+          onStalled={() => logVideoDiag("stalled")}
+          onSuspend={() => logVideoDiag("suspend")}
           onEnded={() => {
+            logVideoDiag("ended");
             if (nativeEnded) {
               onMediaEvent({ type: "MEDIA_ENDED", generation });
             }
           }}
           onError={() => {
+            logVideoDiag("error");
             onMediaEvent({
               type: "MEDIA_ERROR",
               code: MEDIA_ERROR_CODES.MEDIA_DECODE_ERROR,

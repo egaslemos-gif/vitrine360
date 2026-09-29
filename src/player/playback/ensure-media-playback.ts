@@ -23,6 +23,11 @@ export function ensureMediaPlayback(
 ) {
   if (!el) return;
 
+  const isDevVideo = process.env.NODE_ENV === "development" && el instanceof HTMLVideoElement;
+  const log = (msg: string) => {
+    if (isDevVideo) console.log(`[VIDEO-DIAG-ENSURE] ${msg}`);
+  };
+
   const desiredMuted = opts?.desiredMuted === true;
   const desiredVolume =
     typeof opts?.desiredVolume === "number" &&
@@ -54,11 +59,18 @@ export function ensureMediaPlayback(
       try {
         el.muted = true;
         el.setAttribute("muted", "");
+        log("recoverIfPausedAfterUnmute calling play()");
         const again = el.play();
         if (again && typeof again.then === "function") {
-          void again.catch(() => fail("muted_autoplay_denied"));
+          void again.then(() => {
+            log("recoverIfPausedAfterUnmute play() resolved");
+          }).catch((err: any) => {
+            log(`recoverIfPausedAfterUnmute play() rejected: name=${err?.name} msg=${err?.message}`);
+            fail("muted_autoplay_denied");
+          });
         }
-      } catch {
+      } catch (err: any) {
+        log(`recoverIfPausedAfterUnmute threw: ${err?.message}`);
         fail("muted_autoplay_threw");
       }
     }
@@ -69,10 +81,12 @@ export function ensureMediaPlayback(
       el.muted = true;
       el.setAttribute("muted", "");
       el.volume = desiredVolume;
+      log("startMuted calling play()");
       const mutedPlay = el.play();
       if (mutedPlay && typeof mutedPlay.then === "function") {
         void mutedPlay
           .then(() => {
+            log("startMuted play() resolved");
             if (desiredMuted) return;
             applyDesiredAudio();
             recoverIfPausedAfterUnmute();
@@ -83,11 +97,13 @@ export function ensureMediaPlayback(
               }
             }, 250);
           })
-          .catch(() => {
+          .catch((err: any) => {
+            log(`startMuted play() rejected: name=${err?.name} msg=${err?.message}`);
             fail("muted_autoplay_denied");
           });
       }
-    } catch {
+    } catch (err: any) {
+      log(`startMuted threw: ${err?.message}`);
       fail("muted_autoplay_threw");
     }
   };
@@ -99,12 +115,19 @@ export function ensureMediaPlayback(
 
   try {
     applyDesiredAudio();
+    log("audible calling play()");
     const audible = el.play();
     if (audible && typeof audible.then === "function") {
-      void audible.catch(() => startMuted());
+      void audible.then(() => {
+        log("audible play() resolved");
+      }).catch((err: any) => {
+        log(`audible play() rejected: name=${err?.name} msg=${err?.message} - falling back to startMuted`);
+        startMuted();
+      });
       return;
     }
-  } catch {
+  } catch (err: any) {
+    log(`audible play() threw: ${err?.message} - falling back to startMuted`);
     startMuted();
   }
 }

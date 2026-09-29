@@ -38,6 +38,6 @@
 | PI10B-PLAN-08 | PASS | deactivate Plan with ACTIVE TenantPlan → reject |
 | PI10B-PLAN-09 | PASS | Plan soft-deactivate via active=false |
 
-Generated: 2026-09-25T15:27:14.147Z
+Generated: 2026-09-29T20:13:59.633Z
 
 PI-10B NÃO implementa enforcement.
