@@ -5,12 +5,5 @@
   "display": "fullscreen",
   "background_color": "#070b14",
   "theme_color": "#0b1220",
-  "orientation": "landscape",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    }
-  ]
+  "orientation": "landscape"
 }

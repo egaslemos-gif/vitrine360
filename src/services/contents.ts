@@ -110,7 +110,8 @@ export function assertMediaCompatibleWithType(
     return;
   }
   if (type === "VIDEO") {
-    if (!mimeType.startsWith("video/")) {
+    // Allow audio/mp4 for VIDEO since some MP4 files with video tracks get sniffed as audio
+    if (!mimeType.startsWith("video/") && mimeType !== "audio/mp4") {
       throw new Error(
         "Media asset MIME type is not allowed for VIDEO content (expected video/*)",
       );
@@ -118,7 +119,9 @@ export function assertMediaCompatibleWithType(
     return;
   }
   if (type === "AUDIO") {
-    if (!mimeType.startsWith("audio/")) {
+    // Allow video/mp4 for AUDIO since .m4a files are MP4 containers that may be
+    // sniffed as video/mp4 when the ftyp brand is 'isom' or 'mp42' instead of 'M4A '
+    if (!mimeType.startsWith("audio/") && mimeType !== "video/mp4") {
       throw new Error(
         "Media asset MIME type is not allowed for AUDIO content (expected audio/*)",
       );

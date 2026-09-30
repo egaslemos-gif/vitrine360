@@ -525,7 +525,6 @@ export function PlayerRuntimeShell({
       }}
     >
       {children}
-      <FullscreenControlChrome />
     </div>
   );
 }

@@ -295,7 +295,8 @@ export async function runSyncCycle(options?: {
     manifestVersion: remote.manifestVersion,
     playlist: remote.playlist
       ? { ...remote.playlist, items: rawItems }
-      : { items: rawItems },
+      : null,
+    effectivePlayback: remote.effectivePlayback,
     schedules: remote.schedules,
     generatedAt: remote.generatedAt,
     assetIds: requiredIds,

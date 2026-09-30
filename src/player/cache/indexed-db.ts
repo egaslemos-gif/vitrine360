@@ -20,6 +20,10 @@ export type LocalConfig = {
   pairingSecret?: string;
   /** Tenant scope from server Device row (policy enrichment). */
   tenantId?: string | null;
+  /** Identity context for HUD */
+  deviceName?: string | null;
+  location?: string | null;
+  groupName?: string | null;
   /** Server Device.displayType — hardware context, not presentation. */
   displayType?: string;
   /** Server Device.interactionMode */
@@ -37,7 +41,18 @@ export type LocalConfig = {
 
 export type LocalManifest = {
   manifestVersion: number;
-  playlist: unknown;
+  playlist: {
+    id: string;
+    name: string;
+    version: number;
+    items: unknown[];
+  } | null;
+  effectivePlayback?: {
+    source: string;
+    scheduleId: string | null;
+    priority: string;
+    key: string;
+  };
   schedules: unknown;
   generatedAt: string;
   assetIds: string[];

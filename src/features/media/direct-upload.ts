@@ -43,6 +43,9 @@ async function multipartUpload(file: File): Promise<DirectUploadAsset> {
     );
   }
   if (!res.ok || !data.id) {
+    if (data.error === "ENTITLEMENT_DENIED" || data.error === "QUOTA_EXCEEDED") {
+      throw new Error("Plano actual não permite mais carregamentos de ficheiros (limite de armazenamento excedido).");
+    }
     throw new Error(data.error ?? "Erro no upload do media");
   }
   return {
@@ -102,6 +105,9 @@ export async function uploadMediaFile(file: File): Promise<DirectUploadAsset> {
 
   if (!prepareRes.ok) {
     const msg = prepareData.error ?? "Erro ao preparar upload";
+    if (msg === "ENTITLEMENT_DENIED" || msg === "QUOTA_EXCEEDED") {
+      throw new Error("Plano actual não permite mais carregamentos de ficheiros (limite de armazenamento excedido).");
+    }
     if (/direct upload not supported/i.test(msg)) {
       return multipartUpload(file);
     }

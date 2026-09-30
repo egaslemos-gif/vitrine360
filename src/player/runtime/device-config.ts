@@ -90,6 +90,9 @@ export async function applyServerDeviceConfig(
   const next: LocalConfig = {
     ...current,
     tenantId: slice.tenantId ?? current.tenantId ?? null,
+    deviceName: slice.deviceName ?? current.deviceName ?? null,
+    location: slice.location ?? current.location ?? null,
+    groupName: slice.groupName ?? current.groupName ?? null,
     displayType: slice.displayType,
     interactionMode: slice.interactionMode,
     orientation: slice.orientation,
@@ -115,6 +118,9 @@ export function withServerDeviceConfig(
   return {
     ...config,
     tenantId: slice.tenantId ?? config.tenantId ?? null,
+    deviceName: slice.deviceName ?? config.deviceName ?? null,
+    location: slice.location ?? config.location ?? null,
+    groupName: slice.groupName ?? config.groupName ?? null,
     displayType: slice.displayType,
     interactionMode: slice.interactionMode,
     orientation: slice.orientation,

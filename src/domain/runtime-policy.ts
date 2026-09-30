@@ -57,6 +57,9 @@ export type DeviceConfigurationSlice = {
 export type DevicePolicyConfigWire = {
   tenantId: string | null;
   deviceId: string;
+  deviceName?: string | null;
+  location?: string | null;
+  groupName?: string | null;
   displayType: string;
   interactionMode: string;
   orientation: string;
@@ -67,6 +70,9 @@ export type DevicePolicyConfigWire = {
 export function toDevicePolicyConfigWire(device: {
   id: string;
   tenantId: string | null;
+  name?: string | null;
+  location?: string | null;
+  groupName?: string | null;
   displayType: string;
   interactionMode: string;
   orientation: string;
@@ -76,6 +82,9 @@ export function toDevicePolicyConfigWire(device: {
   return {
     tenantId: device.tenantId,
     deviceId: device.id,
+    deviceName: device.name,
+    location: device.location,
+    groupName: device.groupName,
     displayType: device.displayType,
     interactionMode: device.interactionMode,
     orientation: device.orientation,

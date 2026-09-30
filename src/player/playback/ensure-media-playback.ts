@@ -64,13 +64,13 @@ export function ensureMediaPlayback(
         if (again && typeof again.then === "function") {
           void again.then(() => {
             log("recoverIfPausedAfterUnmute play() resolved");
-          }).catch((err: any) => {
-            log(`recoverIfPausedAfterUnmute play() rejected: name=${err?.name} msg=${err?.message}`);
+          }).catch((err: unknown) => {
+            log(`recoverIfPausedAfterUnmute play() rejected: name=${(err as Error)?.name} msg=${(err as Error)?.message}`);
             fail("muted_autoplay_denied");
           });
         }
-      } catch (err: any) {
-        log(`recoverIfPausedAfterUnmute threw: ${err?.message}`);
+      } catch (err: unknown) {
+        log(`recoverIfPausedAfterUnmute threw: ${(err as Error)?.message}`);
         fail("muted_autoplay_threw");
       }
     }
@@ -94,16 +94,30 @@ export function ensureMediaPlayback(
               if (!desiredMuted && !el.paused && el.muted) {
                 applyDesiredAudio();
                 recoverIfPausedAfterUnmute();
+                // If it STILL is muted (browser blocked our unmute attempt),
+                // we register a one-time user interaction listener.
+                if (el.muted) {
+                  const unmuteOnInteract = () => {
+                    if (!desiredMuted && el.muted && !el.paused) {
+                      el.muted = false;
+                      el.removeAttribute("muted");
+                    }
+                    window.removeEventListener("pointerdown", unmuteOnInteract, true);
+                    window.removeEventListener("keydown", unmuteOnInteract, true);
+                  };
+                  window.addEventListener("pointerdown", unmuteOnInteract, true);
+                  window.addEventListener("keydown", unmuteOnInteract, true);
+                }
               }
             }, 250);
           })
-          .catch((err: any) => {
-            log(`startMuted play() rejected: name=${err?.name} msg=${err?.message}`);
+          .catch((err: unknown) => {
+            log(`startMuted play() rejected: name=${(err as Error)?.name} msg=${(err as Error)?.message}`);
             fail("muted_autoplay_denied");
           });
       }
-    } catch (err: any) {
-      log(`startMuted threw: ${err?.message}`);
+    } catch (err: unknown) {
+      log(`startMuted threw: ${(err as Error)?.message}`);
       fail("muted_autoplay_threw");
     }
   };
@@ -120,14 +134,36 @@ export function ensureMediaPlayback(
     if (audible && typeof audible.then === "function") {
       void audible.then(() => {
         log("audible play() resolved");
-      }).catch((err: any) => {
-        log(`audible play() rejected: name=${err?.name} msg=${err?.message} - falling back to startMuted`);
+      }).catch((err: unknown) => {
+        log(`audible play() rejected: name=${(err as Error)?.name} msg=${(err as Error)?.message} - falling back to startMuted`);
         startMuted();
       });
       return;
     }
-  } catch (err: any) {
-    log(`audible play() threw: ${err?.message} - falling back to startMuted`);
+  } catch (err: unknown) {
+    log(`audible play() threw: ${(err as Error)?.message} - falling back to startMuted`);
     startMuted();
+  }
+}
+
+export function disposeMediaElement(el: HTMLMediaElement | null | undefined) {
+  if (!el) return;
+  try {
+    // Nullify potential inline listeners
+    el.onended = null;
+    el.onerror = null;
+    el.ontimeupdate = null;
+    el.onloadeddata = null;
+    el.onloadedmetadata = null;
+    el.oncanplay = null;
+    el.onplay = null;
+    el.onplaying = null;
+    el.onpause = null;
+
+    el.pause();
+    el.removeAttribute("src");
+    el.load();
+  } catch {
+    /* ignore */
   }
 }

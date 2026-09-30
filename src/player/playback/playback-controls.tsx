@@ -199,10 +199,11 @@ export function PlaybackControls({
           style={{
             display: "flex",
             justifyContent: "space-between",
-            gap: 12,
-            fontSize: 12,
+            gap: 8,
+            fontSize: compact ? 11 : 12,
             opacity: 0.85,
             letterSpacing: "0.02em",
+            minWidth: 0,
           }}
         >
           <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -372,6 +373,7 @@ export function PlaybackControls({
           <ControlButton
             label="Previous"
             disabled={!avail.PREVIOUS.enabled}
+            compact={compact}
             onClick={() => dispatch({ type: "PREVIOUS" })}
           >
             ⏮
@@ -380,6 +382,7 @@ export function PlaybackControls({
             label={showPause ? "Pause" : "Play"}
             primary
             disabled={!avail.PLAY_PAUSE.enabled}
+            compact={compact}
             onClick={playPause}
             pressed={showPause}
           >
@@ -388,6 +391,7 @@ export function PlaybackControls({
           <ControlButton
             label="Next"
             disabled={!avail.NEXT.enabled}
+            compact={compact}
             onClick={() => dispatch({ type: "NEXT" })}
           >
             ⏭
@@ -398,6 +402,7 @@ export function PlaybackControls({
                 label="Stop"
                 disabled={!avail.STOP.enabled}
                 onClick={() => dispatch({ type: "STOP" })}
+                compact={compact}
               >
                 ⏹
               </ControlButton>
@@ -405,6 +410,7 @@ export function PlaybackControls({
                 label="Restart"
                 disabled={!avail.RESTART.enabled}
                 onClick={() => dispatch({ type: "RESTART" })}
+                compact={compact}
               >
                 ↺
               </ControlButton>
@@ -418,6 +424,7 @@ export function PlaybackControls({
               label={state.muted ? "Unmute" : "Mute"}
               disabled={!avail.MUTE.enabled}
               pressed={state.muted}
+              compact={compact}
               onClick={() =>
                 dispatch({ type: "SET_MUTED", muted: !state.muted })
               }
@@ -425,7 +432,7 @@ export function PlaybackControls({
               {volumeIcon}
             </ControlButton>
           ) : null}
-          {avail.VOLUME.visible ? (
+          {avail.VOLUME.visible && !compact ? (
             <label
               htmlFor={volId}
               style={{
@@ -467,14 +474,15 @@ export function PlaybackControls({
                     dispatch({ type: "SET_VOLUME", volume: 1 });
                   }
                 }}
-                style={{ width: compact ? 72 : 110, accentColor: "#7c5cff" }}
+                style={{ width: 110, accentColor: "#7c5cff" }}
               />
             </label>
           ) : null}
-          {avail.REPEAT.visible ? (
+          {avail.REPEAT.visible && !compact ? (
             <ControlButton
               label={`Repeat ${state.repeatMode}`}
               disabled={!avail.REPEAT.enabled}
+              compact={compact}
               onClick={() =>
                 dispatch({
                   type: "SET_REPEAT_MODE",
@@ -493,6 +501,7 @@ export function PlaybackControls({
             <ControlButton
               label="Fullscreen"
               disabled={!avail.FULLSCREEN.enabled}
+              compact={compact}
               onClick={toggleFullscreen}
             >
               ⛶
@@ -559,6 +568,7 @@ function ControlButton({
   disabled,
   primary,
   pressed,
+  compact,
 }: {
   label: string;
   children: React.ReactNode;
@@ -566,7 +576,10 @@ function ControlButton({
   disabled?: boolean;
   primary?: boolean;
   pressed?: boolean;
+  compact?: boolean;
 }) {
+  const size = compact ? (primary ? 44 : 36) : (primary ? 52 : 44);
+  const fontSize = compact ? (primary ? 16 : 14) : (primary ? 18 : 16);
   return (
     <button
       type="button"
@@ -583,10 +596,11 @@ function ControlButton({
         color: primary ? "#fff" : btnBase.color,
         opacity: disabled ? 0.35 : 1,
         cursor: disabled ? "not-allowed" : "pointer",
-        minWidth: primary ? 52 : 44,
-        minHeight: primary ? 52 : 44,
+        minWidth: size,
+        minHeight: size,
         borderRadius: primary ? 999 : 12,
-        fontSize: primary ? 18 : 16,
+        fontSize,
+        padding: compact ? "0 6px" : "0 10px",
       }}
     >
       {children}

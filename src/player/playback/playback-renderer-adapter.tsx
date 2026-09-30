@@ -18,7 +18,7 @@ import {
 import { createObjectUrl, getConfig, putAssetBlob } from "@/player/cache/indexed-db";
 import { useLiveClock } from "@/features/contents/use-live-clock";
 import { ExperiencePlaybackSlide } from "@/player/playback/experience-slide";
-import { ensureMediaPlayback } from "@/player/playback/ensure-media-playback";
+import { ensureMediaPlayback, disposeMediaElement } from "@/player/playback/ensure-media-playback";
 import { AudioVisual } from "@/player/playback/audio-visual";
 import { MediaErrorOverlay } from "@/player/playback/media-error-overlay";
 import {
@@ -86,6 +86,8 @@ function mediaStyleFor(fitMode?: string): CSSProperties {
     objectPosition: "center center",
     // Honor EXIF so portrait phone photos stay upright (Chrome/TV WebViews).
     imageOrientation: "from-image",
+    // Fix for older WebKit based TVs (WebOS/Tizen/Vidaa)
+    WebkitImageOrientation: "from-image",
     background: "transparent",
   };
 }
@@ -107,10 +109,22 @@ export function PlaybackRendererAdapter({
   const generation = state.generation;
   const status = state.status;
   const mediaRef = useRef<HTMLMediaElement | null>(null);
+  const prevGenerationRef = useRef<number>(generation);
   const seekAppliedRef = useRef<number | null>(null);
   const timerRef = useRef<PresentationTimer | null>(null);
   if (timerRef.current == null) {
     timerRef.current = new PresentationTimer();
+  }
+
+  // P4/P5 FIX: Force-dispose the previous media element when generation changes.
+  // This prevents audio/video from continuing to play in the background when the
+  // playlist advances to the next item.
+  if (prevGenerationRef.current !== generation) {
+    prevGenerationRef.current = generation;
+    if (mediaRef.current) {
+      disposeMediaElement(mediaRef.current);
+      mediaRef.current = null;
+    }
   }
 
   // Single presentation timer owner (RP-03). PAUSE/STOP/ERROR ⇒ not PLAYING ⇒ stop.
@@ -240,6 +254,16 @@ export function PlaybackRendererAdapter({
     [controller],
   );
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development" && typeof window !== "undefined" && item) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any;
+      if (!w.__v360_media_debug) w.__v360_media_debug = {};
+      w.__v360_media_debug.generation = generation;
+      w.__v360_media_debug.contentId = item.contentId;
+    }
+  }, [generation, item?.contentId]);
+
   if (!item || status === "IDLE") {
     return null;
   }
@@ -247,7 +271,11 @@ export function PlaybackRendererAdapter({
   const rendererKey = `${item.playlistItemId}:${item.contentId}:g${generation}`;
 
   return (
-    <div style={{ position: "absolute", inset: 0 }} data-renderer-adapter>
+    <div
+      style={{ position: "absolute", inset: 0 }}
+      data-renderer-adapter
+      aria-hidden="true"
+    >
       <Slide
         key={rendererKey}
         item={item}
@@ -257,10 +285,7 @@ export function PlaybackRendererAdapter({
         muted={state.muted}
         positionMs={state.positionMs}
         durationMs={state.durationMs}
-        loop={
-          item.durationMs > 0 &&
-          (item.type === "VIDEO" || item.type === "AUDIO")
-        }
+        loop={false}
         mediaRef={mediaRef}
         onMediaEvent={onMediaEvent}
       />
@@ -323,10 +348,36 @@ function Slide({
   
   const localMediaRef = useRef<HTMLMediaElement | null>(null);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any;
+      if (!w.__v360_media_debug) w.__v360_media_debug = { audioCount: 0, videoCount: 0 };
+      if (item.type === "AUDIO") w.__v360_media_debug.audioCount++;
+      if (item.type === "VIDEO") w.__v360_media_debug.videoCount++;
+      w.__v360_media_debug.activeMediaCount = (w.__v360_media_debug.audioCount || 0) + (w.__v360_media_debug.videoCount || 0);
+    }
+
+    return () => {
+      if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const w = window as any;
+        if (w.__v360_media_debug) {
+          if (item.type === "AUDIO") w.__v360_media_debug.audioCount = Math.max(0, w.__v360_media_debug.audioCount - 1);
+          if (item.type === "VIDEO") w.__v360_media_debug.videoCount = Math.max(0, w.__v360_media_debug.videoCount - 1);
+          w.__v360_media_debug.activeMediaCount = (w.__v360_media_debug.audioCount || 0) + (w.__v360_media_debug.videoCount || 0);
+        }
+      }
+      if (localMediaRef.current) {
+        disposeMediaElement(localMediaRef.current);
+      }
+    };
+  }, [item.type]);
+
   const logVideoDiag = useCallback((eventName: string, extra?: string) => {
-    if (process.env.NODE_ENV !== "development" || item.type !== "VIDEO") return;
+    if (item.type !== "VIDEO") return;
     const el = localMediaRef.current as HTMLVideoElement | null;
-    let base = `[VIDEO-DIAG] ${eventName}`;
+    let base = `[MEDIA] [VIDEO-DIAG] ${eventName} event disparado`;
     if (extra) base += ` | ${extra}`;
     if (!el) {
       console.log(base);
@@ -339,15 +390,8 @@ function Slide({
 
   useEffect(() => {
     return () => {
-      const el = localMediaRef.current;
-      if (el) {
-        try {
-          el.pause();
-          el.removeAttribute("src");
-          el.load();
-        } catch {
-          // ignore
-        }
+      if (localMediaRef.current) {
+        disposeMediaElement(localMediaRef.current);
       }
     };
   }, []);
@@ -510,7 +554,7 @@ function Slide({
           style={fit}
           autoPlay
           playsInline
-          muted={true}
+          muted={muted}
           preload="auto"
           loop={loop}
           ref={(el) => {
@@ -622,7 +666,7 @@ function Slide({
           key={url}
           src={url}
           autoPlay
-          muted={true}
+          muted={muted}
           preload="auto"
           controls={false}
           playsInline
@@ -857,7 +901,7 @@ function LiveClockSlide({ payload }: { payload: Record<string, unknown> }) {
               marginTop: "3vh",
               opacity: 0.78,
               fontWeight: 500,
-              fontSize: "clamp(40px, 7vh, 88px)",
+              fontSize: "clamp(24px, min(7vh, 8vw), 88px)",
             }}
           >
             {now.toLocaleDateString()}
@@ -886,7 +930,7 @@ function LiveClockSlide({ payload }: { payload: Record<string, unknown> }) {
             letterSpacing: "0.04em",
             fontVariantNumeric: "tabular-nums",
             fontFamily: "ui-monospace, Consolas, monospace",
-            fontSize: "clamp(120px, 32vh, 320px)",
+            fontSize: "clamp(48px, min(32vh, 20vw), 320px)",
           }}
         >
           {now.toLocaleTimeString([], {
@@ -903,7 +947,7 @@ function LiveClockSlide({ payload }: { payload: Record<string, unknown> }) {
             marginTop: "3vh",
             opacity: 0.78,
             fontWeight: 500,
-            fontSize: "clamp(40px, 7vh, 88px)",
+            fontSize: "clamp(24px, min(7vh, 8vw), 88px)",
           }}
         >
           {now.toLocaleDateString()}

@@ -29,6 +29,8 @@ import {
   RUNTIME_STATE_UPDATED_EVENT,
 } from "@/player/runtime/state";
 
+import { DisplayIdentityHud } from "@/player/playback/display-identity-hud";
+
 export type PlaybackChromeProps = {
   state: PlaybackState;
   dispatch: (action: PlaybackAction) => void;
@@ -174,6 +176,9 @@ export function PlaybackChrome({
       }}
     >
       <div style={{ position: "absolute", inset: 0 }}>{children}</div>
+        {controlsReady && (
+          <DisplayIdentityHud visible={controlsVisible} itemTitle={itemTitle} />
+        )}
         <div
           style={{
             position: "absolute",
