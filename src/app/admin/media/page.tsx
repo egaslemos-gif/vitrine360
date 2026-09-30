@@ -11,7 +11,7 @@ export default async function MediaPage() {
   const assets = await listMediaAssetsWithUsage(session.tenantId);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="mx-auto w-full space-y-8">
       <PageHeader
         title="Media"
         description="Biblioteca profissional de ficheiros multimédia."

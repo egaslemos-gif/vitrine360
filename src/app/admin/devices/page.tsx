@@ -31,7 +31,7 @@ export default async function DevicesPage() {
   const withPlaylist = activeDevices.filter((d) => d.currentPlaylistId).length;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-8">
+    <div className="mx-auto w-full space-y-5 sm:space-y-8">
       <PageHeader
         title="Ecrãs"
         description="Gerencie os dispositivos que apresentam as suas experiências."

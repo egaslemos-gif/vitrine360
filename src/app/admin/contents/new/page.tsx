@@ -25,7 +25,7 @@ export default async function NewContentPage({
 
   if (!hasSeed) {
     return (
-      <div className="mx-auto w-full max-w-7xl space-y-8">
+      <div className="mx-auto w-full space-y-8">
         <Suspense fallback={<p className="text-sm text-muted-foreground">A carregar…</p>}>
           <ContentCreateChooser />
         </Suspense>

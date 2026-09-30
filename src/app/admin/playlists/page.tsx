@@ -11,7 +11,7 @@ export default async function PlaylistsPage() {
   const playlistsWithUsage = await listPlaylistsWithUsage(session.tenantId);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="mx-auto w-full space-y-8">
       <PageHeader
         title="Playlists"
         description="Ordene conteúdos, durações e transições para os ecrãs."

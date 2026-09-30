@@ -45,7 +45,7 @@ export default async function DeviceDetailPage({
   const playbackStatus = observability.runtime.isPlaying ? "PLAYING" : "IDLE";
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8">
+    <div className="mx-auto w-full space-y-8">
       <div className="space-y-1">
         <Link href="/admin/devices" className="ui-caption hover:underline">
           ← Ecrãs
