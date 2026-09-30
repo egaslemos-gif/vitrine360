@@ -87,6 +87,7 @@ function mediaStyleFor(fitMode?: string): CSSProperties {
     // Honor EXIF so portrait phone photos stay upright (Chrome/TV WebViews).
     imageOrientation: "from-image",
     // Fix for older WebKit based TVs (WebOS/Tizen/Vidaa)
+    // @ts-expect-error: WebkitImageOrientation is not in React.CSSProperties
     WebkitImageOrientation: "from-image",
     background: "transparent",
   };
