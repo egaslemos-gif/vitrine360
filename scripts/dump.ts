@@ -10,7 +10,7 @@ config({ path: ".env.local" });
 config({ path: ".env" });
 
 function resolveUrl() {
-  return process.env.TURSO_DATABASE_URL || "file:./data/vitrine360-mt.db";
+  return process.env.TURSO_DATABASE_URL || "file:./.data/sqlite.db";
 }
 
 async function main() {
@@ -21,39 +21,30 @@ async function main() {
   
   const db = drizzle(client, { schema });
   
-  const targetContent = await db.query.contents.findFirst({
-    where: eq(schema.contents.title, "Editor smoke text"),
+  const user = await db.query.users.findMany({
+    where: eq(schema.users.email, "elemos@unilicungo.ac.mz"),
   });
   
-  console.log("TARGET CONTENT:");
-  console.log(JSON.stringify(targetContent, null, 2));
+  if (user && user.length > 0) {
+    const bcrypt = require("bcryptjs");
+    const newHash = bcrypt.hashSync("Admin123!", 12);
+    await db.update(schema.users).set({ passwordHash: newHash }).where(eq(schema.users.id, user[0].id));
+    console.log("Password updated to Admin123!");
+  }
+  console.log(JSON.stringify(user, null, 2));
   
-  if (targetContent) {
-    const pItems = await db.query.playlistItems.findMany({
-      where: eq(schema.playlistItems.contentId, targetContent.id),
+  if (user && user.length > 0) {
+    const memberships = await db.query.memberships.findMany({
+      where: eq(schema.memberships.userId, user[0].id),
     });
-    console.log("PLAYLIST ITEMS FOR THIS CONTENT:");
-    console.log(JSON.stringify(pItems, null, 2));
+    console.log("MEMBERSHIPS:");
+    console.log(JSON.stringify(memberships, null, 2));
 
-    for (const item of pItems) {
-      const playlist = await db.query.playlists.findFirst({
-        where: eq(schema.playlists.id, item.playlistId)
-      });
-      console.log("PLAYLIST:");
-      console.log(JSON.stringify(playlist, null, 2));
-
-      const schedules = await db.query.schedules.findMany({
-        where: eq(schema.schedules.playlistId, item.playlistId)
-      });
-      console.log("SCHEDULES:");
-      console.log(JSON.stringify(schedules, null, 2));
-      
-      const devices = await db.query.devices.findMany({
-        where: eq(schema.devices.currentPlaylistId, item.playlistId)
-      });
-      console.log("DEVICES WITH THIS PLAYLIST AS DEFAULT:");
-      console.log(JSON.stringify(devices, null, 2));
-    }
+    const tenant = await db.query.tenants.findFirst({
+      where: eq(schema.tenants.id, memberships[0].tenantId),
+    });
+    console.log("TENANT:");
+    console.log(JSON.stringify(tenant, null, 2));
   }
 
   process.exit(0);

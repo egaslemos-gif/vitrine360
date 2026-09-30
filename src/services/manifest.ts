@@ -12,6 +12,7 @@ import {
 import type { Device } from "@/db/schema";
 import { resolveEffectivePlayback } from "@/domain/playback-resolver";
 import { effectivePlaybackKey } from "@/domain/effective-playback-key";
+import { resolveEffectiveDuration } from "@/domain/playback-state";
 import { parseTransition } from "@/domain/types";
 import {
   isExperienceVersionPublished,
@@ -265,7 +266,11 @@ async function buildContentManifestItem(
       contentId: content.id,
       type: content.type,
       title: content.title,
-      durationMs: content.durationMs,
+      durationMs: resolveEffectiveDuration({
+        mediaType: content.type,
+        contentDurationMs: content.durationMs,
+        playlistOverrideMs: null,
+      }).durationMs ?? 0,
       transition: "cut",
       fitMode: "black",
       payload,
@@ -326,7 +331,11 @@ async function buildPlaylistBlock(
           contentId: content.id,
           type: content.type,
           title: content.title,
-          durationMs: item.durationOverrideMs ?? content.durationMs,
+          durationMs: resolveEffectiveDuration({
+            mediaType: content.type,
+            contentDurationMs: content.durationMs,
+            playlistOverrideMs: item.durationOverrideMs,
+          }).durationMs ?? 0,
           transition: parseTransition(item.transition),
           fitMode: item.fitMode,
           payload,

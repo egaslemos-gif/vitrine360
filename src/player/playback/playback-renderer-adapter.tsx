@@ -353,27 +353,55 @@ function Slide({
     if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any;
-      if (!w.__v360_media_debug) w.__v360_media_debug = { audioCount: 0, videoCount: 0 };
-      if (item.type === "AUDIO") w.__v360_media_debug.audioCount++;
-      if (item.type === "VIDEO") w.__v360_media_debug.videoCount++;
-      w.__v360_media_debug.activeMediaCount = (w.__v360_media_debug.audioCount || 0) + (w.__v360_media_debug.videoCount || 0);
-    }
-
-    return () => {
-      if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const w = window as any;
-        if (w.__v360_media_debug) {
-          if (item.type === "AUDIO") w.__v360_media_debug.audioCount = Math.max(0, w.__v360_media_debug.audioCount - 1);
-          if (item.type === "VIDEO") w.__v360_media_debug.videoCount = Math.max(0, w.__v360_media_debug.videoCount - 1);
-          w.__v360_media_debug.activeMediaCount = (w.__v360_media_debug.audioCount || 0) + (w.__v360_media_debug.videoCount || 0);
-        }
+      if (!w.__v360_media_debug) {
+        w.__v360_media_debug = {
+          audioCount: 0,
+          videoCount: 0,
+          activeMediaCount: 0,
+          created: 0,
+          disposed: 0,
+          history: []
+        };
       }
+      
+      const debug = w.__v360_media_debug;
+      debug.created++;
+      if (item.type === "AUDIO") debug.audioCount++;
+      if (item.type === "VIDEO") debug.videoCount++;
+      debug.activeMediaCount = debug.audioCount + debug.videoCount;
+      debug.mediaType = item.type;
+      debug.history.push(`[CREATED] ${item.type} | Gen: ${generation} | Active: ${debug.activeMediaCount}`);
+      
+      // We attach an interval to track currentTime and readyState of the current media
+      const interval = setInterval(() => {
+         const el = localMediaRef.current;
+         if (el) {
+           debug.currentTime = el.currentTime;
+           debug.readyState = el.readyState;
+         }
+      }, 500);
+
+      return () => {
+        clearInterval(interval);
+        debug.disposed++;
+        if (item.type === "AUDIO") debug.audioCount = Math.max(0, debug.audioCount - 1);
+        if (item.type === "VIDEO") debug.videoCount = Math.max(0, debug.videoCount - 1);
+        debug.activeMediaCount = debug.audioCount + debug.videoCount;
+        debug.history.push(`[DISPOSED] ${item.type} | Gen: ${generation} | Active: ${debug.activeMediaCount}`);
+        
+        if (localMediaRef.current) {
+          disposeMediaElement(localMediaRef.current);
+        }
+      };
+    }
+    
+    // Non-development environment fallback
+    return () => {
       if (localMediaRef.current) {
         disposeMediaElement(localMediaRef.current);
       }
     };
-  }, [item.type]);
+  }, [item.type, generation]);
 
   const logVideoDiag = useCallback((eventName: string, extra?: string) => {
     if (item.type !== "VIDEO") return;
@@ -389,13 +417,7 @@ function Slide({
     console.log(`${base} | src=${safeSrc} | currentSrc=${safeCurrentSrc} | readyState=${el.readyState} | networkState=${el.networkState} | w=${el.videoWidth} h=${el.videoHeight} | dur=${el.duration} | cur=${el.currentTime} | paused=${el.paused} | muted=${el.muted} | autoplay=${el.autoplay} | preload=${el.preload} | err.code=${el.error?.code} err.msg=${el.error?.message}`);
   }, [item.type]);
 
-  useEffect(() => {
-    return () => {
-      if (localMediaRef.current) {
-        disposeMediaElement(localMediaRef.current);
-      }
-    };
-  }, []);
+
 
   const emitPlayFail = useCallback(() => {
     onMediaEvent({

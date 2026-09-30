@@ -40,6 +40,7 @@ import { PlaylistItemThumb } from "./playlist-item-thumb";
 import { TRANSITIONS, type Transition } from "@/domain/types";
 import { useEffect, useRef } from "react";
 import { TypeBadge } from "@/components/ui/type-badge";
+import { resolveEffectiveDuration } from "@/domain/playback-state";
 
 type PlaylistItem = {
   id: string;
@@ -99,12 +100,14 @@ function SortableItem({
     transition,
   };
 
-  const isNatural = item.durationOverrideMs === 0;
-  const isFallback = item.durationOverrideMs === null;
-  const durationMs =
-    item.durationOverrideMs !== null && item.durationOverrideMs > 0
-      ? item.durationOverrideMs
-      : item.content.durationMs;
+  const effective = resolveEffectiveDuration({
+    mediaType: item.content.type,
+    contentDurationMs: item.content.durationMs,
+    playlistOverrideMs: item.durationOverrideMs,
+  });
+  
+  const isNatural = effective.mode === "NATURAL";
+  const durationMs = effective.durationMs ?? 0;
   const [durationSeconds, setDurationSeconds] = useState(
     item.durationOverrideMs !== null ? String(item.durationOverrideMs / 1000) : "",
   );
@@ -164,9 +167,7 @@ function SortableItem({
           <span className="tabular-nums">
             {isNatural
               ? "Natural"
-              : isFallback
-                ? formatDur(item.content.durationMs)
-                : formatDur(durationMs)}
+              : formatDur(durationMs)}
           </span>
         </p>
       </div>
@@ -546,17 +547,24 @@ export function PlaylistBuilder({
               {items.length} item{items.length === 1 ? "" : "s"}
               {items.length > 0
                 ? ` · Duração total: ${(() => {
+                    const hasNatural = items.some(i => resolveEffectiveDuration({
+                      mediaType: i.content.type,
+                      contentDurationMs: i.content.durationMs,
+                      playlistOverrideMs: i.durationOverrideMs,
+                    }).mode === "NATURAL");
                     const totalMs = items.reduce((acc, i) => {
-                      const ms =
-                        i.durationOverrideMs !== null && i.durationOverrideMs > 0
-                          ? i.durationOverrideMs
-                          : i.content.durationMs;
-                      return acc + Math.max(0, ms);
+                      const effective = resolveEffectiveDuration({
+                        mediaType: i.content.type,
+                        contentDurationMs: i.content.durationMs,
+                        playlistOverrideMs: i.durationOverrideMs,
+                      });
+                      return acc + Math.max(0, effective.durationMs ?? 0);
                     }, 0);
                     const total = Math.round(totalMs / 1000);
                     const m = Math.floor(total / 60);
                     const s = total % 60;
-                    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+                    const formatted = `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+                    return hasNatural && total === 0 ? "Natural" : hasNatural ? `${formatted} + Natural` : formatted;
                   })()}`
                 : ""}
             </p>
@@ -617,16 +625,23 @@ export function PlaylistBuilder({
           </CardHeader>
           <CardContent>
             <PlaylistTimedPreview
-              items={items.map((i) => ({
-                id: i.id,
-                title: i.content.title,
-                type: i.content.type,
-                durationMs: i.durationOverrideMs ?? i.content.durationMs,
-                transition: i.transition,
-                fitMode: i.fitMode,
-                payload: i.content.payload,
-                mediaUrl: i.content.mediaUrl,
-              }))}
+              items={items.map((i) => {
+                const effective = resolveEffectiveDuration({
+                  mediaType: i.content.type,
+                  contentDurationMs: i.content.durationMs,
+                  playlistOverrideMs: i.durationOverrideMs,
+                });
+                return {
+                  id: i.id,
+                  title: i.content.title,
+                  type: i.content.type,
+                  durationMs: effective.durationMs ?? 0,
+                  transition: i.transition,
+                  fitMode: i.fitMode,
+                  payload: i.content.payload,
+                  mediaUrl: i.content.mediaUrl,
+                };
+              })}
               selectedIndex={previewIndex}
               onIndexChange={setPreviewIndex}
             />

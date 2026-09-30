@@ -37,6 +37,6 @@
 | PI10D-ENFORCEMENT-16 | PASS | pure feature gate DENY |
 | PI10D-SCOPE-01 | PASS | enforcement não ligado a Media/Experience/Player |
 
-Generated: 2026-09-29T22:07:46.551Z
+Generated: 2026-09-30T09:46:15.859Z
 
 ENTITLEMENTS_ENABLED default OFF — activation requires explicit ops authorization.

@@ -195,13 +195,53 @@ export function snapshotPlaybackState(state: PlaybackState): PlaybackState {
   };
 }
 
+export type EffectiveDuration =
+  | {
+      mode: "NATURAL";
+      durationMs: null;
+    }
+  | {
+      mode: "FIXED";
+      durationMs: number;
+    };
+
+export function resolveEffectiveDuration({
+  mediaType,
+  contentDurationMs,
+  playlistOverrideMs,
+}: {
+  mediaType: string;
+  contentDurationMs: number;
+  playlistOverrideMs: number | null;
+}): EffectiveDuration {
+  const t = mediaType.toUpperCase();
+  const effectiveMs = playlistOverrideMs !== null ? playlistOverrideMs : contentDurationMs;
+
+  if (t === "VIDEO" || t === "AUDIO") {
+    if (effectiveMs === 0) {
+      return { mode: "NATURAL", durationMs: null };
+    }
+    return { mode: "FIXED", durationMs: effectiveMs };
+  }
+
+  // Domain default for non-AV media
+  const fallback = 8000;
+
+  if (effectiveMs === 0) {
+    return { mode: "FIXED", durationMs: fallback };
+  }
+
+  return { mode: "FIXED", durationMs: effectiveMs };
+}
+
 /** Resolve presentation duration for an item; null = natural / unknown. */
 export function resolveItemDurationMs(item: PlaybackPlaylistItem): number | null {
-  if (item.durationMs > 0) return item.durationMs;
-  const t = item.type.toUpperCase();
-  if (t === "VIDEO" || t === "AUDIO") return null;
-  // IMAGE / GIF / TEXT / CLOCK / EXPERIENCE: fall back like DisplayEngine (8000).
-  return 8000;
+  const result = resolveEffectiveDuration({
+    mediaType: item.type,
+    contentDurationMs: item.durationMs,
+    playlistOverrideMs: item.durationMs,
+  });
+  return result.durationMs;
 }
 
 export function parseContentType(type: string): ContentType | null {

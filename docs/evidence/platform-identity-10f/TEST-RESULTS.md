@@ -27,6 +27,6 @@
 | PI10F-HARD-LT | PASS | usage=0 limit>0 ALLOW |
 | PI10F-USAGE-012 | PASS | Nenhum endpoint existente aplica quota |
 
-Generated: 2026-09-29T22:07:48.211Z
+Generated: 2026-09-30T09:46:17.152Z
 
 No quantitative enforcement. ENTITLEMENTS_ENABLED remains OFF.
