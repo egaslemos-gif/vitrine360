@@ -60,8 +60,9 @@ const bootShellStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   flexDirection: "column",
-  background: "#070b14",
-  color: "rgba(255,255,255,0.55)",
+  background:
+    "radial-gradient(900px 520px at 12% -10%, rgba(190,172,255,0.6), transparent 60%), radial-gradient(760px 480px at 100% 0%, rgba(166,205,255,0.5), transparent 60%), #eeebfb",
+  color: "rgba(43,37,80,0.6)",
   fontFamily: "system-ui, sans-serif",
   margin: 0,
   textAlign: "center",
@@ -747,7 +748,7 @@ export function PlayerApp() {
   if (phase === "error") {
     return (
       <div style={bootShellStyle}>
-        <p style={{ fontSize: 28, margin: 0, color: "#fff" }}>
+        <p style={{ fontSize: 28, margin: 0, color: "#2b2550", fontWeight: 700 }}>
           Não foi possível iniciar
         </p>
         <p style={{ fontSize: 16, marginTop: 16, maxWidth: 480 }}>{bootHint}</p>
@@ -758,12 +759,15 @@ export function PlayerApp() {
           type="button"
           style={{
             marginTop: 28,
-            padding: "12px 24px",
+            padding: "14px 30px",
             fontSize: 18,
-            background: "#1e3a5f",
+            fontWeight: 600,
+            background: "#7057dc",
             color: "#fff",
-            border: "1px solid #3b82f6",
-            borderRadius: 6,
+            border: "none",
+            borderRadius: 999,
+            boxShadow: "0 10px 24px rgba(112,87,220,0.35)",
+            cursor: "pointer",
           }}
           onClick={() => {
             setPhase("boot");
@@ -778,60 +782,98 @@ export function PlayerApp() {
   }
 
   if (phase === "pairing") {
+    const codeChars = (activationCode ?? "").split("");
+    const expired = Boolean(pairExpiryLabel && pairExpiryLabel.includes("expirou"));
     return (
-      <div
-        style={{
-          ...bootShellStyle,
-          color: "#fff",
-        }}
-      >
-        <p
+      <div style={bootShellStyle}>
+        <div
           style={{
-            fontSize: 40,
-            fontWeight: 600,
-            margin: 0,
-            fontFamily: "var(--font-fraunces), Georgia, serif",
+            width: "min(640px, 100%)",
+            boxSizing: "border-box",
+            padding: "clamp(24px, 5vw, 48px)",
+            background: "rgba(255,255,255,0.8)",
+            border: "1px solid rgba(255,255,255,0.95)",
+            borderRadius: 40,
+            boxShadow: "0 30px 70px -24px rgba(88,64,180,0.4)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
           }}
         >
-          Vitrine360
-        </p>
-        <p style={{ marginTop: 16, color: "rgba(255,255,255,0.6)" }}>
-          Código de activação
-        </p>
-        <p
-          style={{
-            marginTop: 24,
-            fontFamily: "ui-monospace, monospace",
-            fontSize: 64,
-            letterSpacing: "0.35em",
-          }}
-        >
-          {activationCode}
-        </p>
-        {pairExpiryLabel ? (
           <p
             style={{
-              marginTop: 16,
-              color: pairExpiryLabel.includes("expirou")
-                ? "#ff6b6b"
-                : "rgba(255,255,255,0.75)",
-              fontSize: 18,
-              fontWeight: 600,
+              fontSize: "clamp(28px, 5vw, 40px)",
+              fontWeight: 700,
+              margin: 0,
+              color: "#7057dc",
+              fontFamily: "var(--font-fraunces), Georgia, serif",
             }}
           >
-            {pairExpiryLabel}
+            Vitrine360
           </p>
-        ) : null}
-        <p
-          style={{
-            marginTop: 40,
-            maxWidth: 420,
-            color: "rgba(255,255,255,0.5)",
-            fontSize: 16,
-          }}
-        >
-          Introduza este código no Admin Console para associar este dispositivo.
-        </p>
+          <p style={{ marginTop: 12, color: "rgba(43,37,80,0.6)", fontSize: 18 }}>
+            Código de activação
+          </p>
+          <div
+            data-activation-code={activationCode ?? ""}
+            aria-label={`Código de activação ${activationCode ?? ""}`}
+            style={{
+              marginTop: 24,
+              display: "flex",
+              justifyContent: "center",
+              gap: "clamp(6px, 1.4vw, 14px)",
+            }}
+          >
+            {codeChars.map((ch, i) => (
+              <span
+                key={i}
+                style={{
+                  width: "clamp(40px, 9vw, 72px)",
+                  height: "clamp(56px, 12vw, 96px)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 20,
+                  background: "#fff",
+                  border: "1px solid rgba(112,87,220,0.18)",
+                  boxShadow: "0 8px 20px -8px rgba(88,64,180,0.35)",
+                  color: "#2b2550",
+                  fontFamily: "ui-monospace, monospace",
+                  fontWeight: 700,
+                  fontSize: "clamp(26px, 6vw, 48px)",
+                }}
+              >
+                {ch}
+              </span>
+            ))}
+          </div>
+          {pairExpiryLabel ? (
+            <p
+              style={{
+                display: "inline-block",
+                marginTop: 24,
+                padding: "8px 18px",
+                borderRadius: 999,
+                background: expired ? "rgba(239,68,68,0.1)" : "rgba(112,87,220,0.1)",
+                color: expired ? "#c92a4a" : "#553fb8",
+                fontSize: 16,
+                fontWeight: 600,
+              }}
+            >
+              {pairExpiryLabel}
+            </p>
+          ) : null}
+          <p
+            style={{
+              margin: "28px auto 0",
+              maxWidth: 420,
+              color: "rgba(43,37,80,0.6)",
+              fontSize: 16,
+              lineHeight: 1.5,
+            }}
+          >
+            Introduza este código no Admin Console para associar este dispositivo.
+          </p>
+        </div>
       </div>
     );
   }

@@ -38,3 +38,19 @@ Pedido: app de multimédia leve e agradável, **sem tema escuro**; player, cards
 O `/player` dos dispositivos (runtime) mantém fundo escuro: é o ecrã de sinalização/TV, onde o preto evita reflexos e é o padrão do sector. Não foi alterado.
 
 Verificação: typecheck PASS; `npm test` exit 0; `test:ui-ux-01` PASS; build PASS; lint 116/6 (baseline, 0 novos). Sem scroll horizontal em 5 larguras (1920, 1366, 1024, 768, 390) × 9 páginas (landing, dashboard, ecrãs, playlists, editor, media, conteúdos, agendamentos, definições).
+
+## UI-REDESIGN-03 — player e informação da playlist no ecrã
+Só estilos e composição visual; **lógica de reprodução inalterada** (`PlaybackController`, `playback-renderer-adapter`, `display-engine`, estado e relógio não foram tocados).
+
+| Elemento | Alteração |
+|---|---|
+| Barra de controlos (`playback-controls.tsx`) | Vidro claro (`rgba(255,255,255,.86)` + blur), cantos 28 px, botões circulares, play/pause primário em violeta com sombra, trilho e polegar em violeta, texto em tinta `#2b2550` |
+| HUD do ecrã (`display-identity-hud.tsx`) | Cartão de vidro claro com tile de ícone, estado online, nome do ecrã e localização; bloco lavanda com **Playlist** e **A reproduzir** |
+| Emparelhamento (`player-app.tsx`) | Fundo lavanda, cartão central, código em 6 caixas individuais, selo de expiração em pílula; ecrã de erro com botão em pílula. Atributo `data-activation-code` com o código completo |
+| Erro de media (`media-error-overlay.tsx`) | Lavanda em vez de quase-preto; botão "Retry" em pílula |
+| Pré-visualização no admin (`playlist-timed-preview.tsx`) | Cartão de 24 px, barra de progresso arredondada, selo "PREVIEW n/N" em vidro e nova fila **"Na playlist · N itens"**: pílulas clicáveis com posição, título e duração; a actual realçada |
+
+O fundo **atrás do conteúdo** em `/player` mantém-se escuro de propósito (é o ecrã de sinalização; letterbox preto evita reflexos). Os slides de texto reflectem o que a TV mostra e por isso não mudam.
+
+Verificação: typecheck PASS, `npm test` exit 0, build PASS, lint 116/6 (baseline, 0 novos). Capturas com o harness dos componentes reais (controlos+HUD) e com o editor de playlist com 3 itens (fila visível); sem scroll horizontal a 1920 e 390 px.
+Nota: o typecheck/build falham se existirem tipos antigos em `.next/dev/types` (gerados pelo servidor de dev) a apontar para ficheiros apagados; apagar `.next/dev` resolve.

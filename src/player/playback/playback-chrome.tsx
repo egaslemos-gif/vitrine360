@@ -209,9 +209,9 @@ export function PlaybackChrome({
               data-playback-controls="pending"
               aria-hidden
               style={{
-                background: "rgba(20, 20, 28, 0.58)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: 22,
+                background: "rgba(255, 255, 255, 0.86)",
+                border: "1px solid rgba(255,255,255,0.9)",
+                borderRadius: 28,
                 width: "min(920px, calc(100% - 24px))",
                 minHeight: 96,
               }}

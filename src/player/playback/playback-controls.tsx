@@ -24,13 +24,16 @@ import {
 import { formatPlaybackTime } from "@/player/playback/format-time";
 import { getFullscreenController } from "@/player/runtime/fullscreen";
 
+const INK = "#2b2550";
+const BRAND = "#7057dc";
+
 const glass: CSSProperties = {
-  background: "rgba(20, 20, 28, 0.58)",
-  backdropFilter: "blur(18px)",
-  WebkitBackdropFilter: "blur(18px)",
-  border: "1px solid rgba(255, 255, 255, 0.14)",
-  borderRadius: 22,
-  boxShadow: "0 12px 40px rgba(0,0,0,0.35)",
+  background: "rgba(255, 255, 255, 0.86)",
+  backdropFilter: "blur(22px) saturate(1.4)",
+  WebkitBackdropFilter: "blur(22px) saturate(1.4)",
+  border: "1px solid rgba(255, 255, 255, 0.9)",
+  borderRadius: 28,
+  boxShadow: "0 18px 48px rgba(60, 40, 140, 0.28)",
 };
 
 const btnBase: CSSProperties = {
@@ -40,9 +43,9 @@ const btnBase: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   border: "none",
-  borderRadius: 12,
+  borderRadius: 999,
   background: "transparent",
-  color: "rgba(255,255,255,0.92)",
+  color: INK,
   cursor: "pointer",
   padding: "0 10px",
   fontSize: 16,
@@ -190,7 +193,7 @@ export function PlaybackControls({
         padding: compact ? "10px 12px" : "12px 16px",
         width: "min(920px, calc(100% - 24px))",
         pointerEvents: "auto",
-        color: "#fff",
+        color: INK,
         fontFamily: "system-ui, sans-serif",
       }}
     >
@@ -278,7 +281,7 @@ export function PlaybackControls({
                 right: 0,
                 height: 6,
                 borderRadius: 999,
-                background: "rgba(255,255,255,0.18)",
+                background: "rgba(112, 87, 220, 0.16)",
               }}
             />
             <div
@@ -288,7 +291,7 @@ export function PlaybackControls({
                 width: `${progress}%`,
                 height: 6,
                 borderRadius: 999,
-                background: "rgba(124, 92, 255, 0.95)",
+                background: BRAND,
               }}
             />
             <div
@@ -299,7 +302,7 @@ export function PlaybackControls({
                 height: 16,
                 borderRadius: "50%",
                 background: "#fff",
-                boxShadow: "0 0 0 3px rgba(124, 92, 255, 0.45)",
+                boxShadow: "0 2px 8px rgba(60, 40, 140, 0.35), 0 0 0 3px rgba(112, 87, 220, 0.3)",
               }}
             />
           </div>
@@ -334,7 +337,7 @@ export function PlaybackControls({
               flex: 1,
               height: 6,
               borderRadius: 999,
-              background: "rgba(255,255,255,0.18)",
+              background: "rgba(112, 87, 220, 0.16)",
               overflow: "hidden",
             }}
           >
@@ -342,7 +345,7 @@ export function PlaybackControls({
               style={{
                 height: "100%",
                 width: `${progress}%`,
-                background: "rgba(255,255,255,0.75)",
+                background: "rgba(112, 87, 220, 0.7)",
               }}
             />
           </div>
@@ -474,7 +477,7 @@ export function PlaybackControls({
                     dispatch({ type: "SET_VOLUME", volume: 1 });
                   }
                 }}
-                style={{ width: 110, accentColor: "#7c5cff" }}
+                style={{ width: 110, accentColor: BRAND }}
               />
             </label>
           ) : null}
@@ -515,7 +518,7 @@ export function PlaybackControls({
           role="alert"
           style={{
             fontSize: 12,
-            color: "#ff8f8f",
+            color: "#c92a4a",
             display: "flex",
             gap: 8,
             alignItems: "center",
@@ -529,7 +532,7 @@ export function PlaybackControls({
               style={{
                 ...btnBase,
                 minHeight: 36,
-                background: "rgba(255,255,255,0.08)",
+                background: "rgba(112, 87, 220, 0.12)",
                 fontSize: 12,
               }}
             >
@@ -543,7 +546,7 @@ export function PlaybackControls({
         [data-playback-controls] button:focus-visible,
         [data-playback-controls] [role=slider]:focus-visible,
         [data-playback-controls] input:focus-visible {
-          outline: 2px solid rgba(124, 92, 255, 0.95);
+          outline: 2px solid #7057dc;
           outline-offset: 2px;
         }
         .sr-only {
@@ -590,15 +593,14 @@ function ControlButton({
       onClick={onClick}
       style={{
         ...btnBase,
-        background: primary
-          ? "rgba(124, 92, 255, 0.92)"
-          : "rgba(255,255,255,0.06)",
+        background: primary ? BRAND : "rgba(112, 87, 220, 0.09)",
+        boxShadow: primary ? "0 8px 18px rgba(112, 87, 220, 0.38)" : "none",
         color: primary ? "#fff" : btnBase.color,
         opacity: disabled ? 0.35 : 1,
         cursor: disabled ? "not-allowed" : "pointer",
         minWidth: size,
         minHeight: size,
-        borderRadius: primary ? 999 : 12,
+        borderRadius: 999,
         fontSize,
         padding: compact ? "0 6px" : "0 10px",
       }}

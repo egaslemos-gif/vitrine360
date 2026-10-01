@@ -203,7 +203,7 @@ export function PlaylistTimedPreview({
     <div
       ref={shellRef}
       className={cn(
-        "flex flex-col overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm",
+        "flex flex-col overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[var(--shadow-card)]",
         expandedFallback &&
           "fixed inset-0 z-[120] rounded-none border-0 bg-black",
         isFullscreen && "h-full bg-black",
@@ -211,7 +211,7 @@ export function PlaylistTimedPreview({
     >
       <div
         className={cn(
-          "flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-muted)]/30 px-3 py-2",
+          "flex items-center justify-between gap-3 px-4 py-3",
           fullscreenActive && "border-white/10 bg-black/80 text-white",
         )}
       >
@@ -280,8 +280,8 @@ export function PlaylistTimedPreview({
                   onNaturalEnd={() => onIndexChange((index + 1) % items.length)}
                 />
               </div>
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-4 py-2 text-[11px] font-medium tracking-wider text-white">
-                <span className="flex items-center gap-2 rounded-md bg-black/40 px-2 py-1 backdrop-blur-sm">
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/20 to-transparent px-4 py-2 text-[11px] font-medium tracking-wider text-white">
+                <span className="flex items-center gap-2 rounded-full bg-white/80 px-2.5 py-1 text-[var(--color-foreground)] shadow-sm backdrop-blur">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-success)]" />
                   PREVIEW {index + 1}/{items.length}
                 </span>
@@ -299,8 +299,8 @@ export function PlaylistTimedPreview({
       >
         <div
           className={cn(
-            "group relative h-1 w-full cursor-pointer",
-            fullscreenActive ? "bg-white/15" : "bg-[var(--color-muted)]",
+            "group relative h-1.5 cursor-pointer overflow-hidden rounded-full",
+            fullscreenActive ? "w-full bg-white/15" : "mx-4 mt-3 bg-[var(--color-primary-soft)]",
           )}
         >
           <div
@@ -430,6 +430,37 @@ export function PlaylistTimedPreview({
             </Button>
           </div>
         </div>
+        {!fullscreenActive && items.length > 1 ? (
+          <div className="border-t border-[var(--color-border-subtle)] px-3 py-3 sm:px-4">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+              Na playlist · {items.length} itens
+            </p>
+            <ol className="flex gap-2 overflow-x-auto pb-1">
+              {items.map((it, i) => (
+                <li key={it.id} className="shrink-0">
+                  <button
+                    type="button"
+                    aria-current={i === index ? "true" : undefined}
+                    onClick={() => {
+                      setTick(0);
+                      onIndexChange(i);
+                    }}
+                    className={cn(
+                      "flex max-w-[190px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                      i === index
+                        ? "border-[var(--color-primary)]/35 bg-[var(--color-primary-soft)] font-semibold text-[var(--color-primary)]"
+                        : "border-[var(--color-border)] bg-white text-[var(--color-text-secondary)] hover:bg-[var(--color-row-hover)]",
+                    )}
+                  >
+                    <span className="tabular-nums opacity-60">{i + 1}</span>
+                    <span className="truncate">{it.title || "Sem título"}</span>
+                    <span className="tabular-nums opacity-60">{formatMs(it.durationMs)}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : null}
       </div>
     </div>
   );
