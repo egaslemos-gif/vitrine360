@@ -1,0 +1,48 @@
+# AUTHZ-DEVICE-02 commit set (paths relative to repo root)
+# package.json is PARTIAL: apply docs/evidence/release-hygiene-01/package-json-AUTHZ.patch (do not `git add package.json` whole)
+src/lib/api.ts
+src/lib/api-error-mapping.ts
+src/lib/api-error-mapping.test.ts
+src/lib/api.test.ts
+src/features/devices/pair-device-form.tsx
+src/domain/device-authz.test.ts
+scripts/test-platform-identity-10g.ts
+scripts/test-platform-identity-10j.ts
+scripts/authz02-e2e-seed.ts
+scripts/authz02-e2e-browser.ts
+# AUTHZ-DEVICE-01 docs (decision: include here or separate commit)
+docs/evidence/authz-device-01/AUTHORIZATION-FLOW.md
+docs/evidence/authz-device-01/DEVICE-API-AUDIT.md
+docs/evidence/authz-device-01/ENTITLEMENT-DEVICE-AUDIT.md
+docs/evidence/authz-device-01/ERROR-CATALOG.md
+docs/evidence/authz-device-01/FINAL-REPORT.md
+docs/evidence/authz-device-01/PRE-AUDIT.md
+docs/evidence/authz-device-01/RBAC-MATRIX.md
+docs/evidence/authz-device-01/ROLE-PERMISSION-AUDIT.md
+docs/evidence/authz-device-01/TEST-MATRIX.md
+# AUTHZ-DEVICE-02 docs + evidence
+docs/evidence/authz-device-02/API-CONSUMER-COMPATIBILITY.md
+docs/evidence/authz-device-02/API-INTEGRATION-VALIDATION.md
+docs/evidence/authz-device-02/BROWSER-VALIDATION.md
+docs/evidence/authz-device-02/ENTITLEMENT-VALIDATION.md
+docs/evidence/authz-device-02/ERROR-MAPPING.md
+docs/evidence/authz-device-02/FINAL-REPORT.md
+docs/evidence/authz-device-02/FINAL-VALIDATION.md
+docs/evidence/authz-device-02/IMPLEMENTATION.md
+docs/evidence/authz-device-02/PRE-IMPLEMENTATION-AUDIT.md
+docs/evidence/authz-device-02/QUOTA-VALIDATION.md
+docs/evidence/authz-device-02/REGRESSION.md
+docs/evidence/authz-device-02/ROLE-TESTS.md
+docs/evidence/authz-device-02/ROLE-VALIDATION.md
+docs/evidence/authz-device-02/UX-VALIDATION.md
+docs/evidence/authz-device-02/e2e-results.json
+docs/evidence/authz-device-02/screenshots/admin-activation-invalid.png
+docs/evidence/authz-device-02/screenshots/admin-form.png
+docs/evidence/authz-device-02/screenshots/admin-success.png
+docs/evidence/authz-device-02/screenshots/editor-denied.png
+docs/evidence/authz-device-02/screenshots/long-error-desktop.png
+docs/evidence/authz-device-02/screenshots/long-error-mobile.png
+docs/evidence/authz-device-02/screenshots/operator-permission-denied.png
+docs/evidence/authz-device-02/screenshots/real-disabled.png
+docs/evidence/authz-device-02/screenshots/real-quota.png
+docs/evidence/authz-device-02/screenshots/viewer-denied.png

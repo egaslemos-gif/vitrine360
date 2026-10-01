@@ -1,0 +1,10 @@
+# MEDIA-RUNTIME-01 Browser Lab (PLAYBACK-LAB) commit set
+# ATOMIC: layout.tsx + playback-lab-guard.ts + page.tsx MUST be in the same commit
+# (page.tsx no longer blocks production by itself; the layout guard replaces it).
+# package.json is PARTIAL: apply package-json-MEDIA-LAB.patch AFTER package-json-AUTHZ.patch (or adapt if AUTHZ is not committed first)
+src/lib/playback-lab-guard.ts
+src/app/player/lab/layout.tsx
+src/app/player/lab/page.tsx
+scripts/test-playback-lab-guard.ts
+.env.example
+docs/evidence/media-runtime-01/BROWSER-LAB-ENABLEMENT.md
