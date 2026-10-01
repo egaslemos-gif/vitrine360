@@ -1,7 +1,7 @@
-var TV_SHELL_CACHE = "v360-tv-shell-v057";
+var TV_SHELL_CACHE = "v360-tv-shell-v058";
 var TV_SHELL_FILES = [
   "/tv.html",
-  "/tv.js?v=057",
+  "/tv.js?v=058",
 ];
 
 self.addEventListener("install", function (event) {
@@ -51,14 +51,14 @@ self.addEventListener("fetch", function (event) {
             var copy = response.clone();
             caches.open(TV_SHELL_CACHE).then(function (cache) {
               cache.put(event.request, copy);
-              cache.put("/tv.js?v=057", copy.clone());
+              cache.put("/tv.js?v=058", copy.clone());
             });
           }
           return response;
         })
         .catch(function () {
           return caches.match(event.request).then(function (cached) {
-            return cached || caches.match("/tv.js?v=057");
+            return cached || caches.match("/tv.js?v=058");
           });
         })
     );

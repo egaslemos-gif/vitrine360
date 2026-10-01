@@ -19,6 +19,7 @@ import {
 } from "react";
 import { PlaybackController } from "@/player/playback/playback-controller";
 import { usePlaybackState } from "@/player/playback/use-playback-state";
+import { usePlaybackRecovery } from "@/player/playback/use-playback-recovery";
 import { PlaybackRendererAdapter } from "@/player/playback/playback-renderer-adapter";
 import { DiagnosticOverlay } from "@/player/playback/diagnostic-overlay";
 import {
@@ -110,6 +111,8 @@ export const DisplayEngine = forwardRef<
   }, [fingerprint, playlistId, manifestVersion, controller, items]);
 
   const state = usePlaybackState(controller);
+  // Retry once, then skip failed/stalled items so unattended screens never freeze.
+  usePlaybackRecovery(controller, state);
   const item =
     items.length > 0 && state.currentItemIndex >= 0
       ? (items[state.currentItemIndex] ?? null)

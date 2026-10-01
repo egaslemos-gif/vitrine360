@@ -5,7 +5,7 @@
  */
 (function () {
   var LS_KEY = "v360-player-config";
-  var VERSION = "0.1.27-smarttv-static";
+  var VERSION = "0.1.28-smarttv-static";
   var root = document.getElementById("root");
   var claimTimer = null;
   var bootSec = 0;
@@ -126,6 +126,13 @@
 
     if (expiresTime > 0) {
       pairingClockTimer = setInterval(function() {
+        // Playback owns the screen once the device is claimed: never repaint the pairing
+        // screen over it (it used to destroy <video>/<img> every second until the code expired).
+        if (playState.token) {
+          clearInterval(pairingClockTimer);
+          pairingClockTimer = null;
+          return;
+        }
         var now = new Date().getTime();
         var diff = expiresTime - now;
         if (diff <= 0) {
@@ -593,7 +600,7 @@
       if (!item.assets || !item.assets.length) return Promise.resolve(item);
       return Promise.all(item.assets.map(function (asset) {
         return cacheAsset(asset).then(function (url) {
-          return Object.assign({}, asset, { url: url });
+          return Object.assign({}, asset, { url: url, altUrl: asset.altUrl || asset.url });
         });
       })).then(function (assets) {
         return Object.assign({}, item, { assets: assets });
@@ -773,6 +780,12 @@
     if (!stage || !img) return;
     img.alt = alt || "";
     img.onload = function () {
+      // Load/decode time must not eat the slide: restart the full display time now.
+      var sh = playState.shownHold;
+      if (sh && sh.g === playState.generation) {
+        playState.shownHold = null;
+        hold(sh.d, sh.g);
+      }
       var w = nw || img.naturalWidth || img.width;
       var h = nh || img.naturalHeight || img.height;
       if (!placeContained(img, w, h)) {
@@ -831,8 +844,10 @@
       return;
     }
     var duration = slideDuration(item);
-    // Arm advance BEFORE any decode / DOM work.
-    hold(duration, generation);
+    // Arm advance BEFORE any decode / DOM work (safety net so a failed load never
+    // freezes the playlist), then restart the full display time on first paint.
+    hold(duration + 8000, generation);
+    playState.shownHold = { g: generation, d: duration };
 
     var stageShell =
       '<div class="slide ' +
@@ -847,6 +862,8 @@
         item.assets && item.assets[0] && item.assets[0].offlineUrl
           ? String(item.assets[0].offlineUrl)
           : imgUrl;
+      // Already cached locally (blob: URL) → use it directly, never re-download each cycle.
+      if (String(imgUrl).indexOf("blob:") === 0) fetchUrl = imgUrl;
 
       function paintStill(arrayBuffer, blob) {
         if (playState.generation !== generation) return;
@@ -1304,9 +1321,75 @@
        and covers the slides. The next video is created only when it plays. */
   }
 
+  /* ── Media diagnostics ───────────────────────────────── */
+
+  function recordMediaError(item, reason, detail) {
+    try {
+      localStorage.setItem(
+        "v360-tv-last-media-error",
+        JSON.stringify({
+          at: new Date().toISOString(),
+          contentId: item && item.contentId,
+          title: item && item.title,
+          type: item && item.type,
+          reason: reason,
+          detail: String(detail || "").slice(0, 160),
+          ua: String(navigator.userAgent || "").slice(0, 120)
+        })
+      );
+    } catch (e) { void e; /* storage may be unavailable */ }
+  }
+
+  /** Visible, non-looping fallback: avoids a silent skip / hot loop when media cannot play. */
+  function renderMediaProblem(item, reason, generation) {
+    var subPx = tvFontPx(0.03, 14, 40);
+    var titlePx = tvFontPx(0.06, 24, 90);
+    setHtml(
+      '<div class="slide fade-in" style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'height:100%;width:100%;background:linear-gradient(160deg,#0b1220 0%,#132033 55%,#1a2740 100%);text-align:center;' +
+        'padding:4vh 6vw;box-sizing:border-box">' +
+        '<p style="font-size:' + subPx + 'px;letter-spacing:0.25em;opacity:0.5;margin:0;font-weight:600">VITRINE360</p>' +
+        '<h1 style="font-size:' + titlePx + 'px;font-weight:700;margin:' + Math.round(titlePx * 0.3) + 'px 0 0;max-width:100%;overflow-wrap:anywhere">' +
+          escapeHtml((item && item.title) || "Conteúdo") +
+        '</h1>' +
+        '<p style="font-size:' + subPx + 'px;margin:' + Math.round(subPx * 0.8) + 'px 0 0;opacity:0.7">' +
+          'Não foi possível reproduzir este conteúdo neste ecrã.' +
+        '</p>' +
+        '<p style="font-size:' + Math.round(subPx * 0.75) + 'px;margin:' + Math.round(subPx * 0.5) + 'px 0 0;opacity:0.4">' +
+          escapeHtml(reason || "") +
+        '</p>' +
+      '</div>'
+    );
+    hold(4000, generation);
+  }
+
+  /**
+   * Ordered video sources. The manifest URL may be a presigned link that expired while the
+   * TV was off; the authenticated same-origin proxy (HTTP Range / 206) is the durable path.
+   */
+  function videoCandidates(item) {
+    var asset = item.assets && item.assets[0];
+    var list = [];
+    function push(u) {
+      if (u && list.indexOf(u) === -1) list.push(u);
+    }
+    push(buildMediaUrl(item));
+    if (asset) {
+      if (asset.offlineUrl) {
+        var off = String(asset.offlineUrl);
+        if (isSameOriginUrl(off) && playState.token) {
+          off += (off.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(playState.token);
+        }
+        push(off);
+      }
+      push(asset.altUrl);
+    }
+    return list;
+  }
+
   function showVideo(item, replaceAll, generation) {
-    var vidUrl = buildMediaUrl(item);
-    if (!vidUrl) { renderNoContent(); return; }
+    var candidates = videoCandidates(item);
+    if (!candidates.length) { renderNoContent(); return; }
     var host = document.getElementById("root");
     var layer = document.createElement("div");
     layer.className = "slide";
@@ -1325,9 +1408,25 @@
     video.style.cssText = "width:100%;height:100%;object-fit:contain;background:#000";
     layer.appendChild(video);
 
+    // item.durationMs: 0 = NATURAL (native "ended" decides), >0 = FIXED window set in the
+    // playlist/content (loops the media until the window ends). Never mixed with video.duration.
     var duration = Number(item.durationMs);
     var revealed = false;
     var clockStarted = false;
+    var naturalArmed = false;
+    var failed = false;
+    var candIndex = 0;
+    var startedAt = 0;
+    var lastProgress = 0;
+    var watchdog = null;
+    var SOFT_STALL_MS = 15000;   // no sign of life from the current source
+    var HARD_START_MS = 60000;   // absolute cap per source
+
+    function nowMs() { return new Date().getTime(); }
+    function stopWatchdog() {
+      if (watchdog) { clearInterval(watchdog); watchdog = null; }
+    }
+    function bump() { lastProgress = nowMs(); }
 
     function armClock() {
       if (clockStarted || playState.generation !== generation) return;
@@ -1350,15 +1449,24 @@
       video.onerror = function () {
         hold(2000, generation);
       };
-      var seconds = Number(video.duration);
-      if (seconds && isFinite(seconds) && seconds > 0.2) {
-        hold(Math.round(seconds * 1000) + 400, generation);
+      // Safety net in case "ended" never fires: natural duration + margin, armed once.
+      function naturalHold() {
+        if (naturalArmed || playState.generation !== generation) return;
+        var seconds = Number(video.duration);
+        if (seconds && isFinite(seconds) && seconds > 0.2) {
+          naturalArmed = true;
+          hold(Math.round(seconds * 1000) + 1500, generation);
+        }
       }
+      naturalHold();
+      video.addEventListener("loadedmetadata", naturalHold);
+      video.addEventListener("durationchange", naturalHold);
     }
 
     function reveal() {
-      if (revealed || playState.generation !== generation) return;
+      if (revealed || failed || playState.generation !== generation) return;
       revealed = true;
+      stopWatchdog();
       layer.style.left = "0px";
       if (!replaceAll) {
         var slides = host.getElementsByClassName("slide");
@@ -1370,20 +1478,58 @@
       armClock();
     }
 
+    function loadCandidate() {
+      startedAt = nowMs();
+      lastProgress = startedAt;
+      try { video.pause(); } catch (e0) { void e0; }
+      video.src = candidates[candIndex];
+      try { video.load(); } catch (e) { /* ignore */ }
+      playVideoElement(video);
+    }
+
+    function fail(reason, detail) {
+      if (failed || revealed || playState.generation !== generation) return;
+      if (candIndex + 1 < candidates.length) {
+        candIndex += 1;
+        loadCandidate();
+        return;
+      }
+      failed = true;
+      stopWatchdog();
+      recordMediaError(item, reason, detail);
+      stopVideoElement(video);
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
+      renderMediaProblem(item, reason, generation);
+    }
+
     if (replaceAll) setHtml("");
     host.appendChild(layer);
-    video.src = vidUrl;
-    try { video.load(); } catch (e) { /* ignore */ }
+
     video.addEventListener("playing", reveal);
     video.addEventListener("timeupdate", function () {
       if (video.currentTime > 0) reveal();
     });
-    playVideoElement(video);
-    setTimeout(function () {
-      if (revealed || playState.generation !== generation) return;
-      stopVideoElement(video);
-      advanceSlide();
-    }, 8000);
+    var aliveEvents = ["progress", "loadedmetadata", "loadeddata", "durationchange", "canplay"];
+    var ev;
+    for (ev = 0; ev < aliveEvents.length; ev++) video.addEventListener(aliveEvents[ev], bump);
+    video.addEventListener("error", function () {
+      if (revealed || failed || playState.generation !== generation) return;
+      var code = video.error && video.error.code ? video.error.code : 0;
+      fail("MEDIA_ERR_" + code, candidates[candIndex]);
+    });
+
+    watchdog = setInterval(function () {
+      if (revealed || failed || playState.generation !== generation) {
+        stopWatchdog();
+        return;
+      }
+      var t = nowMs();
+      if (t - startedAt > HARD_START_MS || t - lastProgress > SOFT_STALL_MS) {
+        fail("TIMEOUT", candidates[candIndex]);
+      }
+    }, 1000);
+
+    loadCandidate();
   }
 
   function showAudio(item, generation) {
@@ -1645,6 +1791,7 @@
   }
 
   function advanceSlide() {
+    playState.shownHold = null;
     clearClockTimer();
     if (playState.slideTimer) { clearTimeout(playState.slideTimer); playState.slideTimer = null; }
     
@@ -1801,9 +1948,51 @@
 
   /* ── Playback entry point ────────────────────────────── */
 
+  function enterFullscreen() {
+    var el = document.documentElement;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen ||
+      el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (!fn) return false;
+    try {
+      var r = fn.call(el);
+      if (r && r.catch) r.catch(function () { /* needs a user gesture */ });
+      return true;
+    } catch (e) {
+      void e;
+      return false;
+    }
+  }
+
+  function isFullscreenNow() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement);
+  }
+
+  var fullscreenArmed = false;
+  /** Default full screen: try right away; if the browser demands a gesture, use the first one. */
+  function armDefaultFullscreen() {
+    if (fullscreenArmed) return;
+    fullscreenArmed = true;
+    if (isFullscreenNow()) return;
+    enterFullscreen();
+    var types = ["click", "keydown", "touchstart", "pointerdown", "mousedown"];
+    var handler;
+    function detach() {
+      var i;
+      for (i = 0; i < types.length; i++) window.removeEventListener(types[i], handler, true);
+    }
+    handler = function () {
+      if (!isFullscreenNow()) enterFullscreen();
+      detach(); // one attempt only — never fight a user who leaves full screen on purpose
+    };
+    var i;
+    for (i = 0; i < types.length; i++) window.addEventListener(types[i], handler, true);
+  }
+
   function startPlayback(cfg) {
     if (bootTick) { clearInterval(bootTick); bootTick = null; }
     if (claimTimer) { clearInterval(claimTimer); claimTimer = null; }
+    if (pairingClockTimer) { clearInterval(pairingClockTimer); pairingClockTimer = null; }
     if (playState.onlineHandler) {
       window.removeEventListener("online", playState.onlineHandler);
     }
@@ -1859,6 +2048,8 @@
 
     // First heartbeat after 3s
     setTimeout(doHeartbeat, 3000);
+
+    armDefaultFullscreen();
   }
 
   /* ── Cursor Idle Interaction (RUNTIME-POLICY-02) ─────────

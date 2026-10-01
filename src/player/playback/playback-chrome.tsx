@@ -116,6 +116,31 @@ export function PlaybackChrome({
     };
   }, []);
 
+  // Default full screen. Browsers only allow it from a user gesture, so it is armed for the
+  // first one (kiosk / TV shells that already run full screen are unaffected). One attempt
+  // only: never fight a user who leaves full screen on purpose. The presentation policy
+  // still decides — a WINDOWED policy makes the request a no-op.
+  useEffect(() => {
+    const types = ["pointerup", "click", "touchend", "keydown"];
+    let done = false;
+    function detach() {
+      for (const type of types) window.removeEventListener(type, onGesture, true);
+    }
+    function onGesture(ev: Event) {
+      if (done) return;
+      if (ev instanceof KeyboardEvent && ["Shift", "Control", "Alt", "Meta"].includes(ev.key)) {
+        return;
+      }
+      done = true;
+      detach();
+      const fs = getFullscreenController();
+      if (!fs || fs.isActive()) return;
+      void fs.request({ userActivation: true, source: "user" });
+    }
+    for (const type of types) window.addEventListener(type, onGesture, true);
+    return detach;
+  }, []);
+
   // Auto-hide: prefer Runtime State from shell CursorIdleController; else local instance.
   useEffect(() => {
     if (!autoHide) return;
@@ -209,9 +234,9 @@ export function PlaybackChrome({
               data-playback-controls="pending"
               aria-hidden
               style={{
-                background: "rgba(255, 255, 255, 0.86)",
-                border: "1px solid rgba(255,255,255,0.9)",
-                borderRadius: 28,
+                background: "rgba(20, 18, 44, 0.34)",
+                border: "1px solid rgba(255,255,255,0.22)",
+                borderRadius: 26,
                 width: "min(920px, calc(100% - 24px))",
                 minHeight: 96,
               }}

@@ -231,17 +231,30 @@ export function PlaybackRendererAdapter({
     ) {
       return;
     }
-    const targetSec = state.positionMs / 1000;
+    // FIXED window (item.durationMs > 0): the timeline is the playlist window, the media is
+    // looped inside it — map the window position onto the media's own (natural) length.
+    const fixedWindow =
+      !!item &&
+      (item.type === "VIDEO" || item.type === "AUDIO") &&
+      usesPresentationTimer(item);
+    const naturalMs =
+      Number.isFinite(el.duration) && el.duration > 0 ? el.duration * 1000 : 0;
+    const targetMs =
+      fixedWindow && naturalMs > 0
+        ? state.positionMs % naturalMs
+        : state.positionMs;
     if (
       seekAppliedRef.current !== null &&
-      Math.abs(seekAppliedRef.current - state.positionMs) < 50
+      Math.abs(seekAppliedRef.current - targetMs) < 50
     ) {
       return;
     }
-    if (Math.abs(el.currentTime * 1000 - state.positionMs) > 400) {
+    let drift = Math.abs(el.currentTime * 1000 - targetMs);
+    if (fixedWindow && naturalMs > 0) drift = Math.min(drift, naturalMs - drift);
+    if (drift > 400) {
       try {
-        el.currentTime = targetSec;
-        seekAppliedRef.current = state.positionMs;
+        el.currentTime = targetMs / 1000;
+        seekAppliedRef.current = targetMs;
       } catch {
         /* ignore */
       }
@@ -270,6 +283,9 @@ export function PlaybackRendererAdapter({
   }
 
   const rendererKey = `${item.playlistItemId}:${item.contentId}:g${generation}`;
+  // FIXED window longer than the media → keep looping inside it (never freeze on the last frame).
+  const loopInWindow =
+    (item.type === "VIDEO" || item.type === "AUDIO") && usesPresentationTimer(item);
 
   return (
     <div
@@ -286,7 +302,7 @@ export function PlaybackRendererAdapter({
         muted={state.muted}
         positionMs={state.positionMs}
         durationMs={state.durationMs}
-        loop={false}
+        loop={loopInWindow}
         mediaRef={mediaRef}
         onMediaEvent={onMediaEvent}
       />
@@ -429,9 +445,40 @@ function Slide({
     });
   }, [generation, onMediaEvent]);
 
+  // A cached still can fire <img onLoad> before this effect runs; READY must never be
+  // overtaken by LOADING, so an early READY is parked until LOADING has been sent.
+  const loadingSentRef = useRef(false);
+  const pendingReadyRef = useRef<(() => void) | null>(null);
   useEffect(() => {
     onMediaEvent({ type: "MEDIA_LOADING" });
+    loadingSentRef.current = true;
+    const pending = pendingReadyRef.current;
+    pendingReadyRef.current = null;
+    pending?.();
   }, [generation, onMediaEvent]);
+
+  // Stable ref callback: React only calls it on mount/unmount of the element. An inline ref
+  // is re-invoked on every render (each timeupdate), which re-ran ensureMediaPlayback()
+  // and fought the muted-autoplay fallback.
+  const latestPlayback = useRef({ status, muted, volume, emitPlayFail });
+  useEffect(() => {
+    latestPlayback.current = { status, muted, volume, emitPlayFail };
+  });
+  const setMediaEl = useCallback(
+    (el: HTMLVideoElement | null) => {
+      localMediaRef.current = el;
+      mediaRef.current = el;
+      const cur = latestPlayback.current;
+      if (el && cur.status === "PLAYING") {
+        ensureMediaPlayback(el, {
+          onUnrecoverable: cur.emitPlayFail,
+          desiredMuted: cur.muted,
+          desiredVolume: cur.volume,
+        });
+      }
+    },
+    [mediaRef],
+  );
 
   useEffect(() => {
     let revoked: string | null = null;
@@ -526,11 +573,7 @@ function Slide({
     if (item.type === "VIDEO" || item.type === "AUDIO") return;
     if (still && !url) return;
     if (still && url) {
-      onMediaEvent({
-        type: "MEDIA_READY",
-        durationMs: item.durationMs > 0 ? item.durationMs : 8000,
-        generation,
-      });
+      // READY is emitted from <img onLoad> so decode/network time does not eat the slide.
       return;
     }
     if (!still) {
@@ -553,6 +596,16 @@ function Slide({
           alt={item.title}
           className="player-media"
           style={{ ...fit, zIndex: 1 }}
+          onLoad={() => {
+            const emitReady = () =>
+              onMediaEvent({
+                type: "MEDIA_READY",
+                durationMs: item.durationMs > 0 ? item.durationMs : 8000,
+                generation,
+              });
+            if (loadingSentRef.current) emitReady();
+            else pendingReadyRef.current = emitReady;
+          }}
           onError={() => {
             onMediaEvent({
               type: "MEDIA_ERROR",
@@ -580,17 +633,7 @@ function Slide({
           muted={muted}
           preload="auto"
           loop={loop}
-          ref={(el) => {
-            localMediaRef.current = el;
-            mediaRef.current = el;
-            if (el && status === "PLAYING") {
-              ensureMediaPlayback(el, {
-                onUnrecoverable: emitPlayFail,
-                desiredMuted: muted,
-                desiredVolume: volume,
-              });
-            }
-          }}
+          ref={setMediaEl}
           onLoadStart={() => logVideoDiag("loadstart")}
           onLoadedMetadata={(e) => {
             logVideoDiag("loadedmetadata");
@@ -635,6 +678,8 @@ function Slide({
             });
           }}
           onTimeUpdate={(e) => {
+            // FIXED window: the timer owns the timeline (media loops inside the window).
+            if (!nativeEnded) return;
             onMediaEvent({
               type: "MEDIA_TIME_UPDATE",
               positionMs: Math.round(e.currentTarget.currentTime * 1000),
@@ -696,17 +741,7 @@ function Slide({
           loop={loop}
           style={{ position: "absolute", width: 1, height: 1, opacity: 0.01, pointerEvents: "none" }}
           aria-hidden
-          ref={(el) => {
-            localMediaRef.current = el;
-            mediaRef.current = el;
-            if (el && status === "PLAYING") {
-              ensureMediaPlayback(el, {
-                onUnrecoverable: emitPlayFail,
-                desiredMuted: muted,
-                desiredVolume: volume,
-              });
-            }
-          }}
+          ref={setMediaEl}
           onLoadedMetadata={(e) => {
             const el = e.currentTarget;
             const natural =
@@ -743,6 +778,8 @@ function Slide({
             })
           }
           onTimeUpdate={(e) => {
+            // FIXED window: the timer owns the timeline (media loops inside the window).
+            if (!nativeEnded) return;
             onMediaEvent({
               type: "MEDIA_TIME_UPDATE",
               positionMs: Math.round(e.currentTarget.currentTime * 1000),

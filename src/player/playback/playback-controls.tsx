@@ -24,16 +24,18 @@ import {
 import { formatPlaybackTime } from "@/player/playback/format-time";
 import { getFullscreenController } from "@/player/runtime/fullscreen";
 
-const INK = "#2b2550";
+const INK = "#ffffff";
 const BRAND = "#7057dc";
+const ACCENT = "#a995f5";
 
 const glass: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.86)",
-  backdropFilter: "blur(22px) saturate(1.4)",
-  WebkitBackdropFilter: "blur(22px) saturate(1.4)",
-  border: "1px solid rgba(255, 255, 255, 0.9)",
-  borderRadius: 28,
-  boxShadow: "0 18px 48px rgba(60, 40, 140, 0.28)",
+  // Frosted glass: translucent so the content behind stays visible.
+  background: "rgba(20, 18, 44, 0.34)",
+  backdropFilter: "blur(22px) saturate(1.6)",
+  WebkitBackdropFilter: "blur(22px) saturate(1.6)",
+  border: "1px solid rgba(255, 255, 255, 0.22)",
+  borderRadius: 26,
+  boxShadow: "0 10px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
 };
 
 const btnBase: CSSProperties = {
@@ -189,11 +191,12 @@ export function PlaybackControls({
         ...glass,
         display: "flex",
         flexDirection: "column",
-        gap: compact ? 8 : 10,
-        padding: compact ? "10px 12px" : "12px 16px",
-        width: "min(920px, calc(100% - 24px))",
+        gap: compact ? 4 : 6,
+        padding: compact ? "6px 12px" : "8px 14px",
+        width: "min(780px, calc(100% - 24px))",
         pointerEvents: "auto",
         color: INK,
+        textShadow: "0 1px 2px rgba(0, 0, 0, 0.45)",
         fontFamily: "system-ui, sans-serif",
       }}
     >
@@ -266,7 +269,7 @@ export function PlaybackControls({
             style={{
               position: "relative",
               flex: 1,
-              height: 44,
+              height: 28,
               display: "flex",
               alignItems: "center",
               cursor: avail.SEEK.enabled ? "pointer" : "not-allowed",
@@ -281,7 +284,7 @@ export function PlaybackControls({
                 right: 0,
                 height: 6,
                 borderRadius: 999,
-                background: "rgba(112, 87, 220, 0.16)",
+                background: "rgba(255, 255, 255, 0.28)",
               }}
             />
             <div
@@ -291,7 +294,7 @@ export function PlaybackControls({
                 width: `${progress}%`,
                 height: 6,
                 borderRadius: 999,
-                background: BRAND,
+                background: ACCENT,
               }}
             />
             <div
@@ -302,7 +305,7 @@ export function PlaybackControls({
                 height: 16,
                 borderRadius: "50%",
                 background: "#fff",
-                boxShadow: "0 2px 8px rgba(60, 40, 140, 0.35), 0 0 0 3px rgba(112, 87, 220, 0.3)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(169, 149, 245, 0.45)",
               }}
             />
           </div>
@@ -337,7 +340,7 @@ export function PlaybackControls({
               flex: 1,
               height: 6,
               borderRadius: 999,
-              background: "rgba(112, 87, 220, 0.16)",
+              background: "rgba(255, 255, 255, 0.28)",
               overflow: "hidden",
             }}
           >
@@ -345,7 +348,7 @@ export function PlaybackControls({
               style={{
                 height: "100%",
                 width: `${progress}%`,
-                background: "rgba(112, 87, 220, 0.7)",
+                background: "rgba(255, 255, 255, 0.85)",
               }}
             />
           </div>
@@ -477,7 +480,7 @@ export function PlaybackControls({
                     dispatch({ type: "SET_VOLUME", volume: 1 });
                   }
                 }}
-                style={{ width: 110, accentColor: BRAND }}
+                style={{ width: 110, accentColor: ACCENT }}
               />
             </label>
           ) : null}
@@ -518,7 +521,7 @@ export function PlaybackControls({
           role="alert"
           style={{
             fontSize: 12,
-            color: "#c92a4a",
+            color: "#ff9aa8",
             display: "flex",
             gap: 8,
             alignItems: "center",
@@ -532,7 +535,7 @@ export function PlaybackControls({
               style={{
                 ...btnBase,
                 minHeight: 36,
-                background: "rgba(112, 87, 220, 0.12)",
+                background: "rgba(255, 255, 255, 0.16)",
                 fontSize: 12,
               }}
             >
@@ -546,7 +549,7 @@ export function PlaybackControls({
         [data-playback-controls] button:focus-visible,
         [data-playback-controls] [role=slider]:focus-visible,
         [data-playback-controls] input:focus-visible {
-          outline: 2px solid #7057dc;
+          outline: 2px solid #c9bdff;
           outline-offset: 2px;
         }
         .sr-only {
@@ -593,8 +596,8 @@ function ControlButton({
       onClick={onClick}
       style={{
         ...btnBase,
-        background: primary ? BRAND : "rgba(112, 87, 220, 0.09)",
-        boxShadow: primary ? "0 8px 18px rgba(112, 87, 220, 0.38)" : "none",
+        background: primary ? BRAND : "rgba(255, 255, 255, 0.1)",
+        boxShadow: primary ? "0 6px 16px rgba(112, 87, 220, 0.5)" : "none",
         color: primary ? "#fff" : btnBase.color,
         opacity: disabled ? 0.35 : 1,
         cursor: disabled ? "not-allowed" : "pointer",

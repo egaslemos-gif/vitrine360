@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { MediaStorageProvider, StoredObject, StoredObjectBytes } from "./types";
+import type { MediaStorageProvider, ObjectHead, StoredObject, StoredObjectBytes } from "./types";
 import { resolveUnderRoot } from "./paths";
 
 export class LocalFsProvider implements MediaStorageProvider {
@@ -43,6 +43,24 @@ export class LocalFsProvider implements MediaStorageProvider {
       contentType: "application/octet-stream",
       contentLength: data.byteLength,
     };
+  }
+
+  /** Byte range [start, end] inclusive — used by the device media proxy (HTTP Range). */
+  async getObjectRange(storageKey: string, start: number, end: number): Promise<Buffer> {
+    const handle = await fs.open(this.resolve(storageKey), "r");
+    try {
+      const length = Math.max(0, end - start + 1);
+      const buf = Buffer.alloc(length);
+      const { bytesRead } = await handle.read(buf, 0, length, start);
+      return buf.subarray(0, bytesRead);
+    } finally {
+      await handle.close();
+    }
+  }
+
+  async headObject(storageKey: string): Promise<ObjectHead> {
+    const st = await fs.stat(this.resolve(storageKey));
+    return { contentLength: st.size };
   }
 
   async delete(storageKey: string): Promise<void> {
