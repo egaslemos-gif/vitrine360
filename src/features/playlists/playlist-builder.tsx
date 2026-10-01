@@ -510,8 +510,8 @@ export function PlaylistBuilder({
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <Card className="h-fit border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:grid-rows-[auto_1fr]">
+        <Card className="order-1 h-fit border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-5 xl:col-start-1 xl:order-none">
           <CardHeader>
             <CardTitle>Detalhes</CardTitle>
           </CardHeader>
@@ -540,7 +540,7 @@ export function PlaylistBuilder({
           </CardContent>
         </Card>
 
-        <Card className="border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-4">
+        <Card className="order-3 border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:self-start xl:col-span-5 xl:col-start-1 xl:order-none">
           <CardHeader className="space-y-1 pb-3">
             <CardTitle>Itens da Playlist</CardTitle>
             <p className="text-xs text-[var(--color-muted-foreground)]">
@@ -619,7 +619,7 @@ export function PlaylistBuilder({
           </CardContent>
         </Card>
 
-        <Card className="border border-[var(--color-border)] shadow-[var(--shadow-subtle)] xl:col-span-5">
+        <Card className="order-2 min-w-0 border border-[var(--color-border)] shadow-[var(--shadow-card)] xl:sticky xl:top-2 xl:order-none xl:col-span-7 xl:col-start-6 xl:row-span-2 xl:row-start-1 xl:self-start">
           <CardHeader>
             <CardTitle>Pré-visualização</CardTitle>
           </CardHeader>

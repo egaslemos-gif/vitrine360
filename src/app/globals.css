@@ -110,6 +110,11 @@
   * {
     @apply border-border;
   }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
@@ -577,6 +582,15 @@ html.dark .admin-page-header {
     0 0 0 1px rgba(109, 74, 255, 0.06);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
+}
+
+/* Dark variant (landing hero). Unlayered, so it must be explicit. */
+.ui-demo-app-shell[data-tone="dark"] {
+  background: #12121c;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 html.dark .glass-panel,

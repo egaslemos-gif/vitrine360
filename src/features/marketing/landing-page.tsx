@@ -1,457 +1,480 @@
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import {
+  ArrowRight,
+  Building2,
+  CalendarDays,
+  Check,
+  GraduationCap,
+  Landmark,
+  Layers,
+  MonitorSmartphone,
+  Play,
+  PlayCircle,
+  Presentation,
+  Radio,
+  Send,
+  ShieldCheck,
+  SlidersHorizontal,
+  Store,
+  Tv,
+  WifiOff,
+  Hand,
+} from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { InteractivePlayerDemo } from "@/components/landing/interactive-player-demo";
+import { LandingMobileMenu } from "./landing-mobile-menu";
 
-const CAPABILITIES = [
-  {
-    key: "CREATE",
-    title: "Create",
-    body: "Create and organize digital content for every screen.",
-  },
-  {
-    key: "DISTRIBUTE",
-    title: "Distribute",
-    body: "Deliver the right content to the right displays and groups.",
-  },
-  {
-    key: "PLAY",
-    title: "Play",
-    body: "Run media, playlists and experiences with a reliable runtime.",
-  },
-  {
-    key: "CONTROL",
-    title: "Control",
-    body: "Supervise devices and prepare remote presentation control.",
-  },
-] as const;
+type Icon = ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 
-const USE_CASES = [
-  "Digital Signage",
-  "Corporate Presentations",
-  "Education",
-  "Events",
-  "Reception Displays",
-  "Interactive Kiosks",
-  "Retail",
-  "Institutional Communication",
+const NAV = [
+  { href: "#produto", label: "Produto" },
+  { href: "#player", label: "Player" },
+  { href: "#casos", label: "Casos de uso" },
+  { href: "#fiabilidade", label: "Fiabilidade" },
+];
+
+const STEPS: { icon: Icon; title: string; hint: string }[] = [
+  { icon: Layers, title: "Criar", hint: "Conteúdos e playlists" },
+  { icon: Send, title: "Distribuir", hint: "Para os ecrãs certos" },
+  { icon: PlayCircle, title: "Reproduzir", hint: "Player fiável, mesmo offline" },
+  { icon: SlidersHorizontal, title: "Controlar", hint: "Tudo à distância" },
+];
+
+const CAPABILITIES: { icon: Icon; title: string; body: string; tone: string }[] = [
+  {
+    icon: Layers,
+    title: "Criar",
+    body: "Biblioteca de media, templates e estúdio de conteúdos: imagem, vídeo, áudio, GIF, relógio, avisos e QR code.",
+    tone: "from-violet-500 to-indigo-500",
+  },
+  {
+    icon: Send,
+    title: "Distribuir",
+    body: "Playlists, grupos de ecrãs e agendamentos levam o conteúdo certo ao ecrã certo, à hora certa.",
+    tone: "from-sky-500 to-blue-600",
+  },
+  {
+    icon: PlayCircle,
+    title: "Reproduzir",
+    body: "Um player pensado para TVs, quiosques e browsers. Guarda o conteúdo localmente e continua a reproduzir sem rede.",
+    tone: "from-fuchsia-500 to-violet-600",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Controlar",
+    body: "Veja que ecrãs estão online e comande a reprodução: play, pausa, seguinte, anterior e volume.",
+    tone: "from-emerald-500 to-teal-600",
+  },
+];
+
+const PLAYER_POINTS = [
+  "Vídeo, imagem, áudio, GIF e experiências interactivas",
+  "Transições suaves e ajuste do conteúdo ao ecrã",
+  "Compatível com Smart TVs e browsers modernos",
+  "Modo de ecrã inteiro, pronto para sinalização",
+  "Retoma sozinho depois de uma falha de rede",
+];
+
+const USE_CASES: { icon: Icon; label: string }[] = [
+  { icon: Tv, label: "Sinalização digital" },
+  { icon: Presentation, label: "Apresentações corporativas" },
+  { icon: GraduationCap, label: "Educação" },
+  { icon: CalendarDays, label: "Eventos" },
+  { icon: Building2, label: "Ecrãs de recepção" },
+  { icon: Hand, label: "Quiosques interactivos" },
+  { icon: Store, label: "Retalho" },
+  { icon: Landmark, label: "Comunicação institucional" },
 ];
 
 const RELIABILITY = [
-  "Offline-first device runtime",
-  "Device observability & diagnostics",
-  "Multi-tenant workspace architecture",
-  "Controlled content distribution",
-  "Sandboxed Experience Runtime",
+  "Runtime de dispositivo offline-first",
+  "Observabilidade e diagnóstico dos ecrãs",
+  "Espaços de trabalho isolados (multi-tenant)",
+  "Distribuição de conteúdo controlada",
+  "Experiências executadas em sandbox",
 ];
 
-function CtaLink({
-  href,
-  children,
-  variant = "default",
-  size = "default",
-  className,
-}: {
-  href: string;
-  children: React.ReactNode;
-  variant?: "default" | "outline";
-  size?: "default" | "sm" | "lg";
-  className?: string;
-}) {
+function Eyebrow({ children, dark }: { children: ReactNode; dark?: boolean }) {
   return (
-    <Link
-      href={href}
-      className={cn(buttonVariants({ variant, size }), className)}
+    <p
+      className={cn(
+        "text-xs font-semibold uppercase tracking-[0.18em]",
+        dark ? "text-[var(--color-primary-light)]" : "text-[var(--color-primary)]",
+      )}
     >
       {children}
-    </Link>
+    </p>
   );
 }
 
 export function LandingPage({ signedIn }: { signedIn: boolean }) {
   const primaryHref = signedIn ? "/admin" : "/admin/login";
-  const primaryLabel = signedIn ? "Open console" : "Get started";
+  const primaryLabel = signedIn ? "Abrir consola" : "Começar agora";
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
-      <header className="sticky top-0 z-40 border-b border-black/[0.04] bg-white/70 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex min-w-0 items-baseline gap-2">
+    <div className="min-h-screen bg-white text-[var(--color-foreground)]">
+      {/* ───────── Header ───────── */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0a0a12]/95 backdrop-blur-xl">
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <span
-              className="truncate text-[20px] font-bold tracking-tight text-[var(--color-primary)]"
+              aria-hidden
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary-strong)] text-[15px] font-bold text-white shadow-[0_0_20px_rgba(109,74,255,0.5)]"
+            >
+              V
+            </span>
+            <span
+              className="truncate text-xl font-bold tracking-tight text-white"
               style={{ fontFamily: "var(--font-display), serif" }}
             >
               Vitrine360
             </span>
-            <span className="hidden text-xs text-[var(--color-text-muted)] sm:inline font-medium">
-              Digital Display & Presentation
-            </span>
           </Link>
+
           <nav
-            className="hidden items-center gap-6 text-[13px] font-medium text-[var(--color-text-secondary)] md:flex"
-            aria-label="Product"
+            className="hidden items-center gap-7 text-sm font-medium text-white/70 md:flex"
+            aria-label="Principal"
           >
-            <a href="#product" className="hover:text-[var(--color-foreground)]">
-              Product
-            </a>
-            <a href="#platform" className="hover:text-[var(--color-foreground)]">
-              Platform
-            </a>
-            <a href="#use-cases" className="hover:text-[var(--color-foreground)]">
-              Use Cases
-            </a>
-            <a href="#reliability" className="hover:text-[var(--color-foreground)]">
-              Resources
-            </a>
+            {NAV.map((item) => (
+              <a key={item.href} href={item.href} className="transition-colors hover:text-white">
+                {item.label}
+              </a>
+            ))}
           </nav>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2 sm:gap-3">
             {!signedIn && (
               <Link
                 href="/admin/login"
-                className="hidden text-[13px] font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-foreground)] sm:inline"
+                className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white md:inline"
               >
-                Sign in
+                Entrar
               </Link>
             )}
-            <CtaLink href={primaryHref} size="sm" className="rounded-lg bg-[var(--color-primary)] font-medium text-white hover:bg-[var(--color-primary-hover)] shadow-[0_2px_8px_rgba(109,74,255,0.25)]">
+            <Link
+              href={primaryHref}
+              className="inline-flex h-10 items-center rounded-lg bg-white px-4 text-sm font-semibold text-[#0a0a12] shadow-sm transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
+            >
               {primaryLabel}
-            </CtaLink>
+            </Link>
+            <LandingMobileMenu
+              items={NAV}
+              signInHref="/admin/login"
+              signInLabel={signedIn ? "Consola" : "Entrar"}
+            />
           </div>
         </div>
       </header>
 
       <main>
-        <section className="relative overflow-hidden border-b border-[var(--color-border-subtle)] bg-gradient-to-b from-[#F8F8FB] to-white">
-          <div
-            className="pointer-events-none absolute inset-0"
-            aria-hidden
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_30%,rgba(124,92,255,0.12),transparent_50%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_80%,rgba(92,124,255,0.08),transparent_40%)]" />
+        {/* ───────── Hero ───────── */}
+        <section className="relative isolate overflow-hidden bg-[#0a0a12] text-white">
+          <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+            <div className="absolute -right-32 -top-40 h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle,rgba(109,74,255,0.45),transparent_65%)]" />
+            <div className="absolute -bottom-48 -left-32 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.18),transparent_65%)]" />
+            <div
+              className="absolute inset-0 opacity-[0.07]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
+                backgroundSize: "56px 56px",
+                maskImage: "radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%)",
+                WebkitMaskImage: "radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%)",
+              }}
+            />
           </div>
 
-          <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-6 pb-10 sm:gap-10 sm:px-6 sm:pt-8 sm:pb-12 xl:items-start xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] xl:gap-10 xl:pt-8 xl:pb-12">
-            <div className="flex flex-col max-w-[520px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                Digital Display & Presentation
-              </p>
+          <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pb-6 pt-8 sm:gap-10 sm:px-6 sm:pt-12 lg:gap-12 lg:pt-16 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-player-success)] shadow-[0_0_8px_var(--color-player-success)]" aria-hidden />
+                Sinalização digital e apresentações
+              </span>
 
-              <h1 className="mt-2 max-w-[600px] text-[2rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#131316] sm:mt-3 sm:text-[2.5rem] lg:text-[2.75rem] xl:text-[3.15rem]">
-                Turn every screen into a digital experience.
+              <h1 className="mt-4 text-[2.15rem] font-bold leading-[1.05] tracking-[-0.03em] sm:mt-5 sm:text-5xl xl:text-[3.5rem]">
+                Todos os seus ecrãs.{" "}
+                <span className="bg-gradient-to-r from-[#a99bff] via-[#8b6ff7] to-[#5cc8ff] bg-clip-text text-transparent">
+                  Um só painel de controlo.
+                </span>
               </h1>
 
-              <p className="mt-2 max-w-[480px] text-[15px] leading-[1.5] text-[var(--color-text-secondary)] sm:mt-3 sm:text-[17.5px] sm:leading-[1.55]">
-                Create, distribute, play and control digital content across
-                displays and interactive devices.
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
+                Crie conteúdos, monte playlists, envie-as para TVs, quiosques e
+                ecrãs de recepção e controle a reprodução à distância, com um
+                player que continua a trabalhar mesmo sem internet.
               </p>
 
-              <div className="mt-5 flex flex-col items-stretch gap-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-4">
-                <CtaLink href={primaryHref} size="lg" className="w-full sm:w-[160px] rounded-xl bg-gradient-to-b from-[var(--color-primary)] to-[#5335e9] hover:from-[#5335e9] hover:to-[var(--color-primary)] text-white shadow-[0_6px_20px_rgba(109,74,255,0.3)] font-semibold h-12 sm:h-14 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(109,74,255,0.4)]">
-                  {primaryLabel}
-                </CtaLink>
-                <a
-                  href="#player-demo"
-                  className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-[180px] rounded-xl h-12 sm:h-14 font-medium text-[#131316] border-[var(--color-border)] bg-white/70 backdrop-blur-md transition-all hover:bg-white hover:border-[var(--color-border-strong)] hover:shadow-md hover:-translate-y-0.5")}
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href={primaryHref}
+                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#7c5cff] to-[#5b3de6] px-6 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(109,74,255,0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(109,74,255,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
                 >
-                  Explore platform
+                  {primaryLabel}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+                <a
+                  href="#player"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-[15px] font-medium text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                >
+                  <Play className="h-4 w-4" aria-hidden />
+                  Ver o player em acção
                 </a>
               </div>
 
-              <div className="mt-4 text-[11px] font-medium tracking-wide text-[var(--color-text-muted)] sm:mt-5 sm:text-[13px]">
-                Offline-first &nbsp;·&nbsp; Multi-screen &nbsp;·&nbsp; Remote control
-              </div>
-
-              <div className="mt-12 xl:mt-16 grid grid-cols-3 divide-x divide-black/[0.08] border-t border-black/[0.08] pt-6 sm:mt-16 sm:pt-8">
-                <div className="flex flex-col pr-4">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    01 <span className="text-[var(--color-primary)]">Create</span>
-                  </span>
-                  <span className="mt-1 text-[14px] font-semibold tracking-tight text-[#131316]">Content</span>
-                </div>
-                <div className="flex flex-col px-4 sm:px-6">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    02 <span className="text-[var(--color-primary)]">Distribute</span>
-                  </span>
-                  <span className="mt-1 text-[14px] font-semibold tracking-tight text-[#131316]">Screens</span>
-                </div>
-                <div className="flex flex-col pl-4 sm:pl-6">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    03 <span className="text-[var(--color-primary)]">Control</span>
-                  </span>
-                  <span className="mt-1 text-[14px] font-semibold tracking-tight text-[#131316]">Devices</span>
-                </div>
-              </div>
+              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-medium text-white/60">
+                {[
+                  { icon: WifiOff, label: "Funciona offline" },
+                  { icon: MonitorSmartphone, label: "Multi-ecrã" },
+                  { icon: Radio, label: "Controlo remoto" },
+                ].map(({ icon: I, label }) => (
+                  <li key={label} className="inline-flex items-center gap-1.5">
+                    <I className="h-4 w-4 text-[var(--color-primary-light)]" aria-hidden />
+                    {label}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className="relative mx-auto w-full max-w-[640px] xl:mx-0 xl:ml-auto xl:max-w-[min(700px,46vw)] xl:mt-2">
+            {/* The Player is the hero */}
+            <div className="relative min-w-0">
               <div
-                className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-[radial-gradient(circle_at_center,rgba(109,74,255,0.08),transparent_65%)] sm:-inset-6 sm:rounded-[2.5rem]"
+                className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-[radial-gradient(circle_at_50%_40%,rgba(109,74,255,0.35),transparent_70%)] blur-2xl"
                 aria-hidden
               />
-              <div className="relative rounded-[24px] border border-[rgba(255,255,255,0.9)] bg-[rgba(255,255,255,0.88)] shadow-[0_12px_32px_rgba(30,20,60,0.08)] transition-transform duration-500 hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(30,20,60,0.12)]">
-                <InteractivePlayerDemo size="hero" showPlaylist className="relative rounded-[23px] overflow-hidden bg-white" />
+              <div className="relative overflow-hidden rounded-2xl shadow-[0_30px_80px_-20px_rgba(109,74,255,0.55)] ring-1 ring-white/15">
+                <InteractivePlayerDemo size="hero" showPlaylist tone="dark" playlistLayout="below" />
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="product" className="bg-[var(--color-background-secondary)]/50">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <p className="ui-caption uppercase tracking-[0.12em]">Capabilities</p>
-          <h2 className="mt-2 max-w-xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
-            One platform to create, distribute, play and control.
-          </h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {CAPABILITIES.map((c) => (
-              <div
-                key={c.key}
-                className="glass-card rounded-[var(--radius-xl)] p-5"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-primary)]">
-                  {c.key}
-                </p>
-                <h3 className="mt-2 text-lg font-semibold">{c.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  {c.body}
-                </p>
-              </div>
-            ))}
-          </div>
-          </div>
-        </section>
-
-        <section
-          id="player-demo"
-          className="border-y border-[var(--color-border)] bg-[var(--color-background)]"
-        >
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-            <p className="ui-caption uppercase tracking-[0.12em]">Play</p>
-            <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
-              Meet the Vitrine360 Player
-            </h2>
-            <p className="mt-3 max-w-xl text-[17px] text-[var(--color-text-secondary)]">
-              Designed for media, presentations and digital displays. This is a
-              local interactive demo — not connected to real devices.
-            </p>
-            <div className="mt-10">
-              <InteractivePlayerDemo size="showcase" showPlaylist />
-            </div>
-          </div>
-        </section>
-
-        <section className="border-y border-[var(--color-border)] bg-[var(--color-surface)]">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="ui-caption uppercase tracking-[0.12em]">Interactive</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Go beyond digital signage.
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-base">
-                Turn touch-enabled displays into interactive experiences —
-                combining content, Experience Runtime and future interaction
-                layers. Interactive playback is a product vision; Experience
-                Runtime foundations already exist.
+              <p className="mt-3 text-center text-xs text-white/45">
+                Experimente: carregue em play, avance e use o ecrã inteiro.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: "Touchscreen", hint: "Tap" },
-                { label: "Interactive Content", hint: "Swipe" },
-                { label: "Experience Runtime", hint: "Select" },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  className="glass-card rounded-[var(--radius-xl)] px-4 py-6 text-center transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/45 active:translate-y-0 active:ring-2 active:ring-[var(--color-primary)]/35"
-                >
-                  <p className="text-sm font-semibold">{item.label}</p>
-                  <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
-                    {item.hint}
-                  </p>
-                </button>
-              ))}
-            </div>
           </div>
-        </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="ui-caption uppercase tracking-[0.12em]">
-                Remote control
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Your displays. Under your control.
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-base">
-                Device Control is designed into the product experience —
-                Play, Pause, Next, Previous, Stop, timeline and volume. Remote
-                command transport ships in a later playback phase; the console
-                already surfaces the visual concept.
-              </p>
-            </div>
-            <div
-              className="ui-player-surface relative overflow-hidden rounded-[var(--radius-2xl)] border border-white/8 p-4 shadow-[var(--shadow-modal)] sm:p-5"
-              aria-hidden
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-[var(--color-player-text)]">
-                  Recepção Principal
-                </p>
-                <span className="text-xs text-[var(--color-player-success)]">
-                  ● Online
-                </span>
-              </div>
-              <div className="ui-player-canvas relative mb-0 aspect-video overflow-hidden rounded-[var(--radius-xl)]">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,color-mix(in_oklab,var(--color-player-primary)_25%,transparent),transparent_60%)]" />
-                <div className="absolute inset-x-3 bottom-3 z-[2]">
-                  <div className="glass-player-controls mx-auto flex max-w-sm items-center justify-center gap-1.5 rounded-full px-3 py-2">
-                    {["◀◀", "▶", "❚❚", "■", "▶▶", "🔊", "⛶"].map((g, i) => (
-                      <span
-                        key={`${g}-${i}`}
-                        className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] ${
-                          i === 1
-                            ? "bg-[var(--color-player-primary)] text-white"
-                            : "text-[var(--color-player-muted)]"
-                        }`}
-                      >
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="relative mt-2 h-1 overflow-visible rounded-full bg-white/15">
-                    <div className="h-full w-2/5 rounded-full bg-[var(--color-player-primary)]" />
-                    <span className="absolute top-1/2 left-[40%] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="platform"
-          className="border-y border-[var(--color-border)] bg-[var(--color-muted)]/35"
-        >
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-            <p className="ui-caption uppercase tracking-[0.12em]">Architecture</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              One platform from content creation to playback.
-            </h2>
-            <ol className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-              {[
-                "Content",
-                "Playlist",
-                "Distribution",
-                "Device",
-                "Runtime",
-              ].map((step, i, arr) => (
-                <li key={step} className="flex items-center gap-2">
-                  <span className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium">
-                    {step}
+          {/* Essence strip */}
+          <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8">
+            <ol className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-4">
+              {STEPS.map(({ icon: I, title, hint }, i) => (
+                <li key={title} className="flex items-start gap-3 bg-[#0d0d18] p-4 sm:p-5">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[var(--color-primary-light)]">
+                    <I className="h-[18px] w-[18px]" aria-hidden />
                   </span>
-                  {i < arr.length - 1 ? (
-                    <span
-                      className="hidden text-[var(--color-muted-foreground)] sm:inline"
-                      aria-hidden
-                    >
-                      →
-                    </span>
-                  ) : null}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white">
+                      <span className="mr-1.5 text-white/35">{String(i + 1).padStart(2, "0")}</span>
+                      {title}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-snug text-white/55">{hint}</p>
+                  </div>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        <section id="use-cases" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <p className="ui-caption uppercase tracking-[0.12em]">Use cases</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-            Built for real display environments.
-          </h2>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {USE_CASES.map((u) => (
-              <li
-                key={u}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-medium"
-              >
-                {u}
-              </li>
-            ))}
-          </ul>
+        {/* ───────── Produto ───────── */}
+        <section id="produto" className="scroll-mt-16 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+            <Eyebrow>Produto</Eyebrow>
+            <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+              Do conteúdo ao ecrã, sem complicações.
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--color-text-secondary)] sm:text-lg">
+              Uma única plataforma para preparar, entregar, reproduzir e
+              supervisionar tudo o que aparece nos seus ecrãs.
+            </p>
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {CAPABILITIES.map(({ icon: I, title, body, tone }) => (
+                <article
+                  key={title}
+                  className="group rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-[var(--shadow-subtle)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-floating)]"
+                >
+                  <span
+                    className={cn(
+                      "flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md",
+                      tone,
+                    )}
+                  >
+                    <I className="h-5 w-5" aria-hidden />
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                    {body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <section
-          id="reliability"
-          className="border-t border-[var(--color-border)] bg-[var(--color-surface)]"
-        >
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-            <p className="ui-caption uppercase tracking-[0.12em]">Reliability</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-              Operational foundations that already ship.
+        {/* ───────── Player + Controlo remoto ───────── */}
+        <section id="player" className="relative isolate scroll-mt-16 overflow-hidden bg-[#0a0a12] text-white">
+          <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+            <div className="absolute left-1/2 top-0 h-[480px] w-[900px] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(109,74,255,0.28),transparent_65%)]" />
+          </div>
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-14">
+            <div className="min-w-0">
+              <Eyebrow dark>O player</Eyebrow>
+              <h2 className="mt-2 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+                O coração do Vitrine360 está no ecrã.
+              </h2>
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
+                Um player robusto, desenhado para correr dia e noite em TVs,
+                quiosques e computadores, e para ser comandado à distância.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {PLAYER_POINTS.map((p) => (
+                  <li key={p} className="flex items-start gap-3 text-[15px] text-white/80">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/25 text-[var(--color-primary-light)]">
+                      <Check className="h-3 w-3" aria-hidden />
+                    </span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div
+              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_30px_80px_-30px_rgba(109,74,255,0.5)] backdrop-blur sm:p-5"
+              role="img"
+              aria-label="Exemplo do painel de controlo remoto de um ecrã"
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
+                    Controlo remoto
+                  </p>
+                  <p className="mt-0.5 truncate text-sm font-semibold">Recepção Principal</p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[var(--color-player-success)]/15 px-2.5 py-1 text-xs font-medium text-[var(--color-player-success)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-player-success)]" />
+                  Online
+                </span>
+              </div>
+              <div className="relative aspect-video overflow-hidden rounded-xl bg-[#07070c] ring-1 ring-white/10">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(109,74,255,0.35),transparent_62%)]" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20 backdrop-blur">
+                    <Play className="ml-0.5 h-6 w-6 text-white" aria-hidden />
+                  </span>
+                </div>
+                <div className="absolute inset-x-3 bottom-3">
+                  <div className="h-1 rounded-full bg-white/15">
+                    <div className="h-full w-2/5 rounded-full bg-[var(--color-player-primary)]" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                {["Anterior", "Pausa", "Seguinte", "Volume"].map((label, i) => (
+                  <span
+                    key={label}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-xs font-medium",
+                      i === 1
+                        ? "bg-[var(--color-primary)] text-white"
+                        : "bg-white/8 text-white/70 ring-1 ring-white/10",
+                    )}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ───────── Casos de uso ───────── */}
+        <section id="casos" className="scroll-mt-16 bg-[var(--color-background)]">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+            <Eyebrow>Casos de uso</Eyebrow>
+            <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+              Feito para ambientes reais.
             </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {RELIABILITY.map((r) => (
+            <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              {USE_CASES.map(({ icon: I, label }) => (
                 <li
-                  key={r}
-                  className="border-l-2 border-[var(--color-primary)]/40 pl-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"
+                  key={label}
+                  className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white p-4 shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-card)]"
                 >
-                  {r}
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                    <I className="h-5 w-5" aria-hidden />
+                  </span>
+                  <span className="min-w-0 text-sm font-medium leading-snug">{label}</span>
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
-          <h2
-            className="text-3xl font-semibold tracking-tight sm:text-4xl"
-            style={{ fontFamily: "var(--font-display), serif" }}
-          >
-            Build better digital experiences.
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-[var(--color-text-secondary)]">
-            Start with your workspace console — content, devices and playback in
-            one place.
-          </p>
-          <div className="mt-8">
-            <CtaLink href={primaryHref} size="lg">
+        {/* ───────── Fiabilidade ───────── */}
+        <section id="fiabilidade" className="scroll-mt-16 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+            <Eyebrow>Fiabilidade</Eyebrow>
+            <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+              Bases operacionais que já funcionam.
+            </h2>
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {RELIABILITY.map((r) => (
+                <li
+                  key={r}
+                  className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
+                >
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-primary)]" aria-hidden />
+                  <span className="text-sm font-medium leading-snug">{r}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ───────── CTA final ───────── */}
+        <section className="bg-white px-4 pb-16 sm:px-6 sm:pb-20">
+          <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#0a0a12] px-6 py-14 text-center text-white sm:px-12 sm:py-16">
+            <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+              <div className="absolute left-1/2 top-0 h-80 w-[720px] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(109,74,255,0.5),transparent_65%)]" />
+            </div>
+            <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+              Ponha os seus ecrãs a trabalhar para si.
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-white/65">
+              Conteúdos, ecrãs e reprodução num só lugar. Comece em minutos.
+            </p>
+            <Link
+              href={primaryHref}
+              className="group mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-7 text-[15px] font-semibold text-[#0a0a12] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(255,255,255,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
+            >
               {primaryLabel}
-            </CtaLink>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </Link>
           </div>
         </section>
       </main>
 
+      {/* ───────── Footer ───────── */}
       <footer className="border-t border-[var(--color-border)] bg-[var(--color-background)]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 md:flex-row md:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p
-              className="text-lg font-semibold text-[var(--color-primary)]"
+              className="text-lg font-bold text-[var(--color-primary)]"
               style={{ fontFamily: "var(--font-display), serif" }}
             >
               Vitrine360
             </p>
             <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-              Digital Display & Presentation Platform
+              Plataforma de sinalização digital e apresentações
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-4">
-            {[
-              { h: "Product", links: ["Capabilities", "Device Control"] },
-              { h: "Platform", links: ["Architecture", "Runtime"] },
-              { h: "Resources", links: ["Reliability", "Console"] },
-              { h: "Company", links: ["Sign in"] },
-            ].map((col) => (
-              <div key={col.h}>
-                <p className="font-semibold">{col.h}</p>
-                <ul className="mt-2 space-y-1 text-[var(--color-muted-foreground)]">
-                  {col.links.map((l) => (
-                    <li key={l}>{l}</li>
-                  ))}
-                </ul>
-              </div>
+          <nav aria-label="Rodapé" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-[var(--color-text-secondary)]">
+            {NAV.map((item) => (
+              <a key={item.href} href={item.href} className="hover:text-[var(--color-foreground)]">
+                {item.label}
+              </a>
             ))}
-          </div>
+            <Link href="/admin/login" className="hover:text-[var(--color-foreground)]">
+              {signedIn ? "Consola" : "Entrar"}
+            </Link>
+          </nav>
         </div>
         <div className="border-t border-[var(--color-border)] py-4 text-center text-xs text-[var(--color-muted-foreground)]">
           © {new Date().getFullYear()} Vitrine360

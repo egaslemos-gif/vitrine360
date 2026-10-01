@@ -84,11 +84,11 @@ export const NAV_SECTION_ORDER: NavSection[] = [
 ];
 
 export const NAV_SECTION_LABELS: Record<NavSection, string> = {
-  OVERVIEW: "Overview",
-  CONTENT: "Content",
-  DEVICES: "Devices",
-  PLAYBACK: "Playback",
-  SYSTEM: "System",
+  OVERVIEW: "Visão geral",
+  CONTENT: "Conteúdo",
+  DEVICES: "Ecrãs",
+  PLAYBACK: "Reprodução",
+  SYSTEM: "Sistema",
 };
 
 export function navForRole(role: string) {

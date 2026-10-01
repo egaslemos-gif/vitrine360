@@ -15,9 +15,9 @@ const display = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Vitrine360 — Digital Display & Presentation Platform",
+  title: "Vitrine360 — Sinalização digital e apresentações",
   description:
-    "Create, distribute, play and control digital content across displays and interactive devices.",
+    "Crie, distribua, reproduza e controle conteúdos digitais em TVs, quiosques e ecrãs interactivos, com um player fiável que funciona mesmo offline.",
 };
 
 const SMART_TV_GLOBAL_BOOT = `
