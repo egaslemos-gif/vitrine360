@@ -7,17 +7,14 @@ import {
   GraduationCap,
   Landmark,
   Layers,
-  MonitorSmartphone,
   Play,
   PlayCircle,
   Presentation,
-  Radio,
   Send,
   ShieldCheck,
   SlidersHorizontal,
   Store,
   Tv,
-  WifiOff,
   Hand,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
@@ -32,20 +29,6 @@ const NAV = [
   { href: "#player", label: "Player" },
   { href: "#casos", label: "Casos de uso" },
   { href: "#fiabilidade", label: "Fiabilidade" },
-];
-
-const STEPS: { icon: Icon; title: string; hint: string }[] = [
-  { icon: Layers, title: "Criar", hint: "Conteúdos e playlists" },
-  { icon: Send, title: "Distribuir", hint: "Para os ecrãs certos" },
-  { icon: PlayCircle, title: "Reproduzir", hint: "Player fiável, mesmo offline" },
-  { icon: SlidersHorizontal, title: "Controlar", hint: "Tudo à distância" },
-];
-
-const STEP_TONES = [
-  "bg-violet-100 text-violet-600",
-  "bg-sky-100 text-sky-600",
-  "bg-fuchsia-100 text-fuchsia-600",
-  "bg-emerald-100 text-emerald-600",
 ];
 
 const PASTELS = [
@@ -193,14 +176,9 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             <div className="absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(125,196,255,0.35),transparent_65%)]" />
           </div>
 
-          <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pb-6 pt-8 sm:gap-10 sm:px-6 sm:pt-12 lg:gap-12 lg:pt-16 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <div className="min-w-0">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] shadow-[var(--shadow-subtle)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-player-success)] shadow-[0_0_8px_var(--color-player-success)]" aria-hidden />
-                Sinalização digital e apresentações
-              </span>
-
-              <h1 className="mt-4 text-[2.15rem] font-bold leading-[1.05] tracking-[-0.03em] sm:mt-5 sm:text-5xl xl:text-[3.5rem]">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-8 sm:gap-10 sm:px-6 sm:pb-16 sm:pt-12 lg:gap-12 lg:pt-14 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div className="min-w-0 xl:pt-12">
+              <h1 className="text-[2.15rem] font-bold leading-[1.05] tracking-[-0.03em] sm:text-5xl xl:text-[3.5rem]">
                 Todos os seus ecrãs.{" "}
                 <span className="bg-gradient-to-r from-[#7057dc] via-[#8f78ee] to-[#3fa7ef] bg-clip-text text-transparent">
                   Um só painel de controlo.
@@ -208,9 +186,8 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               </h1>
 
               <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)] sm:text-lg">
-                Crie conteúdos, monte playlists, envie-as para TVs, quiosques e
-                ecrãs de recepção e controle a reprodução à distância, com um
-                player que continua a trabalhar mesmo sem internet.
+                Crie, distribua e controle o conteúdo dos seus ecrãs, mesmo sem
+                internet.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -229,19 +206,6 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                   Ver o player em acção
                 </a>
               </div>
-
-              <ul className="mt-6 flex flex-wrap gap-2 text-[13px] font-medium text-[var(--color-text-secondary)]">
-                {[
-                  { icon: WifiOff, label: "Funciona offline" },
-                  { icon: MonitorSmartphone, label: "Multi-ecrã" },
-                  { icon: Radio, label: "Controlo remoto" },
-                ].map(({ icon: I, label }) => (
-                  <li key={label} className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1.5">
-                    <I className="h-4 w-4 text-[var(--color-primary)]" aria-hidden />
-                    {label}
-                  </li>
-                ))}
-              </ul>
             </div>
 
             {/* The Player is the hero */}
@@ -253,30 +217,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               <div className="relative overflow-hidden rounded-[2rem] border border-white/80 shadow-[0_30px_70px_-24px_rgba(88,64,180,0.4)]">
                 <InteractivePlayerDemo size="hero" showPlaylist playlistLayout="below" />
               </div>
-              <p className="mt-3 text-center text-xs text-[var(--color-text-muted)]">
-                Experimente: carregue em play, avance e use o ecrã inteiro.
-              </p>
             </div>
-          </div>
-
-          {/* Essence strip */}
-          <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8">
-            <ol className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {STEPS.map(({ icon: I, title, hint }, i) => (
-                <li key={title} className="flex items-start gap-3 rounded-3xl border border-white/80 bg-white/75 p-4 shadow-[var(--shadow-card)] backdrop-blur sm:p-5">
-                  <span className={cn("mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", STEP_TONES[i])}>
-                    <I className="h-[18px] w-[18px]" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--color-foreground)]">
-                      <span className="mr-1.5 text-[var(--color-text-muted)]">{String(i + 1).padStart(2, "0")}</span>
-                      {title}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-text-secondary)]">{hint}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
           </div>
         </section>
 

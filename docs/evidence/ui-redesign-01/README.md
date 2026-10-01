@@ -54,3 +54,9 @@ O fundo **atrás do conteúdo** em `/player` mantém-se escuro de propósito (é
 
 Verificação: typecheck PASS, `npm test` exit 0, build PASS, lint 116/6 (baseline, 0 novos). Capturas com o harness dos componentes reais (controlos+HUD) e com o editor de playlist com 3 itens (fila visível); sem scroll horizontal a 1920 e 390 px.
 Nota: o typecheck/build falham se existirem tipos antigos em `.next/dev/types` (gerados pelo servidor de dev) a apontar para ficheiros apagados; apagar `.next/dev` resolve.
+
+## UI-REDESIGN-04 — hero da landing mais focado
+Problema: o título ficava centrado na vertical em relação ao cartão do player (alto), deixando um vazio grande por cima do texto.
+- Alinhamento ao topo (`items-start`) com pequeno recuo no desktop; hero passa a abrir com o título e o player lado a lado.
+- Menos texto: removidos o selo "Sinalização digital e apresentações", os 3 chips (offline / multi-ecrã / controlo remoto), a faixa dos 4 passos (já explicados na secção Produto) e a legenda sob o player; subtítulo reduzido a uma frase; aviso de "demonstração local" escondido no layout do hero.
+- Resultado: título a 169 px e player a 122 px do topo a 1366 px; sem scroll horizontal (1366, 1920, 1024, 390).

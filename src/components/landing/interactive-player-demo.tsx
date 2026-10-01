@@ -587,6 +587,7 @@ export function InteractivePlayerDemo({
               </ul>
               <div className={cn(
                 "mt-4 xl:mt-5 pt-3 xl:pt-3 border-t",
+                below && "hidden",
                 dark ? "border-white/5" : "border-black/[0.04]"
               )}>
                 <p className={cn(
