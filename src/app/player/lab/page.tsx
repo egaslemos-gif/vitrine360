@@ -23,13 +23,5 @@ const PlaybackLabClient = dynamic(() => import("./lab-client"), {
 });
 
 export default function PlaybackLabPage() {
-  if (process.env.NODE_ENV === "production") {
-    return (
-      <div style={{ padding: 24, fontFamily: "system-ui" }}>
-        Playback lab is disabled in production.
-      </div>
-    );
-  }
-
   return <PlaybackLabClient />;
 }
