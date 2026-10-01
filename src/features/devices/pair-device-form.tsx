@@ -1,12 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import {
+  mapApiErrorToUserMessage,
+  type UserErrorMessage,
+} from "@/lib/api-error-mapping";
 
 export function PairDeviceForm() {
   const router = useRouter();
@@ -14,31 +18,52 @@ export function PairDeviceForm() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [deviceCode, setDeviceCode] = useState("TV-HALL-001");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<UserErrorMessage | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  // Synchronous guard: state updates are async, rapid clicks could slip through.
+  const inFlight = useRef(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
+    if (inFlight.current) return;
+    inFlight.current = true;
+
+    setSuccess(null);
     setError(null);
-    const res = await fetch("/api/admin/devices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        activationCode,
-        name,
-        location,
-        deviceCode: deviceCode.toUpperCase(),
-      }),
-    });
-    const data = (await res.json()) as { error?: string };
-    if (!res.ok) {
-      setError(data.error ?? "Falha no pairing");
-      return;
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/admin/devices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activationCode,
+          name,
+          location,
+          deviceCode: deviceCode.toUpperCase(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(mapApiErrorToUserMessage(data, res.status));
+        return;
+      }
+
+      setSuccess("Ecrã associado com sucesso. O Player irá receber o token automaticamente.");
+      // Same as the pre-AUTHZ-DEVICE-02 UX: only the one-time activation code is cleared.
+      setActivationCode("");
+      router.refresh();
+    } catch {
+      setError(
+        mapApiErrorToUserMessage(null),
+      );
+    } finally {
+      inFlight.current = false;
+      setSubmitting(false);
     }
-    setMessage("Dispositivo associado. O Player irá receber o token.");
-    setActivationCode("");
-    router.refresh();
   }
 
   return (
@@ -66,6 +91,7 @@ export function PairDeviceForm() {
               onChange={(e) => setActivationCode(e.target.value)}
               placeholder="6 dígitos"
               required
+              disabled={submitting}
             />
           </div>
           
@@ -79,6 +105,7 @@ export function PairDeviceForm() {
               value={deviceCode}
               onChange={(e) => setDeviceCode(e.target.value)}
               required
+              disabled={submitting}
             />
           </div>
 
@@ -93,6 +120,7 @@ export function PairDeviceForm() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Ecrã da Entrada Principal"
               required
+              disabled={submitting}
             />
           </div>
 
@@ -106,19 +134,31 @@ export function PairDeviceForm() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Ex: Edifício Central - Piso 0"
+              disabled={submitting}
             />
           </div>
-          <div className="sm:col-span-2">
-            <Button type="submit">Associar dispositivo</Button>
-            {message ? (
-              <p className="mt-2 text-sm text-[var(--color-success)]">
-                {message}
-              </p>
+          <div className="min-w-0 space-y-3 sm:col-span-2">
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "A associar Ecrã…" : "Associar dispositivo"}
+            </Button>
+
+            {success ? (
+              <div className="min-w-0 rounded-md border border-[var(--color-success)]/20 bg-[var(--color-success)]/5 px-4 py-3">
+                <p className="text-sm font-medium text-[var(--color-success)] [overflow-wrap:anywhere]">
+                  ✓ {success}
+                </p>
+              </div>
             ) : null}
+
             {error ? (
-              <p className="mt-2 text-sm text-[var(--color-destructive)]">
-                {error}
-              </p>
+              <div className="min-w-0 rounded-md border border-[var(--color-destructive)]/20 bg-[var(--color-destructive)]/5 px-4 py-3">
+                <p className="text-sm font-semibold text-[var(--color-destructive)] [overflow-wrap:anywhere]">
+                  {error.title}
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-destructive)]/80 [overflow-wrap:anywhere]">
+                  {error.message}
+                </p>
+              </div>
             ) : null}
           </div>
         </form>

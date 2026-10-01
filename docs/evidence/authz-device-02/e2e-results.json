@@ -1,0 +1,382 @@
+{
+  "matrix": {
+    "ok": {
+      "VIEWER": "403 PERMISSION_DENIED",
+      "EDITOR": "403 PERMISSION_DENIED",
+      "OPERATOR": "200 SUCCESS",
+      "ADMIN": "200 SUCCESS",
+      "SUPER_ADMIN": "200 SUCCESS"
+    },
+    "disabled": {
+      "VIEWER": "403 PERMISSION_DENIED",
+      "EDITOR": "403 PERMISSION_DENIED",
+      "OPERATOR": "403 ENTITLEMENT_DENIED",
+      "ADMIN": "403 ENTITLEMENT_DENIED",
+      "SUPER_ADMIN": "403 ENTITLEMENT_DENIED"
+    },
+    "quota": {
+      "VIEWER": "403 PERMISSION_DENIED",
+      "EDITOR": "403 PERMISSION_DENIED",
+      "OPERATOR": "403 QUOTA_EXCEEDED",
+      "ADMIN": "403 QUOTA_EXCEEDED",
+      "SUPER_ADMIN": "403 QUOTA_EXCEEDED"
+    }
+  },
+  "rows": [
+    {
+      "id": "MATRIX ok/VIEWER",
+      "ok": true,
+      "detail": "403 PERMISSION_DENIED (expected 403 PERMISSION_DENIED)"
+    },
+    {
+      "id": "MATRIX ok/EDITOR",
+      "ok": true,
+      "detail": "403 PERMISSION_DENIED (expected 403 PERMISSION_DENIED)"
+    },
+    {
+      "id": "MATRIX ok/OPERATOR",
+      "ok": true,
+      "detail": "200 SUCCESS (expected 200 SUCCESS)"
+    },
+    {
+      "id": "MATRIX ok/ADMIN",
+      "ok": true,
+      "detail": "200 SUCCESS (expected 200 SUCCESS)"
+    },
+    {
+      "id": "MATRIX ok/SUPER_ADMIN",
+      "ok": true,
+      "detail": "200 SUCCESS (expected 200 SUCCESS)"
+    },
+    {
+      "id": "MATRIX disabled/VIEWER",
+      "ok": true,
+      "detail": "403 PERMISSION_DENIED (expected 403 PERMISSION_DENIED)"
+    },
+    {
+      "id": "MATRIX disabled/EDITOR",
+      "ok": true,
+      "detail": "403 PERMISSION_DENIED (expected 403 PERMISSION_DENIED)"
+    },
+    {
+      "id": "MATRIX disabled/OPERATOR",
+      "ok": true,
+      "detail": "403 ENTITLEMENT_DENIED (expected 403 ENTITLEMENT_DENIED)"
+    },
+    {
+      "id": "MATRIX disabled/ADMIN",
+      "ok": true,
+      "detail": "403 ENTITLEMENT_DENIED (expected 403 ENTITLEMENT_DENIED)"
+    },
+    {
+      "id": "MATRIX disabled/SUPER_ADMIN",
+      "ok": true,
+      "detail": "403 ENTITLEMENT_DENIED (expected 403 ENTITLEMENT_DENIED)"
+    },
+    {
+      "id": "MATRIX quota/VIEWER",
+      "ok": true,
+      "detail": "403 PERMISSION_DENIED (expected 403 PERMISSION_DENIED)"
+    },
+    {
+      "id": "MATRIX quota/EDITOR",
+      "ok": true,
+      "detail": "403 PERMISSION_DENIED (expected 403 PERMISSION_DENIED)"
+    },
+    {
+      "id": "MATRIX quota/OPERATOR",
+      "ok": true,
+      "detail": "403 QUOTA_EXCEEDED (expected 403 QUOTA_EXCEEDED)"
+    },
+    {
+      "id": "MATRIX quota/ADMIN",
+      "ok": true,
+      "detail": "403 QUOTA_EXCEEDED (expected 403 QUOTA_EXCEEDED)"
+    },
+    {
+      "id": "MATRIX quota/SUPER_ADMIN",
+      "ok": true,
+      "detail": "403 QUOTA_EXCEEDED (expected 403 QUOTA_EXCEEDED)"
+    },
+    {
+      "id": "API activation invalid",
+      "ok": true,
+      "detail": "400 {\"error\":\"ACTIVATION_CODE_INVALID\",\"code\":\"ACTIVATION_CODE_INVALID\",\"message\":\"Invalid or expired activation code\"}"
+    },
+    {
+      "id": "API device already registered",
+      "ok": true,
+      "detail": "first=200 dup=400 {\"error\":\"DEVICE_ALREADY_REGISTERED\",\"code\":\"DEVICE_ALREADY_REGISTERED\",\"message\":\"Device code already in use\"}"
+    },
+    {
+      "id": "API validation (zod) keeps readable text + code",
+      "ok": true,
+      "detail": "{\"error\":\"Too small: expected string to have exactly 6 characters; Too small: expected string to have >=1 characters; Too small: expected string to have >=3 cha"
+    },
+    {
+      "id": "API unauthenticated",
+      "ok": true,
+      "detail": "401 {\"error\":\"AUTHENTICATION_REQUIRED\",\"code\":\"AUTHENTICATION_REQUIRED\",\"message\":\"Unauthorized\"}"
+    },
+    {
+      "id": "ADMIN sees Ecrãs + form",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE F success message",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE F activation code cleared, other fields kept (pre-existing UX)",
+      "ok": true,
+      "detail": "{\"code\":\"\",\"id\":\"ADM-OK-001\",\"name\":\"Ecrã Browser ADMIN\",\"loc\":\"Piso 0\"}"
+    },
+    {
+      "id": "CASE F list updated (new device visible)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE D real: activation invalid title",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "PRESERVE on error (all 4 fields)",
+      "ok": true,
+      "detail": "{\"code\":\"000000\",\"id\":\"ADM-BAD-001\",\"name\":\"Preservar nome\",\"loc\":\"Preservar local\"}"
+    },
+    {
+      "id": "CASE D no technical code in UI",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE E real: device already registered",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE E no technical code in UI",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE A (mock) UI title \"Permissão insuficiente\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE A (mock) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE B (mock) UI title \"Funcionalidade indisponível\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE B (mock) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE C (mock) UI title \"Limite de Ecrãs atingido\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE C (mock) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE D (mock) UI title \"Código de activação inválido\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE D (mock) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE E (mock 409) UI title \"Ecrã já associado\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "CASE E (mock 409) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "INTERNAL (mock) UI title \"Não foi possível completar a operação\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "INTERNAL (mock) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "LEGACY 403 'Forbidden' (mock) UI title \"Permissão insuficiente\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "LEGACY 403 'Forbidden' (mock) no technical code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "DUPLICATE: button disabled while submitting",
+      "ok": true,
+      "detail": "A associar Ecrã…"
+    },
+    {
+      "id": "DUPLICATE: exactly one request for 3 clicks + 3 requestSubmit",
+      "ok": true,
+      "detail": "requests=1"
+    },
+    {
+      "id": "DUPLICATE: button re-enabled after response",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "OVERFLOW mobile: long error stays inside box/page",
+      "ok": true,
+      "detail": "{\"errBox\":0,\"page\":0,\"form\":0}"
+    },
+    {
+      "id": "USABLE mobile: submit button visible/enabled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "OVERFLOW desktop: long error stays inside box/page",
+      "ok": true,
+      "detail": "{\"errBox\":0,\"page\":0,\"form\":0}"
+    },
+    {
+      "id": "USABLE desktop: submit button visible/enabled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "ADMIN DevTools: no console/page errors, no duplicate POSTs",
+      "ok": true,
+      "detail": "console.error: Failed to load resource: the server responded with a status of 400 (Bad Request) | console.error: Failed to load resource: the server responded with a status of 400 (Bad Request) | console.error: Failed to load resource: the server responded with a status of 403 (Forbidden) | console."
+    },
+    {
+      "id": "OPERATOR real success (passes RBAC+Entitlement+Quota+Domain)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "REPORTED CASE: real 403 PERMISSION_DENIED from API",
+      "ok": true,
+      "detail": "403 {\"error\":\"PERMISSION_DENIED\",\"code\":\"PERMISSION_DENIED\",\"message\":\"Forbidden\"}"
+    },
+    {
+      "id": "REPORTED CASE: UI shows 'Permissão insuficiente', not ENTITLEMENT_DENIED / raw code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "REPORTED CASE: values preserved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "OPERATOR DevTools: no page errors",
+      "ok": true,
+      "detail": "console.error: Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    },
+    {
+      "id": "EDITOR: Ecrãs page shows access denied, no pairing form",
+      "ok": true,
+      "detail": "V Vitrine360 OVERVIEW Dashboard CONTENT Media Conteúdos Playlists PLAYBACK Agendamentos SYSTEM Actividade Definições E E"
+    },
+    {
+      "id": "EDITOR: direct API → 403 PERMISSION_DENIED",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "EDITOR DevTools: no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "VIEWER: Ecrãs page shows access denied, no pairing form",
+      "ok": true,
+      "detail": "V Vitrine360 OVERVIEW Dashboard SYSTEM Actividade Definições V VIEWER VIEWER WORKSPACE AUTHZ02 ok Acesso negado Não tem "
+    },
+    {
+      "id": "VIEWER: direct API → 403 PERMISSION_DENIED",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "VIEWER DevTools: no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "ENTITLEMENT real (devices.enabled=false): API ENTITLEMENT_DENIED",
+      "ok": true,
+      "detail": "403 {\"error\":\"ENTITLEMENT_DENIED\",\"code\":\"ENTITLEMENT_DENIED\",\"entitlement\":\"devices.enabled\",\"reason\":\"FEATURE_DISABLED\"}"
+    },
+    {
+      "id": "ENTITLEMENT real (devices.enabled=false): UI \"Funcionalidade indisponível\", no 'Permissão insuficiente' / raw code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "ENTITLEMENT real (devices.enabled=false): values preserved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "ENTITLEMENT real (devices.enabled=false) DevTools: no page errors",
+      "ok": true,
+      "detail": "console.error: Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    },
+    {
+      "id": "ENTITLEMENT real (devices.enabled=false): exactly one POST",
+      "ok": true,
+      "detail": "posts=1"
+    },
+    {
+      "id": "QUOTA real (usage>=max): API QUOTA_EXCEEDED",
+      "ok": true,
+      "detail": "403 {\"error\":\"QUOTA_EXCEEDED\",\"code\":\"QUOTA_EXCEEDED\",\"entitlement\":\"devices.max\",\"reason\":\"QUOTA_EXCEEDED\"}"
+    },
+    {
+      "id": "QUOTA real (usage>=max): UI \"Limite de Ecrãs atingido\", no 'Permissão insuficiente' / raw code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "QUOTA real (usage>=max): values preserved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "QUOTA real (usage>=max) DevTools: no page errors",
+      "ok": true,
+      "detail": "console.error: Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    },
+    {
+      "id": "QUOTA real (usage>=max): exactly one POST",
+      "ok": true,
+      "detail": "posts=1"
+    }
+  ]
+}

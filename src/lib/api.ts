@@ -46,20 +46,47 @@ export function enforceRateLimit(
   return null;
 }
 
+/**
+ * Legacy-compatible error body. `error` keeps the human-readable text that
+ * existing consumers display or pattern-match (e.g. direct-upload.ts matches
+ * /direct upload not supported/); `code` carries the structured category.
+ */
+function legacyError(code: string, message: string, status: number) {
+  return NextResponse.json({ error: message, code, message }, { status });
+}
+
+/** Structured error body: `error` === `code` (consumed by the code mapper). */
+function codedError(
+  code: string,
+  message: string,
+  status: number,
+  extra: Record<string, unknown> = {},
+) {
+  return NextResponse.json({ error: code, code, message, ...extra }, { status });
+}
+
 export function handleApiError(error: unknown) {
   if (error instanceof AuthError) {
-    return jsonError(error.message, error.status);
+    if (error.status === 401) {
+      return codedError("AUTHENTICATION_REQUIRED", error.message, 401);
+    }
+    if (error.status === 403) {
+      return codedError("PERMISSION_DENIED", error.message, 403);
+    }
+    return legacyError("VALIDATION_ERROR", error.message, error.status);
   }
   if (error instanceof MembershipError) {
-    return jsonError(error.message, error.status);
+    return legacyError("MEMBERSHIP_ERROR", error.message, error.status);
   }
   if (error instanceof TenantLifecycleError) {
-    return jsonError(error.message, error.status);
+    const code =
+      error.code === "NOT_OPERABLE" ? "TENANT_SUSPENDED" : "TENANT_ERROR";
+    return legacyError(code, error.message, error.status);
   }
   if (error instanceof EntitlementDeniedError) {
     return NextResponse.json(
       {
-        error: "ENTITLEMENT_DENIED",
+        error: error.code,
         code: error.code,
         entitlement: error.entitlementKey,
         reason: error.reason,
@@ -68,13 +95,17 @@ export function handleApiError(error: unknown) {
     );
   }
   if (error instanceof ZodError) {
-    return jsonError(error.issues.map((i) => i.message).join("; "), 400);
+    return legacyError(
+      "VALIDATION_ERROR",
+      error.issues.map((i) => i.message).join("; "),
+      400,
+    );
   }
   if (error instanceof Error) {
     const msg = error.message;
     // Cross-tenant / missing resources: 404 (do not reveal existence via 403).
     if (/not found/i.test(msg)) {
-      return jsonError(msg, 404);
+      return legacyError("NOT_FOUND", msg, 404);
     }
     // Dependency / in-use conflicts
     if (
@@ -82,12 +113,19 @@ export function handleApiError(error: unknown) {
         msg,
       )
     ) {
-      return jsonError(msg, 409);
+      return legacyError("CONFLICT", msg, 409);
+    }
+    // Device-specific domain errors
+    if (/invalid or expired activation code/i.test(msg)) {
+      return codedError("ACTIVATION_CODE_INVALID", msg, 400);
+    }
+    if (/device code already in use|device already paired/i.test(msg)) {
+      return codedError("DEVICE_ALREADY_REGISTERED", msg, 400);
     }
     if (/invalid|expired|already|required|not allowed|not supported|exceeds|mismatch/i.test(msg)) {
-      return jsonError(msg, 400);
+      return legacyError("VALIDATION_ERROR", msg, 400);
     }
   }
   console.error(error);
-  return jsonError("Internal server error", 500);
+  return legacyError("INTERNAL_ERROR", "Internal server error", 500);
 }

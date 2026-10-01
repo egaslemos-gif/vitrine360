@@ -339,7 +339,7 @@ async function main() {
   assertPass(
     "PI10G-ERROR",
     http.status === 403 &&
-      body.error === "ENTITLEMENT_DENIED" &&
+      body.error === "QUOTA_EXCEEDED" &&
       body.code === "QUOTA_EXCEEDED" &&
       body.entitlement === DEVICES_MAX_KEY,
     "403 QUOTA_EXCEEDED contract",
