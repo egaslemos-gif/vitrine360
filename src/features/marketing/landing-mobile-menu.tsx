@@ -35,7 +35,7 @@ export function LandingMobileMenu({
         aria-controls="landing-mobile-nav"
         aria-label={open ? "Fechar menu" : "Abrir menu"}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/80 bg-white/80 text-[var(--color-foreground)] shadow-[var(--shadow-subtle)] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
       >
         {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
       </button>
@@ -44,15 +44,15 @@ export function LandingMobileMenu({
         <nav
           id="landing-mobile-nav"
           aria-label="Navegação"
-          className="absolute inset-x-0 top-full border-b border-white/10 bg-[#0a0a12]/95 px-4 pb-5 pt-2 shadow-2xl backdrop-blur-xl"
+          className="absolute inset-x-0 top-full border-b border-white/70 bg-white/95 px-4 pb-5 pt-2 shadow-[var(--shadow-floating)] backdrop-blur-xl"
         >
-          <ul className="mx-auto max-w-7xl divide-y divide-white/10">
+          <ul className="mx-auto max-w-7xl divide-y divide-[var(--color-border-subtle)]">
             {items.map((item) => (
               <li key={item.href}>
                 <a
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="block py-3 text-[15px] font-medium text-white/85 hover:text-white"
+                  className="block py-3 text-[15px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
                 >
                   {item.label}
                 </a>
@@ -61,7 +61,7 @@ export function LandingMobileMenu({
             <li>
               <Link
                 href={signInHref}
-                className="block py-3 text-[15px] font-medium text-white/85 hover:text-white"
+                className="block py-3 text-[15px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]"
               >
                 {signInLabel}
               </Link>

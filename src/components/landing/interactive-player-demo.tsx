@@ -395,7 +395,7 @@ export function InteractivePlayerDemo({
                 "ui-player-canvas relative overflow-hidden w-full",
                 isFullscreen
                   ? "min-h-0 flex-1"
-                  : dark ? "aspect-video rounded-[10px] shadow-sm border border-white/10" : "aspect-video rounded-[10px] shadow-sm border border-black/5",
+                  : dark ? "aspect-video rounded-2xl shadow-sm border border-white/10" : "aspect-video rounded-2xl border border-white/80 shadow-[0_10px_30px_-12px_rgba(88,64,180,0.35)]",
               )}
             >
               <MediaSurface

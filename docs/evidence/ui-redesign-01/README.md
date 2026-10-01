@@ -18,3 +18,23 @@ Objectivo: layout responsivo e profissional, com o **Player sempre em evidência
 - Screenshots Playwright a 1920, 1366, 1024, 768 e 390 px: sem scroll horizontal na landing, em `/admin`, `/admin/devices`, `/admin/playlists`, `/admin/media`, `/admin/contents`, `/admin/schedules`, `/admin/settings`, no editor de playlist e em `/player`.
 - Sem erros de consola em `/`, `/admin`, `/admin/playlists`, `/admin/devices`.
 - Medições feitas contra uma BD SQLite descartável (seed AUTHZ-02), não contra dados reais.
+
+## UI-REDESIGN-02 — direcção visual clara (inspirada em referência EduSphere)
+Pedido: app de multimédia leve e agradável, **sem tema escuro**; player, cards, botões, listas, cores e efeitos inspirados na referência.
+
+| Elemento | Alteração |
+|---|---|
+| Tokens (`globals.css`) | Fundo lavanda com brilhos suaves (lilás/azul/rosa), primária `#7057dc`, bordas e sombras com tom violeta, raios maiores (cards 24 px, painéis 30 px), paineis `workspace`/`sidebar` translúcidos |
+| Card | Vidro branco translúcido, borda branca, sombra violeta suave |
+| Button | Pílula (`rounded-full`), sombra colorida na primária, outline branco; tamanhos 40/48 px |
+| Campos | `rounded-2xl`, fundo branco, 40 px |
+| Shell admin | Painel principal em vidro (`backdrop-blur`), cabeçalho sticky na mesma tonalidade (sem faixa) |
+| Sidebar | Item activo em pílula violeta sólida com sombra; hover lavanda |
+| Landing | Totalmente clara: header em vidro, hero lavanda, player em cartão branco de 32 px, selos e passos em pílulas/cartões com tiles pastel, secção do player em painel de vidro com controlo remoto em lavanda, casos de uso com ícones pastel, CTA em gradiente violeta suave |
+| Player demo | Canvas `rounded-2xl` com sombra suave; barra de controlos em vidro; playlist em miniaturas |
+| Dashboard | Palco do ecrã em destaque em lavanda/azul claro (já não preto) |
+| Editor de playlist | Itens em cartões arredondados; item seleccionado com a cor da marca (antes azul) |
+
+O `/player` dos dispositivos (runtime) mantém fundo escuro: é o ecrã de sinalização/TV, onde o preto evita reflexos e é o padrão do sector. Não foi alterado.
+
+Verificação: typecheck PASS; `npm test` exit 0; `test:ui-ux-01` PASS; build PASS; lint 116/6 (baseline, 0 novos). Sem scroll horizontal em 5 larguras (1920, 1366, 1024, 768, 390) × 9 páginas (landing, dashboard, ecrãs, playlists, editor, media, conteúdos, agendamentos, definições).

@@ -117,40 +117,40 @@ export default async function AdminDashboardPage() {
           <Card className="mt-3 overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)] sm:mt-4">
             <CardContent className="p-0">
               <div
-                className="relative flex aspect-video min-h-[200px] items-center justify-center overflow-hidden bg-[#0b0a12]"
+                className="relative flex aspect-video min-h-[200px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#e1d8ff] via-[#ebe6ff] to-[#d3e8ff]"
                 aria-hidden
               >
                 <div
                   className="absolute inset-0"
                   style={{
                     background:
-                      "radial-gradient(ellipse at 50% 35%, rgba(109,74,255,0.38) 0%, rgba(11,10,18,1) 68%)",
+                      "radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 65%)",
                   }}
                 />
                 <div
-                  className="absolute inset-0 opacity-[0.05]"
+                  className="absolute inset-0 opacity-[0.07]"
                   style={{
                     backgroundImage:
-                      "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
+                      "linear-gradient(rgba(112,87,220,1) 1px, transparent 1px), linear-gradient(90deg, rgba(112,87,220,1) 1px, transparent 1px)",
                     backgroundSize: "40px 40px",
                   }}
                 />
                 <div className="relative z-[1] flex max-w-[85%] flex-col items-center text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-primary)] shadow-[0_0_40px_rgba(109,74,255,0.55)] sm:h-16 sm:w-16">
-                    <MonitorPlay className="h-6 w-6 text-white sm:h-7 sm:w-7" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-[0_14px_40px_rgba(88,64,180,0.3)] sm:h-16 sm:w-16">
+                    <MonitorPlay className="h-6 w-6 text-[var(--color-primary)] sm:h-7 sm:w-7" />
                   </div>
-                  <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">
+                  <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                     {nowPlayingDevice ? "Ecrã" : "Sem ecrã activo"}
                   </p>
-                  <p className="mt-1 max-w-full truncate text-lg font-semibold text-white sm:text-2xl">
+                  <p className="mt-1 max-w-full truncate text-lg font-semibold text-[var(--color-foreground)] sm:text-2xl">
                     {nowPlayingDevice
                       ? (nowPlayingDevice.name ?? nowPlayingDevice.deviceCode ?? "Ecrã")
                       : "Associe um ecrã para começar"}
                   </p>
                   {nowPlayingDevice ? (
-                    <p className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-white/60">
+                    <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
                       <span
-                        className={`h-2 w-2 rounded-full ${nowPlayingOnline ? "bg-[var(--color-player-success)] shadow-[0_0_8px_var(--color-player-success)]" : "bg-white/30"}`}
+                        className={`h-2 w-2 rounded-full ${nowPlayingOnline ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" : "bg-slate-300"}`}
                       />
                       {nowPlayingOnline ? "Online" : "Offline"}
                     </p>

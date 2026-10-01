@@ -35,7 +35,7 @@ export default async function AdminLayout({
   const tenantName = tenant?.name ?? session.activeTenantId.slice(0, 8);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] font-sans">
+    <div className="flex h-dvh flex-col overflow-hidden bg-transparent text-[var(--color-foreground)] font-sans">
       <MobileNav
         userName={session.name}
         userRole={session.role}
@@ -56,7 +56,7 @@ export default async function AdminLayout({
           workspaces={workspaces}
         />
 
-        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-workspace)] shadow-[var(--shadow-subtle)] md:rounded-[var(--radius-2xl)]">
+        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-white/80 bg-[var(--color-workspace)] shadow-[var(--shadow-card)] backdrop-blur-xl md:rounded-[var(--radius-2xl)]">
           <div className="admin-main-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
             <div className="ui-content-canvas mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-5 sm:py-5 md:px-8 md:py-6">
               {children}

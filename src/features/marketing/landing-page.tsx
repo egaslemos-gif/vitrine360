@@ -41,6 +41,24 @@ const STEPS: { icon: Icon; title: string; hint: string }[] = [
   { icon: SlidersHorizontal, title: "Controlar", hint: "Tudo à distância" },
 ];
 
+const STEP_TONES = [
+  "bg-violet-100 text-violet-600",
+  "bg-sky-100 text-sky-600",
+  "bg-fuchsia-100 text-fuchsia-600",
+  "bg-emerald-100 text-emerald-600",
+];
+
+const PASTELS = [
+  "bg-violet-100 text-violet-600",
+  "bg-sky-100 text-sky-600",
+  "bg-emerald-100 text-emerald-600",
+  "bg-amber-100 text-amber-600",
+  "bg-rose-100 text-rose-600",
+  "bg-teal-100 text-teal-600",
+  "bg-fuchsia-100 text-fuchsia-600",
+  "bg-indigo-100 text-indigo-600",
+];
+
 const CAPABILITIES: { icon: Icon; title: string; body: string; tone: string }[] = [
   {
     icon: Layers,
@@ -113,19 +131,19 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
   const primaryLabel = signedIn ? "Abrir consola" : "Começar agora";
 
   return (
-    <div className="min-h-screen bg-white text-[var(--color-foreground)]">
+    <div className="min-h-screen text-[var(--color-foreground)]">
       {/* ───────── Header ───────── */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0a0a12]/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/70 bg-white/70 backdrop-blur-xl">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <span
               aria-hidden
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary-strong)] text-[15px] font-bold text-white shadow-[0_0_20px_rgba(109,74,255,0.5)]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary)] text-[15px] font-bold text-white shadow-[0_6px_16px_rgba(112,87,220,0.35)]"
             >
               V
             </span>
             <span
-              className="truncate text-xl font-bold tracking-tight text-white"
+              className="truncate text-xl font-bold tracking-tight text-[var(--color-foreground)]"
               style={{ fontFamily: "var(--font-display), serif" }}
             >
               Vitrine360
@@ -133,11 +151,11 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
           </Link>
 
           <nav
-            className="hidden items-center gap-7 text-sm font-medium text-white/70 md:flex"
+            className="hidden items-center gap-7 text-sm font-medium text-[var(--color-text-secondary)] md:flex"
             aria-label="Principal"
           >
             {NAV.map((item) => (
-              <a key={item.href} href={item.href} className="transition-colors hover:text-white">
+              <a key={item.href} href={item.href} className="transition-colors hover:text-[var(--color-primary)]">
                 {item.label}
               </a>
             ))}
@@ -147,14 +165,14 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             {!signedIn && (
               <Link
                 href="/admin/login"
-                className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white md:inline"
+                className="hidden text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)] md:inline"
               >
                 Entrar
               </Link>
             )}
             <Link
               href={primaryHref}
-              className="inline-flex h-10 items-center rounded-lg bg-white px-4 text-sm font-semibold text-[#0a0a12] shadow-sm transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
+              className="inline-flex h-10 items-center rounded-full bg-[var(--color-primary)] px-5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(112,87,220,0.3)] transition-all hover:bg-[var(--color-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
             >
               {primaryLabel}
             </Link>
@@ -169,37 +187,27 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
 
       <main>
         {/* ───────── Hero ───────── */}
-        <section className="relative isolate overflow-hidden bg-[#0a0a12] text-white">
+        <section className="relative isolate overflow-x-clip">
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-            <div className="absolute -right-32 -top-40 h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle,rgba(109,74,255,0.45),transparent_65%)]" />
-            <div className="absolute -bottom-48 -left-32 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.18),transparent_65%)]" />
-            <div
-              className="absolute inset-0 opacity-[0.07]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
-                backgroundSize: "56px 56px",
-                maskImage: "radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%)",
-                WebkitMaskImage: "radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%)",
-              }}
-            />
+            <div className="absolute -right-24 -top-32 h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgba(167,148,255,0.5),transparent_65%)]" />
+            <div className="absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(125,196,255,0.35),transparent_65%)]" />
           </div>
 
           <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pb-6 pt-8 sm:gap-10 sm:px-6 sm:pt-12 lg:gap-12 lg:pt-16 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <div className="min-w-0">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] shadow-[var(--shadow-subtle)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-player-success)] shadow-[0_0_8px_var(--color-player-success)]" aria-hidden />
                 Sinalização digital e apresentações
               </span>
 
               <h1 className="mt-4 text-[2.15rem] font-bold leading-[1.05] tracking-[-0.03em] sm:mt-5 sm:text-5xl xl:text-[3.5rem]">
                 Todos os seus ecrãs.{" "}
-                <span className="bg-gradient-to-r from-[#a99bff] via-[#8b6ff7] to-[#5cc8ff] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#7057dc] via-[#8f78ee] to-[#3fa7ef] bg-clip-text text-transparent">
                   Um só painel de controlo.
                 </span>
               </h1>
 
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)] sm:text-lg">
                 Crie conteúdos, monte playlists, envie-as para TVs, quiosques e
                 ecrãs de recepção e controle a reprodução à distância, com um
                 player que continua a trabalhar mesmo sem internet.
@@ -208,28 +216,28 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   href={primaryHref}
-                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#7c5cff] to-[#5b3de6] px-6 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(109,74,255,0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(109,74,255,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-7 text-[15px] font-semibold text-white shadow-[0_10px_26px_rgba(112,87,220,0.35)] transition-all hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_14px_32px_rgba(112,87,220,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
                 >
                   {primaryLabel}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </Link>
                 <a
                   href="#player"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-[15px] font-medium text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/80 bg-white/80 px-7 text-[15px] font-medium text-[var(--color-foreground)] shadow-[var(--shadow-subtle)] transition-all hover:bg-white hover:shadow-[var(--shadow-card)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
                 >
                   <Play className="h-4 w-4" aria-hidden />
                   Ver o player em acção
                 </a>
               </div>
 
-              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-medium text-white/60">
+              <ul className="mt-6 flex flex-wrap gap-2 text-[13px] font-medium text-[var(--color-text-secondary)]">
                 {[
                   { icon: WifiOff, label: "Funciona offline" },
                   { icon: MonitorSmartphone, label: "Multi-ecrã" },
                   { icon: Radio, label: "Controlo remoto" },
                 ].map(({ icon: I, label }) => (
-                  <li key={label} className="inline-flex items-center gap-1.5">
-                    <I className="h-4 w-4 text-[var(--color-primary-light)]" aria-hidden />
+                  <li key={label} className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1.5">
+                    <I className="h-4 w-4 text-[var(--color-primary)]" aria-hidden />
                     {label}
                   </li>
                 ))}
@@ -239,13 +247,13 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             {/* The Player is the hero */}
             <div className="relative min-w-0">
               <div
-                className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-[radial-gradient(circle_at_50%_40%,rgba(109,74,255,0.35),transparent_70%)] blur-2xl"
+                className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-[radial-gradient(circle_at_50%_40%,rgba(112,87,220,0.28),transparent_70%)] blur-2xl"
                 aria-hidden
               />
-              <div className="relative overflow-hidden rounded-2xl shadow-[0_30px_80px_-20px_rgba(109,74,255,0.55)] ring-1 ring-white/15">
-                <InteractivePlayerDemo size="hero" showPlaylist tone="dark" playlistLayout="below" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/80 shadow-[0_30px_70px_-24px_rgba(88,64,180,0.4)]">
+                <InteractivePlayerDemo size="hero" showPlaylist playlistLayout="below" />
               </div>
-              <p className="mt-3 text-center text-xs text-white/45">
+              <p className="mt-3 text-center text-xs text-[var(--color-text-muted)]">
                 Experimente: carregue em play, avance e use o ecrã inteiro.
               </p>
             </div>
@@ -253,18 +261,18 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
 
           {/* Essence strip */}
           <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8">
-            <ol className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-4">
+            <ol className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {STEPS.map(({ icon: I, title, hint }, i) => (
-                <li key={title} className="flex items-start gap-3 bg-[#0d0d18] p-4 sm:p-5">
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[var(--color-primary-light)]">
+                <li key={title} className="flex items-start gap-3 rounded-3xl border border-white/80 bg-white/75 p-4 shadow-[var(--shadow-card)] backdrop-blur sm:p-5">
+                  <span className={cn("mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", STEP_TONES[i])}>
                     <I className="h-[18px] w-[18px]" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">
-                      <span className="mr-1.5 text-white/35">{String(i + 1).padStart(2, "0")}</span>
+                    <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                      <span className="mr-1.5 text-[var(--color-text-muted)]">{String(i + 1).padStart(2, "0")}</span>
                       {title}
                     </p>
-                    <p className="mt-0.5 text-xs leading-snug text-white/55">{hint}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-text-secondary)]">{hint}</p>
                   </div>
                 </li>
               ))}
@@ -273,7 +281,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
         </section>
 
         {/* ───────── Produto ───────── */}
-        <section id="produto" className="scroll-mt-16 bg-white">
+        <section id="produto" className="scroll-mt-16">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
             <Eyebrow>Produto</Eyebrow>
             <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
@@ -288,7 +296,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               {CAPABILITIES.map(({ icon: I, title, body, tone }) => (
                 <article
                   key={title}
-                  className="group rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-[var(--shadow-subtle)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-floating)]"
+                  className="group rounded-[1.75rem] border border-white/80 bg-white/80 p-6 shadow-[var(--shadow-card)] backdrop-blur transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-floating)]"
                 >
                   <span
                     className={cn(
@@ -309,24 +317,21 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
         </section>
 
         {/* ───────── Player + Controlo remoto ───────── */}
-        <section id="player" className="relative isolate scroll-mt-16 overflow-hidden bg-[#0a0a12] text-white">
-          <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-            <div className="absolute left-1/2 top-0 h-[480px] w-[900px] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(109,74,255,0.28),transparent_65%)]" />
-          </div>
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-14">
+        <section id="player" className="scroll-mt-16 px-4 py-6 sm:px-6">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 rounded-[2rem] border border-white/80 bg-white/65 p-6 shadow-[var(--shadow-card)] backdrop-blur-xl sm:p-10 lg:grid-cols-2 lg:gap-14 lg:p-14">
             <div className="min-w-0">
-              <Eyebrow dark>O player</Eyebrow>
+              <Eyebrow>O player</Eyebrow>
               <h2 className="mt-2 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
                 O coração do Vitrine360 está no ecrã.
               </h2>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)] sm:text-lg">
                 Um player robusto, desenhado para correr dia e noite em TVs,
                 quiosques e computadores, e para ser comandado à distância.
               </p>
               <ul className="mt-6 space-y-3">
                 {PLAYER_POINTS.map((p) => (
-                  <li key={p} className="flex items-start gap-3 text-[15px] text-white/80">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/25 text-[var(--color-primary-light)]">
+                  <li key={p} className="flex items-start gap-3 text-[15px] text-[var(--color-foreground)]">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
                       <Check className="h-3 w-3" aria-hidden />
                     </span>
                     {p}
@@ -336,33 +341,35 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
             </div>
 
             <div
-              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_30px_80px_-30px_rgba(109,74,255,0.5)] backdrop-blur sm:p-5"
+              className="min-w-0 rounded-[1.75rem] border border-white/90 bg-white/85 p-4 shadow-[0_24px_60px_-28px_rgba(88,64,180,0.4)] sm:p-5"
               role="img"
               aria-label="Exemplo do painel de controlo remoto de um ecrã"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
                     Controlo remoto
                   </p>
-                  <p className="mt-0.5 truncate text-sm font-semibold">Recepção Principal</p>
+                  <p className="mt-0.5 truncate text-sm font-semibold text-[var(--color-foreground)]">Recepção Principal</p>
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[var(--color-player-success)]/15 px-2.5 py-1 text-xs font-medium text-[var(--color-player-success)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-player-success)]" />
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   Online
                 </span>
               </div>
-              <div className="relative aspect-video overflow-hidden rounded-xl bg-[#07070c] ring-1 ring-white/10">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(109,74,255,0.35),transparent_62%)]" />
+              <div className="relative aspect-video overflow-hidden rounded-3xl bg-gradient-to-br from-[#d9d0ff] via-[#e9e4ff] to-[#cfe6ff]">
+                <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/50 blur-2xl" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20 backdrop-blur">
-                    <Play className="ml-0.5 h-6 w-6 text-white" aria-hidden />
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/80 shadow-[0_10px_30px_rgba(88,64,180,0.3)] backdrop-blur">
+                    <Play className="ml-0.5 h-6 w-6 text-[var(--color-primary)]" aria-hidden />
                   </span>
                 </div>
-                <div className="absolute inset-x-3 bottom-3">
-                  <div className="h-1 rounded-full bg-white/15">
-                    <div className="h-full w-2/5 rounded-full bg-[var(--color-player-primary)]" />
+                <div className="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-full bg-white/60 px-4 py-2.5 backdrop-blur-xl">
+                  <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-secondary)]">06:42</span>
+                  <div className="h-1.5 flex-1 rounded-full bg-white/80">
+                    <div className="h-full w-2/5 rounded-full bg-[var(--color-primary)]" />
                   </div>
+                  <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-secondary)]">24:18</span>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -372,8 +379,8 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                     className={cn(
                       "rounded-full px-4 py-2 text-xs font-medium",
                       i === 1
-                        ? "bg-[var(--color-primary)] text-white"
-                        : "bg-white/8 text-white/70 ring-1 ring-white/10",
+                        ? "bg-[var(--color-primary)] text-white shadow-[0_6px_16px_rgba(112,87,220,0.3)]"
+                        : "border border-[var(--color-border)] bg-white text-[var(--color-text-secondary)]",
                     )}
                   >
                     {label}
@@ -385,19 +392,19 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
         </section>
 
         {/* ───────── Casos de uso ───────── */}
-        <section id="casos" className="scroll-mt-16 bg-[var(--color-background)]">
+        <section id="casos" className="scroll-mt-16">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
             <Eyebrow>Casos de uso</Eyebrow>
             <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
               Feito para ambientes reais.
             </h2>
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              {USE_CASES.map(({ icon: I, label }) => (
+              {USE_CASES.map(({ icon: I, label }, i) => (
                 <li
                   key={label}
-                  className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-white p-4 shadow-[var(--shadow-subtle)] transition-shadow hover:shadow-[var(--shadow-card)]"
+                  className="flex items-center gap-3 rounded-3xl border border-white/80 bg-white/80 p-4 shadow-[var(--shadow-subtle)] backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                  <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", PASTELS[i % PASTELS.length])}>
                     <I className="h-5 w-5" aria-hidden />
                   </span>
                   <span className="min-w-0 text-sm font-medium leading-snug">{label}</span>
@@ -408,7 +415,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
         </section>
 
         {/* ───────── Fiabilidade ───────── */}
-        <section id="fiabilidade" className="scroll-mt-16 bg-white">
+        <section id="fiabilidade" className="scroll-mt-16">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
             <Eyebrow>Fiabilidade</Eyebrow>
             <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
@@ -418,7 +425,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
               {RELIABILITY.map((r) => (
                 <li
                   key={r}
-                  className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
+                  className="flex items-start gap-3 rounded-3xl border border-white/80 bg-white/70 p-4 shadow-[var(--shadow-subtle)]"
                 >
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-primary)]" aria-hidden />
                   <span className="text-sm font-medium leading-snug">{r}</span>
@@ -429,20 +436,21 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
         </section>
 
         {/* ───────── CTA final ───────── */}
-        <section className="bg-white px-4 pb-16 sm:px-6 sm:pb-20">
-          <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#0a0a12] px-6 py-14 text-center text-white sm:px-12 sm:py-16">
+        <section className="px-4 pb-16 sm:px-6 sm:pb-20">
+          <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#7a62e3] via-[#8b74ee] to-[#a28df3] px-6 py-14 text-center text-white shadow-[0_24px_60px_-24px_rgba(112,87,220,0.6)] sm:px-12 sm:py-16">
             <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-              <div className="absolute left-1/2 top-0 h-80 w-[720px] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(109,74,255,0.5),transparent_65%)]" />
+              <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
+              <div className="absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-sky-200/30 blur-3xl" />
             </div>
             <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
               Ponha os seus ecrãs a trabalhar para si.
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-white/65">
+            <p className="mx-auto mt-3 max-w-xl text-white/85">
               Conteúdos, ecrãs e reprodução num só lugar. Comece em minutos.
             </p>
             <Link
               href={primaryHref}
-              className="group mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-7 text-[15px] font-semibold text-[#0a0a12] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(255,255,255,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-light)]"
+              className="group mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-8 text-[15px] font-semibold text-[var(--color-primary)] shadow-[0_10px_26px_rgba(0,0,0,0.12)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(0,0,0,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               {primaryLabel}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
@@ -452,7 +460,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
       </main>
 
       {/* ───────── Footer ───────── */}
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-background)]">
+      <footer className="border-t border-white/70 bg-white/50 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p
