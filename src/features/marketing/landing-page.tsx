@@ -6,6 +6,7 @@ import {
   Check,
   GraduationCap,
   Landmark,
+  MonitorPlay,
   Layers,
   Play,
   PlayCircle,
@@ -29,6 +30,12 @@ const NAV = [
   { href: "#player", label: "Player" },
   { href: "#casos", label: "Casos de uso" },
   { href: "#fiabilidade", label: "Fiabilidade" },
+];
+
+const SAMPLE_SCREENS: { name: string; now: string; online: boolean; progress: number }[] = [
+  { name: "Recepção principal", now: "Boas-vindas", online: true, progress: 64 },
+  { name: "Loja Centro", now: "Promoção de verão", online: true, progress: 32 },
+  { name: "Sala de espera", now: "Avisos e relógio", online: false, progress: 0 },
 ];
 
 const PASTELS = [
@@ -206,6 +213,53 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                   Ver o player em acção
                 </a>
               </div>
+
+              {/* Illustrative fleet panel: fills the desktop column with product context, hidden on small screens. */}
+              <div
+                aria-hidden
+                className="mt-10 hidden max-w-[520px] rounded-[1.75rem] border border-white/80 bg-white/70 p-4 shadow-[var(--shadow-card)] backdrop-blur xl:block"
+              >
+                <div className="flex items-center justify-between px-1 pb-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                    Os seus ecrãs
+                  </p>
+                  <span className="rounded-full bg-[var(--color-primary-soft)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-primary)]">
+                    Exemplo
+                  </span>
+                </div>
+                <ul className="space-y-2">
+                  {SAMPLE_SCREENS.map((s) => (
+                    <li
+                      key={s.name}
+                      className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/80 px-3 py-2.5"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                        <MonitorPlay className="h-[18px] w-[18px]" aria-hidden />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[var(--color-foreground)]">{s.name}</p>
+                        <p className="truncate text-xs text-[var(--color-text-secondary)]">
+                          {s.online ? `A reproduzir · ${s.now}` : "Sem contacto recente"}
+                        </p>
+                        {s.online ? (
+                          <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[var(--color-primary-soft)]">
+                            <div className="h-full rounded-full bg-[var(--color-primary)]" style={{ width: `${s.progress}%` }} />
+                          </div>
+                        ) : null}
+                      </div>
+                      <span
+                        className={cn(
+                          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                          s.online ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500",
+                        )}
+                      >
+                        <span className={cn("h-1.5 w-1.5 rounded-full", s.online ? "bg-emerald-500" : "bg-slate-400")} />
+                        {s.online ? "Online" : "Offline"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* The Player is the hero */}
@@ -298,7 +352,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
                   Online
                 </span>
               </div>
-              <div className="relative aspect-video overflow-hidden rounded-3xl bg-gradient-to-br from-[#d9d0ff] via-[#e9e4ff] to-[#cfe6ff]">
+              <div className="relative aspect-video overflow-hidden rounded-none bg-gradient-to-br from-[#d9d0ff] via-[#e9e4ff] to-[#cfe6ff]">
                 <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/50 blur-2xl" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/80 shadow-[0_10px_30px_rgba(88,64,180,0.3)] backdrop-blur">

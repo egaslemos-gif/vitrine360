@@ -395,7 +395,7 @@ export function InteractivePlayerDemo({
                 "ui-player-canvas relative overflow-hidden w-full",
                 isFullscreen
                   ? "min-h-0 flex-1"
-                  : dark ? "aspect-video rounded-2xl shadow-sm border border-white/10" : "aspect-video rounded-2xl border border-white/80 shadow-[0_10px_30px_-12px_rgba(88,64,180,0.35)]",
+                  : dark ? "aspect-video rounded-none shadow-sm border border-white/10" : "aspect-video rounded-none border border-black/10 shadow-[0_10px_30px_-12px_rgba(88,64,180,0.35)]",
               )}
             >
               <MediaSurface
@@ -520,8 +520,8 @@ export function InteractivePlayerDemo({
                           <span className={cn(
                             "relative shrink-0 overflow-hidden bg-black/5",
                             below
-                              ? "aspect-video w-full rounded-[8px]"
-                              : "h-[36px] w-[64px] rounded-[6px] lg:h-[42px] lg:w-[74px] lg:rounded-[8px]",
+                              ? "aspect-video w-full rounded-[2px]"
+                              : "h-[36px] w-[64px] rounded-[2px] lg:h-[42px] lg:w-[74px]",
                           )}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -715,7 +715,7 @@ function ControlBar({
   return (
     <div
       className={cn(
-        "pointer-events-auto mx-auto w-full rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 backdrop-blur-xl border transition-all",
+        "pointer-events-auto mx-auto w-full rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 backdrop-blur-xl border transition-all",
         isFullscreen 
           ? "max-w-2xl bg-black/50 border-white/10" 
           : "max-w-md sm:max-w-lg bg-white/70 border-white shadow-[0_8px_32px_rgba(0,0,0,0.12)]",

@@ -60,3 +60,7 @@ Problema: o título ficava centrado na vertical em relação ao cartão do playe
 - Alinhamento ao topo (`items-start`) com pequeno recuo no desktop; hero passa a abrir com o título e o player lado a lado.
 - Menos texto: removidos o selo "Sinalização digital e apresentações", os 3 chips (offline / multi-ecrã / controlo remoto), a faixa dos 4 passos (já explicados na secção Produto) e a legenda sob o player; subtítulo reduzido a uma frase; aviso de "demonstração local" escondido no layout do hero.
 - Resultado: título a 169 px e player a 122 px do topo a 1366 px; sem scroll horizontal (1366, 1920, 1024, 390).
+
+## UI-REDESIGN-05 — ecrã do player retangular + hero preenchido
+- Interior do player com cantos retangulares (padrão de ecrãs profissionais): demo da landing, mock de controlo remoto, pré-visualização do admin (`PreviewViewport`); miniaturas da playlist quase retas; barra de controlos e HUD do player real com raio de 14 px (antes pílula).
+- Hero (desktop ≥ xl): painel ilustrativo "Os seus ecrãs" (marcado "Exemplo") por baixo dos botões, com 3 ecrãs, estado online/offline e progresso, a preencher a coluna sem texto extra. Oculto em tablet/telemóvel.

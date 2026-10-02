@@ -34,7 +34,7 @@ const glass: CSSProperties = {
   backdropFilter: "blur(22px) saturate(1.6)",
   WebkitBackdropFilter: "blur(22px) saturate(1.6)",
   border: "1px solid rgba(255, 255, 255, 0.22)",
-  borderRadius: 26,
+  borderRadius: 14,
   boxShadow: "0 10px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
 };
 

@@ -58,7 +58,7 @@ export function DisplayIdentityHud({
         background: "rgba(20, 18, 44, 0.34)",
         backdropFilter: "blur(22px) saturate(1.6)",
         WebkitBackdropFilter: "blur(22px) saturate(1.6)",
-        borderRadius: 22,
+        borderRadius: 14,
         border: "1px solid rgba(255, 255, 255, 0.22)",
         textShadow: "0 1px 2px rgba(0, 0, 0, 0.45)",
         color: INK,
