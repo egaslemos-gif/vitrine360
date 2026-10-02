@@ -1,0 +1,556 @@
+{
+ "rej": [],
+ "events": [
+  {
+   "t": 2821,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 2844,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 2845,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 2905,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 2905,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 6462,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=1 cur=3.41 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 7103,
+   "k": "seeked",
+   "d": "video paused=true muted=false vol=1 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 7103,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 7105,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 7106,
+   "k": "seeked",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 7106,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 7106,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 9235,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 9236,
+   "k": "seeked",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 9236,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 9238,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 11067,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 11070,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 11071,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 11112,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 11112,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=1 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 12284,
+   "k": "volumechange",
+   "d": "video paused=false muted=true vol=1 cur=1.14 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 12705,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=1 cur=1.56 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 13513,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=2.35 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 13939,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 13940,
+   "k": "seeked",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 13941,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 13941,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 19073,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 19077,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 23215,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 23217,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 23218,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 23218,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 23243,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 23243,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 28317,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.00 rs=4 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 28318,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=150/a28b5b2d-75d1-4355-86cc-527f214e660b"
+  },
+  {
+   "t": 28320,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 28324,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 28325,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 28325,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 28357,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 28357,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 33517,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 33522,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 37664,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 37666,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 37666,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 37667,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 37685,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 37685,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 42752,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.00 rs=4 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 42754,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=150/307d8902-af21-4b98-b8b2-3388d398c3fd"
+  },
+  {
+   "t": 42758,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 42776,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 42776,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 42776,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 42804,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 42805,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 47963,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 47965,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 52160,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 52162,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 52162,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 52162,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 52178,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 52178,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 57246,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.00 rs=4 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 57250,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=150/23ce30e6-d90d-4710-8a01-50b8923a0f81"
+  },
+  {
+   "t": 57254,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 57264,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 57265,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 57266,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 57312,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 57313,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 62464,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 62467,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 66626,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 66629,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 66629,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 66629,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 66660,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 66660,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 71743,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.00 rs=4 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 71749,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=150/04214096-a1ef-4fd8-a02c-94bae1e784be"
+  },
+  {
+   "t": 71754,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 71762,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 71762,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 71763,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 71798,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 71798,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 76950,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 76952,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 81137,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 81144,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 81144,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 81145,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 81162,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 81162,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 86229,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.00 rs=4 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 86230,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=150/ad653439-667f-44bd-80d1-f9b500f9cfa8"
+  },
+  {
+   "t": 86232,
+   "k": "loadstart",
+   "d": "video paused=true muted=false vol=1 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 86234,
+   "k": "loadedmetadata",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 86234,
+   "k": "volumechange",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 86235,
+   "k": "waiting",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=1 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 86266,
+   "k": "canplay",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 86267,
+   "k": "playing",
+   "d": "video paused=false muted=false vol=0.3 cur=0.00 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 91417,
+   "k": "pause",
+   "d": "video paused=true muted=false vol=0.3 cur=5.05 rs=4 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  },
+  {
+   "t": 91420,
+   "k": "ended",
+   "d": "video paused=true muted=false vol=0.3 cur=0.00 rs=0 err= src=47-50cb-40d8-bc60-9c4cf7737fc0?token=***"
+  }
+ ],
+ "pageErrors": []
+}

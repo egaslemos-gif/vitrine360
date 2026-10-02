@@ -1,0 +1,16 @@
+{
+ "at": "2026-10-02T12:10:40.893Z",
+ "sim": 2,
+ "rows": [
+  {
+   "id": "SIM2-01 recoverable autoplay refusal -> PAUSED, no automatic skip",
+   "ok": true,
+   "detail": "{\"status\":\"PAUSED\",\"idx\":0,\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"vol\":1,\"same\":false,\"playLabel\":\"Play\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "SIM2-02 Play after the refusal retries on the SAME element and plays",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":1.79,\"vol\":1,\"same\":true,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  }
+ ]
+}

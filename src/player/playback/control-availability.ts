@@ -55,17 +55,24 @@ export function resolveControlAvailability(
   const navOk = hasItem && count > 0 && !loading;
 
   return {
+    // EXPERIENCE runs in an isolated sandbox with no suspend/stop capability in the runtime
+    // bridge: a pause/stop here would only freeze the playlist timer while the content keeps
+    // running. No fake pause - the controls are disabled (the rest of the item still advances).
     PLAY_PAUSE: {
       visible: true,
       enabled:
         hasItem &&
+        !experience &&
         !ended &&
         (error ? Boolean(state.error?.recoverable) : true),
     },
     STOP: {
       visible: true,
       enabled:
-        hasItem && state.status !== "STOPPED" && state.status !== "IDLE",
+        hasItem &&
+        !experience &&
+        state.status !== "STOPPED" &&
+        state.status !== "IDLE",
     },
     NEXT: { visible: true, enabled: navOk && count > 0 },
     PREVIOUS: { visible: true, enabled: navOk },

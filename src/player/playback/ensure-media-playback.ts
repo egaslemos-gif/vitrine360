@@ -15,7 +15,61 @@ export type EnsureMediaPlaybackOptions = {
   desiredMuted?: boolean;
   /** Desired volume 0..1 (default 1). */
   desiredVolume?: number;
+  /**
+   * Reports that the element is playing silently only because of the autoplay policy
+   * (true) or that audio is audible again (false). Presentation-only signal.
+   */
+  onAudioBlocked?: (blocked: boolean) => void;
+  /** Injectable for tests. `undefined` = browser cannot tell (old TV browsers). */
+  hasUserActivation?: () => boolean | undefined;
 };
+
+export function readUserActivation(): boolean | undefined {
+  try {
+    const ua = (typeof navigator !== "undefined"
+      ? (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation
+      : undefined);
+    return ua ? ua.hasBeenActive : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const gestureArmed = new WeakSet<HTMLMediaElement>();
+
+/**
+ * Inside a user gesture: restore the user's intended audio on the SAME element and make sure
+ * it is playing. Never rebuilds the element.
+ */
+export function enableSoundOnElement(
+  el: HTMLMediaElement,
+  opts: { desiredMuted: boolean; desiredVolume: number; onUnrecoverable?: (reason: string) => void },
+): void {
+  try {
+    el.volume = Math.min(1, Math.max(0, opts.desiredVolume));
+    el.muted = opts.desiredMuted;
+    if (!opts.desiredMuted) el.removeAttribute("muted");
+    if (el.paused) {
+      const p = el.play();
+      if (p && typeof p.then === "function") {
+        void p.catch(() => {
+          // Still refused (even inside a gesture): keep it playing silently if possible.
+          try {
+            el.muted = true;
+            const again = el.play();
+            if (again && typeof again.catch === "function") {
+              void again.catch(() => opts.onUnrecoverable?.("play_denied_in_gesture"));
+            }
+          } catch {
+            opts.onUnrecoverable?.("play_threw_in_gesture");
+          }
+        });
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 export function ensureMediaPlayback(
   el: HTMLMediaElement | null | undefined,
@@ -23,21 +77,18 @@ export function ensureMediaPlayback(
 ) {
   if (!el) return;
 
-  const isDevVideo = process.env.NODE_ENV === "development" && el instanceof HTMLVideoElement;
-  const log = (msg: string) => {
-    if (isDevVideo) console.log(`[VIDEO-DIAG-ENSURE] ${msg}`);
-  };
-
   const desiredMuted = opts?.desiredMuted === true;
   const desiredVolume =
     typeof opts?.desiredVolume === "number" &&
     Number.isFinite(opts.desiredVolume)
       ? Math.min(1, Math.max(0, opts.desiredVolume))
       : 1;
+  const activation = opts?.hasUserActivation ?? readUserActivation;
 
   const fail = (reason: string) => {
     opts?.onUnrecoverable?.(reason);
   };
+  const audioBlocked = (blocked: boolean) => opts?.onAudioBlocked?.(blocked);
 
   const applyDesiredAudio = () => {
     try {
@@ -54,26 +105,19 @@ export function ensureMediaPlayback(
     }
   };
 
-  const recoverIfPausedAfterUnmute = () => {
-    if (el.paused) {
-      try {
-        el.muted = true;
-        el.setAttribute("muted", "");
-        log("recoverIfPausedAfterUnmute calling play()");
-        const again = el.play();
-        if (again && typeof again.then === "function") {
-          void again.then(() => {
-            log("recoverIfPausedAfterUnmute play() resolved");
-          }).catch((err: unknown) => {
-            log(`recoverIfPausedAfterUnmute play() rejected: name=${(err as Error)?.name} msg=${(err as Error)?.message}`);
-            fail("muted_autoplay_denied");
-          });
-        }
-      } catch (err: unknown) {
-        log(`recoverIfPausedAfterUnmute threw: ${(err as Error)?.message}`);
-        fail("muted_autoplay_threw");
-      }
-    }
+  // The browser only allows sound after a user gesture: wait for the first one (no hacks),
+  // then restore the intended audio on the same element.
+  const armGesture = () => {
+    if (gestureArmed.has(el)) return;
+    gestureArmed.add(el);
+    const types = ["pointerdown", "keydown", "touchend"];
+    const onGesture = () => {
+      for (const t of types) window.removeEventListener(t, onGesture, true);
+      gestureArmed.delete(el);
+      enableSoundOnElement(el, { desiredMuted, desiredVolume, onUnrecoverable: fail });
+      audioBlocked(false);
+    };
+    for (const t of types) window.addEventListener(t, onGesture, true);
   };
 
   const startMuted = () => {
@@ -81,43 +125,49 @@ export function ensureMediaPlayback(
       el.muted = true;
       el.setAttribute("muted", "");
       el.volume = desiredVolume;
-      log("startMuted calling play()");
       const mutedPlay = el.play();
       if (mutedPlay && typeof mutedPlay.then === "function") {
         void mutedPlay
           .then(() => {
-            log("startMuted play() resolved");
             if (desiredMuted) return;
+            // Playing, but silently only because of the policy.
+            if (activation() === false) {
+              // Known: no user activation yet → unmuting would make the browser pause the
+              // element. Stay muted, say so, and wait for the first gesture.
+              audioBlocked(true);
+              armGesture();
+              return;
+            }
+            // Activation present or unknown (old TV browsers): try once, then verify.
             applyDesiredAudio();
-            recoverIfPausedAfterUnmute();
             window.setTimeout(() => {
-              if (!desiredMuted && !el.paused && el.muted) {
-                applyDesiredAudio();
-                recoverIfPausedAfterUnmute();
-                // If it STILL is muted (browser blocked our unmute attempt),
-                // we register a one-time user interaction listener.
-                if (el.muted) {
-                  const unmuteOnInteract = () => {
-                    if (!desiredMuted && el.muted && !el.paused) {
-                      el.muted = false;
-                      el.removeAttribute("muted");
-                    }
-                    window.removeEventListener("pointerdown", unmuteOnInteract, true);
-                    window.removeEventListener("keydown", unmuteOnInteract, true);
-                  };
-                  window.addEventListener("pointerdown", unmuteOnInteract, true);
-                  window.addEventListener("keydown", unmuteOnInteract, true);
+              if (el.paused) {
+                // The browser paused it on unmute: back to muted playback, same element.
+                try {
+                  el.muted = true;
+                  el.setAttribute("muted", "");
+                  const again = el.play();
+                  if (again && typeof again.catch === "function") {
+                    void again.catch(() => fail("muted_autoplay_denied"));
+                  }
+                } catch {
+                  fail("muted_autoplay_threw");
                 }
+                audioBlocked(true);
+                armGesture();
+              } else if (el.muted) {
+                audioBlocked(true);
+                armGesture();
+              } else {
+                audioBlocked(false);
               }
-            }, 250);
+            }, 300);
           })
-          .catch((err: unknown) => {
-            log(`startMuted play() rejected: name=${(err as Error)?.name} msg=${(err as Error)?.message}`);
+          .catch(() => {
             fail("muted_autoplay_denied");
           });
       }
-    } catch (err: unknown) {
-      log(`startMuted threw: ${(err as Error)?.message}`);
+    } catch {
       fail("muted_autoplay_threw");
     }
   };
@@ -129,19 +179,16 @@ export function ensureMediaPlayback(
 
   try {
     applyDesiredAudio();
-    log("audible calling play()");
     const audible = el.play();
     if (audible && typeof audible.then === "function") {
-      void audible.then(() => {
-        log("audible play() resolved");
-      }).catch((err: unknown) => {
-        log(`audible play() rejected: name=${(err as Error)?.name} msg=${(err as Error)?.message} - falling back to startMuted`);
-        startMuted();
-      });
+      void audible
+        .then(() => audioBlocked(false))
+        .catch(() => {
+          startMuted();
+        });
       return;
     }
-  } catch (err: unknown) {
-    log(`audible play() threw: ${(err as Error)?.message} - falling back to startMuted`);
+  } catch {
     startMuted();
   }
 }

@@ -1,0 +1,91 @@
+{
+ "at": "2026-10-02T12:08:39.354Z",
+ "sim": 0,
+ "rows": [
+  {
+   "id": "STOP-01 Stop + late loadedmetadata/loadeddata/canplay -> stays stopped",
+   "ok": true,
+   "detail": "{\"status\":\"STOPPED\",\"idx\":0,\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"vol\":1,\"same\":false,\"playLabel\":\"Play\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "STOP-02 Play after Stop starts again",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":1.1,\"vol\":1,\"same\":false,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "SEEK-01 PLAY->PAUSE->SEEK->wait: still PAUSED, element paused",
+   "ok": true,
+   "detail": "{\"status\":\"PAUSED\",\"idx\":0,\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"vol\":1,\"same\":false,\"playLabel\":\"Play\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "SEEK-01b seek was applied and time did not advance",
+   "ok": true,
+   "detail": "before=3.61 afterSeek=0 later=0"
+  },
+  {
+   "id": "SEEK-02 second Home (same position) is applied too",
+   "ok": true,
+   "detail": "1st=0.65 advanced=3.15 2nd=0.64"
+  },
+  {
+   "id": "MUTE-01 Mute -> element muted, label Unmute",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":true,\"cur\":1,\"vol\":1,\"same\":true,\"playLabel\":\"Pause\",\"muteLabel\":\"Unmute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "MUTE-02 Unmute -> element audible state restored, same element, still playing",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":1.8,\"vol\":1,\"same\":true,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "MUTE-03 volume 0 is not 'muted' (label stays Mute, volume applied)",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":2.44,\"vol\":0,\"same\":true,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "MUTE-04 unmuting from volume 0 restores the previous level (>0), same element",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":3.17,\"vol\":0.4,\"same\":true,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "REP-01 default repeat is the playlist, Portuguese label, aria-pressed=true",
+   "ok": true,
+   "detail": "Repetição: repetir lista pressed=true"
+  },
+  {
+   "id": "REP-02 cycle lista -> item -> sem repetição -> lista, aria-pressed off only for NONE",
+   "ok": true,
+   "detail": "Repetição: repetir item | Repetição: sem repetição | Repetição: repetir lista"
+  },
+  {
+   "id": "REP-03 repeat control available below 768 px (touch target >= 36 px)",
+   "ok": true,
+   "detail": "count=1 box={\"x\":485.328125,\"y\":737,\"width\":49.671875,\"height\":36}"
+  },
+  {
+   "id": "BUF-01 buffering note appears on starvation and clears on playing",
+   "ok": true,
+   "detail": "during=buffering after="
+  },
+  {
+   "id": "BUF-02 no buffering claim for a healthy element",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "id": "MATRIX-01 VIDEO>IMAGE>GIF>AUDIO>VIDEO in order, wraps last->first",
+   "ok": true,
+   "detail": "1:still > 2:still > 3:audio > 0:video > 1:still > 2:still > 3:audio > 0:video > 1:still"
+  },
+  {
+   "id": "MATRIX-02 3x NEXT during loading ends coherent (logical PLAYING == element playing)",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":2.55,\"vol\":0.4,\"same\":false,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "NO-ERR page errors",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

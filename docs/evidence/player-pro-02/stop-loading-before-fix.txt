@@ -1,0 +1,15 @@
+PASS A-00 precondition: video element in LOADING with its media request held — {"status":"LOADING","gen":2,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":false,"paused":true,"cur":0,"readyState":0}
+PASS A-01 STOP during loading (before canplay) -> STOPPED — {"status":"STOPPED","gen":2,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":false,"paused":true,"cur":0,"readyState":0}
+PASS A-02 late native events really arrived (loadedmetadata fired after STOP) — before=0 after=1
+FAIL A-03 no spontaneous playback: STOPPED, element paused, time 0 — {"status":"STOPPED","gen":2,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":true,"paused":false,"cur":2.69,"readyState":4}
+PASS A-04 generation unchanged (nothing re-armed the item) — gen before=2 stop=2 after=2
+PASS A-05 Play afterwards starts normally — {"status":"PLAYING","gen":3,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":true,"paused":false,"cur":1.39,"readyState":4}
+PASS A-99 no page errors
+PASS B-00 precondition: video element in LOADING with its media request held — {"status":"LOADING","gen":2,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":false,"paused":true,"cur":0,"readyState":0}
+PASS B-01 STOP during loading (before canplay) -> STOPPED — {"status":"STOPPED","gen":2,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":false,"paused":true,"cur":0,"readyState":0}
+PASS B-02 NEXT after STOP changes generation and moves to the image item — {"status":"LOADING","gen":3,"idx":1,"kind":"still-loading","videos":0,"anyVideoPlaying":false,"paused":null,"cur":null,"readyState":null}
+PASS B-03 late events of the old generation did not touch the new item (still PLAYING the image) — {"status":"PLAYING","gen":3,"idx":1,"kind":"still","videos":0,"anyVideoPlaying":false,"paused":null,"cur":null,"readyState":null}
+PASS B-04 playlist wraps to the video and it plays normally afterwards — {"status":"PLAYING","gen":4,"idx":0,"kind":"video","videos":1,"anyVideoPlaying":true,"paused":false,"cur":0.02,"readyState":4}
+PASS B-99 no page errors
+12/13 PASS
+FAILED: A-03 no spontaneous playback: STOPPED, element paused, time 0

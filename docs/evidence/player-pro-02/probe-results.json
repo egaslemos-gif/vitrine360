@@ -1,0 +1,76 @@
+{
+ "at": "2026-10-02T11:38:16.841Z",
+ "autoplayPolicy": "document-user-activation-required",
+ "findings": [
+  {
+   "id": "A1 video starts without gesture",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":2.37,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "A2 audio state honest: UI says audible vs element muted",
+   "ok": true,
+   "detail": "element.muted=false button=\"Mute\" (UI claims audible while element is silent)"
+  },
+  {
+   "id": "B1 click anywhere does not leave video paused",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":3.01,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "C1 Pause pauses element",
+   "ok": true,
+   "detail": "{\"status\":\"PAUSED\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":3.34,\"ended\":false,\"vol\":1,\"btnPlay\":\"Play\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "C2 seek while PAUSED keeps element paused (no resume)",
+   "ok": true,
+   "detail": "{\"status\":\"PAUSED\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"ended\":false,\"vol\":1,\"btnPlay\":\"Play\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "C3 Stop leaves element stopped (no auto-resume on canplay)",
+   "ok": true,
+   "detail": "{\"status\":\"STOPPED\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"ended\":false,\"vol\":1,\"btnPlay\":\"Play\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "C4 Play after Stop restarts playback",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":1.12,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "D1 Mute silences element",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":true,\"cur\":1.57,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Unmute\"}"
+  },
+  {
+   "id": "D2 Unmute restores audio & keeps playing",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":2.38,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "D3 Volume slider applied to element",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":2.8,\"ended\":false,\"vol\":0.3,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "E1 second Home (SEEK 0) after advancing really rewinds",
+   "ok": true,
+   "detail": "before=3.35s after=0.84s"
+  },
+  {
+   "id": "F1 repeat default PLAYLIST and cycles back after 3 clicks",
+   "ok": true,
+   "detail": "Repetição: repetir lista -> Repetição: repetir lista"
+  },
+  {
+   "id": "G1 matrix reaches video, still, audio kinds",
+   "ok": true,
+   "detail": "video,still,audio"
+  },
+  {
+   "id": "G2 playlist wraps last → first (idx sequence revisits 0)",
+   "ok": true,
+   "detail": "0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0"
+  }
+ ]
+}

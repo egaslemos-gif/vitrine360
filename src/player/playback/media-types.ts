@@ -59,3 +59,28 @@ export function userFacingMediaErrorMessage(code: string): string {
       return "Media unavailable";
   }
 }
+
+/**
+ * Classify a native media failure using only observable data (MediaError.code, connectivity).
+ * Never returns URLs or messages from the browser (they may contain signed URLs / tokens).
+ *   1 ABORTED · 2 NETWORK · 3 DECODE · 4 SRC_NOT_SUPPORTED
+ */
+export function classifyMediaError(input: {
+  errorCode?: number | null;
+  online?: boolean | null;
+}): { code: MediaErrorCode; kind: "network" | "decode" | "unsupported" | "load" | "unknown" } {
+  switch (input.errorCode) {
+    case 2:
+    case 1:
+      return { code: MEDIA_ERROR_CODES.MEDIA_LOAD_ERROR, kind: input.errorCode === 2 ? "network" : "load" };
+    case 3:
+      return { code: MEDIA_ERROR_CODES.MEDIA_DECODE_ERROR, kind: "decode" };
+    case 4:
+      return { code: MEDIA_ERROR_CODES.MEDIA_UNSUPPORTED, kind: "unsupported" };
+    default:
+      if (input.online === false) {
+        return { code: MEDIA_ERROR_CODES.MEDIA_LOAD_ERROR, kind: "network" };
+      }
+      return { code: MEDIA_ERROR_CODES.MEDIA_ERROR, kind: "unknown" };
+  }
+}

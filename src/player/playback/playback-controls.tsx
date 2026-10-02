@@ -22,6 +22,7 @@ import {
   showPresentationProgress,
 } from "@/player/playback/control-availability";
 import { formatPlaybackTime } from "@/player/playback/format-time";
+import { useMediaSignals, useMediaSignalStore } from "@/player/playback/media-signal";
 import { getFullscreenController } from "@/player/runtime/fullscreen";
 
 const INK = "#ffffff";
@@ -53,6 +54,12 @@ const btnBase: CSSProperties = {
   fontSize: 16,
   lineHeight: 1,
 };
+
+const REPEAT_LABELS = {
+  PLAYLIST: { short: "Lista", long: "repetir lista" },
+  ITEM: { short: "Item", long: "repetir item" },
+  NONE: { short: "Off", long: "sem repetição" },
+} as const;
 
 export type PlaybackControlsProps = {
   state: PlaybackState;
@@ -87,8 +94,34 @@ export function PlaybackControls({
   const draggingRef = useRef(false);
   const trackRef = useRef<HTMLDivElement | null>(null);
 
+  const signals = useMediaSignals();
+  const signalStore = useMediaSignalStore();
+  const lastAudibleVolumeRef = useRef(state.volume > 0 ? state.volume : 0.5);
+  useEffect(() => {
+    if (state.volume > 0) lastAudibleVolumeRef.current = state.volume;
+  }, [state.volume]);
+
+  // What the browser really does, not only what the controller intends.
   const isPlaying = state.status === "PLAYING";
-  const showPause = isPlaying;
+  const playBlocked = isPlaying && signals.playBlocked;
+  const soundBlocked = isPlaying && !state.muted && signals.audioBlocked && !playBlocked;
+  const buffering = isPlaying && signals.buffering && !playBlocked;
+  const showPause = isPlaying && !playBlocked;
+  const statusNote = playBlocked
+    ? "O navegador bloqueou a reprodução — toque para reproduzir"
+    : soundBlocked
+      ? "Som bloqueado pelo navegador — toque para ativar"
+      : state.status === "LOADING" || buffering
+        ? "A carregar…"
+        : state.status === "ERROR"
+          ? signals.errorKind === "network"
+            ? "Falha de rede ao carregar o conteúdo"
+            : signals.errorKind === "decode"
+              ? "O dispositivo não conseguiu descodificar o conteúdo"
+              : signals.errorKind === "unsupported"
+                ? "Formato não suportado neste dispositivo"
+                : null
+          : null;
   const positionLabel = formatPlaybackTime(
     previewMs != null ? previewMs : state.positionMs,
   );
@@ -160,13 +193,37 @@ export function PlaybackControls({
   };
 
   const playPause = () => {
+    if (playBlocked) {
+      // Same element, inside this user gesture (no rebuild, no skip).
+      signalStore?.requestEnableSound();
+      return;
+    }
     if (showPause) dispatch({ type: "PAUSE" });
     else dispatch({ type: "PLAY" });
   };
 
-  const volumeIcon = state.muted || state.volume === 0
+  const toggleMute = () => {
+    if (soundBlocked) {
+      signalStore?.requestEnableSound();
+      return;
+    }
+    if (state.muted) {
+      // Un-muting a zero volume would stay silent: restore the level from before.
+      if (state.volume === 0) {
+        dispatch({ type: "SET_VOLUME", volume: lastAudibleVolumeRef.current });
+      }
+      dispatch({ type: "SET_MUTED", muted: false });
+    } else {
+      dispatch({ type: "SET_MUTED", muted: true });
+    }
+  };
+
+  const silent = state.muted || soundBlocked;
+  const volumeIcon = silent
     ? "🔇"
-    : state.volume < 0.4
+    : state.volume === 0
+      ? "🔈"
+      : state.volume < 0.4
       ? "🔈"
       : state.volume < 0.75
         ? "🔉"
@@ -225,6 +282,17 @@ export function PlaybackControls({
           </span>
         </div>
       )}
+
+      {statusNote ? (
+        <div
+          role="status"
+          aria-live="polite"
+          data-playback-note={playBlocked ? "play-blocked" : soundBlocked ? "sound-blocked" : buffering || state.status === "LOADING" ? "buffering" : "error"}
+          style={{ fontSize: 12, fontWeight: 600, color: "#e3dcff", textAlign: "center" }}
+        >
+          {statusNote}
+        </div>
+      ) : null}
 
       {avail.SEEK.visible ? (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -427,13 +495,11 @@ export function PlaybackControls({
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {avail.MUTE.visible ? (
             <ControlButton
-              label={state.muted ? "Unmute" : "Mute"}
+              label={soundBlocked ? "Ativar som" : state.muted ? "Unmute" : "Mute"}
               disabled={!avail.MUTE.enabled}
-              pressed={state.muted}
+              pressed={silent}
               compact={compact}
-              onClick={() =>
-                dispatch({ type: "SET_MUTED", muted: !state.muted })
-              }
+              onClick={toggleMute}
             >
               {volumeIcon}
             </ControlButton>
@@ -484,11 +550,13 @@ export function PlaybackControls({
               />
             </label>
           ) : null}
-          {avail.REPEAT.visible && !compact ? (
+          {avail.REPEAT.visible ? (
             <ControlButton
-              label={`Repeat ${state.repeatMode}`}
+              label={`Repetição: ${REPEAT_LABELS[state.repeatMode].long}`}
               disabled={!avail.REPEAT.enabled}
               compact={compact}
+              pressed={state.repeatMode !== "NONE"}
+              data-repeat-mode={state.repeatMode}
               onClick={() =>
                 dispatch({
                   type: "SET_REPEAT_MODE",
@@ -496,11 +564,10 @@ export function PlaybackControls({
                 })
               }
             >
-              {state.repeatMode === "NONE"
-                ? "↷"
-                : state.repeatMode === "ITEM"
-                  ? "¹"
-                  : "↻"}
+              <span aria-hidden style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                {state.repeatMode === "NONE" ? "↷" : state.repeatMode === "ITEM" ? "↻¹" : "↻"}
+                <span style={{ fontSize: 11, fontWeight: 600 }}>{REPEAT_LABELS[state.repeatMode].short}</span>
+              </span>
             </ControlButton>
           ) : null}
           {avail.FULLSCREEN.visible ? (
@@ -575,8 +642,10 @@ function ControlButton({
   primary,
   pressed,
   compact,
+  "data-repeat-mode": repeatMode,
 }: {
   label: string;
+  "data-repeat-mode"?: string;
   children: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
@@ -594,6 +663,7 @@ function ControlButton({
       {...(typeof pressed === "boolean" ? { "aria-pressed": pressed } : {})}
       disabled={disabled}
       onClick={onClick}
+      {...(repeatMode ? { "data-repeat-mode": repeatMode } : {})}
       style={{
         ...btnBase,
         background: primary ? BRAND : "rgba(255, 255, 255, 0.1)",

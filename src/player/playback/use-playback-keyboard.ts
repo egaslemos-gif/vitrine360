@@ -77,6 +77,18 @@ export function usePlaybackKeyboard(opts: PlaybackKeyboardOptions): void {
         hasKnownDuration &&
         (st.currentContentType === "VIDEO" || st.currentContentType === "AUDIO");
 
+      const isExperience = st.currentContentType === "EXPERIENCE";
+      if (
+        isExperience &&
+        (key === " " || key === "Spacebar" || key === "MediaPlayPause" || key === "MediaStop" ||
+          ev.keyCode === TV_KEY.PLAY || ev.keyCode === TV_KEY.PAUSE || ev.keyCode === TV_KEY.STOP)
+      ) {
+        // EXPERIENCE cannot be suspended (sandbox): no fake pause.
+        ev.preventDefault();
+        show();
+        return;
+      }
+
       if (key === " " || key === "Spacebar" || key === "MediaPlayPause") {
         ev.preventDefault();
         show();

@@ -46,6 +46,12 @@ export const COMMAND_REJECT_REASONS = [
   "UNAUTHORIZED",
   "COMMAND_TOO_LARGE",
   "NOT_AUTHORIZED",
+  /**
+   * The command is valid but the CURRENT content cannot honour it (e.g. PAUSE/STOP on a
+   * sandboxed EXPERIENCE, which has no suspend capability). Not applied; not a failure of
+   * the command itself. Additive: the ACK wire carries `reason` as a free string.
+   */
+  "NOT_SUPPORTED",
 ] as const;
 export type CommandRejectReason = (typeof COMMAND_REJECT_REASONS)[number];
 

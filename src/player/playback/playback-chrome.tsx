@@ -30,6 +30,7 @@ import {
 } from "@/player/runtime/state";
 
 import { DisplayIdentityHud } from "@/player/playback/display-identity-hud";
+import { MediaSignalProvider, useCreateMediaSignalStore } from "@/player/playback/media-signal";
 
 export type PlaybackChromeProps = {
   state: PlaybackState;
@@ -52,6 +53,7 @@ export function PlaybackChrome({
   style,
 }: PlaybackChromeProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const signalStore = useCreateMediaSignalStore();
   const [idleVisible, setIdleVisible] = useState(true);
   const [compact, setCompact] = useState(false);
   const [fullscreenAvailable, setFullscreenAvailable] = useState(true);
@@ -184,6 +186,7 @@ export function PlaybackChrome({
   }, [autoHide]);
 
   return (
+    <MediaSignalProvider store={signalStore}>
     <div
       ref={rootRef}
       tabIndex={0}
@@ -244,5 +247,6 @@ export function PlaybackChrome({
           )}
         </div>
     </div>
+    </MediaSignalProvider>
   );
 }

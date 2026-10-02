@@ -198,6 +198,24 @@ export function createCommandDispatcher(
         return result;
       }
 
+      // EXPERIENCE runs in an isolated sandbox with no suspend/stop capability: PAUSE/STOP
+      // would only freeze the playlist timer while the content keeps running. Do not touch
+      // the controller (state, generation, timer) and do not report success.
+      if (
+        (action.type === "PAUSE" || action.type === "STOP") &&
+        options.controller.getState().currentContentType === "EXPERIENCE"
+      ) {
+        const result = reject(command, "NOT_SUPPORTED");
+        store.set(command.commandId, result, command.expiresAt + grace);
+        telem?.({
+          type: "COMMAND_REJECTED",
+          commandId: command.commandId,
+          commandType: command.type,
+          reason: "NOT_SUPPORTED",
+        });
+        return result;
+      }
+
       options.controller.dispatch(action);
       const appliedAt = now();
       const result: CommandResult = {

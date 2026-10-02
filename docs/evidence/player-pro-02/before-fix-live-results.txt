@@ -1,0 +1,11 @@
+FAIL STOP-01 Stop + late loadedmetadata/loadeddata/canplay -> stays stopped — {"status":"STOPPED","idx":0,"kind":"video","paused":false,"muted":false,"cur":2.66,"vol":1,"same":false,"playLabel":"Play","muteLa
+PASS STOP-02 Play after Stop starts again — {"status":"PLAYING","idx":0,"kind":"video","paused":false,"muted":false,"cur":1.1,"vol":1,"same":false,"playLabel":"Pause","muteLabel":"Mute","note":"","noteText":"
+FAIL SEEK-01 PLAY->PAUSE->SEEK->wait: still PAUSED, element paused — {"status":"PAUSED","idx":0,"kind":"video","paused":false,"muted":false,"cur":2.25,"vol":1,"same":false,"playLabel":"Play","muteLabel":"Mute
+FAIL SEEK-01b seek was applied and time did not advance — before=3.62 afterSeek=0.44 later=2.25
+FAIL SEEK-02 second Home (same position) is applied too — 1st=null advanced=null 2nd=null
+PASS MUTE-01 Mute -> element muted, label Unmute — {"status":"PLAYING","idx":3,"kind":"audio","paused":false,"muted":true,"cur":0.37,"vol":1,"same":false,"playLabel":"Pause","muteLabel":"Unmute","note":"","no
+FAIL MUTE-02 Unmute -> element audible state restored, same element, still playing — {"status":"PLAYING","idx":3,"kind":"audio","paused":false,"muted":false,"cur":1.31,"vol":1,"same":false,"playLabel":"Pause"
+PASS MUTE-03 volume 0 is not 'muted' (label stays Mute, volume applied) — {"status":"PLAYING","idx":3,"kind":"audio","paused":false,"muted":false,"cur":1.89,"vol":0,"same":false,"playLabel":"Pause","muteLabel
+FAIL MUTE-04 unmuting from volume 0 restores the previous level (>0), same element — {"status":"PLAYING","idx":3,"kind":"audio","paused":false,"muted":false,"cur":2.62,"vol":0,"same":false,"playLabel":"Pause"
+FAIL REP-01 default repeat is the playlist, Portuguese label, aria-pressed=true — - pressed=-
+  name: 'TimeoutError'

@@ -18,10 +18,17 @@ import {
 import { createObjectUrl, getConfig, putAssetBlob } from "@/player/cache/indexed-db";
 import { useLiveClock } from "@/features/contents/use-live-clock";
 import { ExperiencePlaybackSlide } from "@/player/playback/experience-slide";
-import { ensureMediaPlayback, disposeMediaElement } from "@/player/playback/ensure-media-playback";
+import {
+  ensureMediaPlayback,
+  disposeMediaElement,
+  enableSoundOnElement,
+  readUserActivation,
+} from "@/player/playback/ensure-media-playback";
+import { useMediaSignalStore, type MediaSignalStore } from "@/player/playback/media-signal";
 import { AudioVisual } from "@/player/playback/audio-visual";
 import { MediaErrorOverlay } from "@/player/playback/media-error-overlay";
 import {
+  classifyMediaError,
   isStillMedia,
   MEDIA_ERROR_CODES,
   resolveObjectFit,
@@ -111,7 +118,9 @@ export function PlaybackRendererAdapter({
   const status = state.status;
   const mediaRef = useRef<HTMLMediaElement | null>(null);
   const prevGenerationRef = useRef<number>(generation);
-  const seekAppliedRef = useRef<number | null>(null);
+  // Target of a seek that is still in flight (cleared on `seeked`); never a permanent memory.
+  const seekInFlightRef = useRef<number | null>(null);
+  const signals = useMediaSignalStore();
   const timerRef = useRef<PresentationTimer | null>(null);
   if (timerRef.current == null) {
     timerRef.current = new PresentationTimer();
@@ -191,7 +200,8 @@ export function PlaybackRendererAdapter({
       } catch {
         /* ignore */
       }
-      if (!el.paused) el.pause();
+      // Always pause (also when already paused): this cancels a pending `autoplay` start.
+      el.pause();
       if (status === "STOPPED") {
         try {
           el.currentTime = 0;
@@ -211,13 +221,20 @@ export function PlaybackRendererAdapter({
       } else {
         try {
           el.volume = state.volume;
-          el.muted = state.muted;
+          // Un-muting without user activation makes browsers pause the element: only apply
+          // it when the browser can honour it (the explicit gesture path handles the rest).
+          if (state.muted || readUserActivation() !== false) el.muted = state.muted;
         } catch {
           /* ignore */
         }
       }
     }
   }, [status, state.volume, state.muted, generation, controller]);
+
+  // A new item/generation never inherits the seek still in flight of the previous element.
+  useEffect(() => {
+    seekInFlightRef.current = null;
+  }, [generation]);
 
   useEffect(() => {
     const el = mediaRef.current;
@@ -243,9 +260,11 @@ export function PlaybackRendererAdapter({
       fixedWindow && naturalMs > 0
         ? state.positionMs % naturalMs
         : state.positionMs;
+    // Same seek still being applied by the element -> wait for `seeked`; any new intent
+    // (even to the same position as an earlier, completed seek) is applied.
     if (
-      seekAppliedRef.current !== null &&
-      Math.abs(seekAppliedRef.current - targetMs) < 50
+      seekInFlightRef.current !== null &&
+      Math.abs(seekInFlightRef.current - targetMs) < 50
     ) {
       return;
     }
@@ -253,9 +272,15 @@ export function PlaybackRendererAdapter({
     if (fixedWindow && naturalMs > 0) drift = Math.min(drift, naturalMs - drift);
     if (drift > 400) {
       try {
+        const done = () => {
+          seekInFlightRef.current = null;
+          el.removeEventListener("seeked", done);
+        };
+        seekInFlightRef.current = targetMs;
+        el.addEventListener("seeked", done);
         el.currentTime = targetMs / 1000;
-        seekAppliedRef.current = targetMs;
       } catch {
+        seekInFlightRef.current = null;
         /* ignore */
       }
     }
@@ -305,6 +330,8 @@ export function PlaybackRendererAdapter({
         loop={loopInWindow}
         mediaRef={mediaRef}
         onMediaEvent={onMediaEvent}
+        controller={controller}
+        signals={signals}
       />
       {status === "ERROR" && state.error ? (
         <MediaErrorOverlay
@@ -341,6 +368,8 @@ function Slide({
   loop,
   mediaRef,
   onMediaEvent,
+  controller,
+  signals,
 }: {
   item: EnginePlaybackItem;
   generation: number;
@@ -352,6 +381,8 @@ function Slide({
   loop: boolean;
   mediaRef: MutableRefObject<HTMLMediaElement | null>;
   onMediaEvent: (action: MediaEventAction) => void;
+  controller: PlaybackController;
+  signals: MediaSignalStore | null;
 }) {
   const asset = item.assets[0];
   const assetId = asset?.id;
@@ -420,6 +451,7 @@ function Slide({
   }, [item.type, generation]);
 
   const logVideoDiag = useCallback((eventName: string, extra?: string) => {
+    if (process.env.NODE_ENV !== "development") return; // diagnostics only in dev
     if (item.type !== "VIDEO") return;
     const el = localMediaRef.current as HTMLVideoElement | null;
     let base = `[MEDIA] [VIDEO-DIAG] ${eventName} event disparado`;
@@ -457,27 +489,160 @@ function Slide({
     pending?.();
   }, [generation, onMediaEvent]);
 
-  // Stable ref callback: React only calls it on mount/unmount of the element. An inline ref
-  // is re-invoked on every render (each timeupdate), which re-ran ensureMediaPlayback()
-  // and fought the muted-autoplay fallback.
   const latestPlayback = useRef({ status, muted, volume, emitPlayFail });
   useEffect(() => {
     latestPlayback.current = { status, muted, volume, emitPlayFail };
   });
+
+  // Native events may arrive late (after STOP, after a seek while paused, from a previous
+  // item). Only start playback while the controller still wants it for THIS generation.
+  const startIfWanted = useCallback(
+    (el: HTMLMediaElement) => {
+      const s = controller.getState();
+      if (s.generation !== generation) return;
+      if (s.status !== "LOADING" && s.status !== "PLAYING") return;
+      ensureMediaPlayback(el, {
+        onUnrecoverable: emitPlayFail,
+        desiredMuted: s.muted,
+        desiredVolume: s.volume,
+      });
+    },
+    [controller, generation, emitPlayFail],
+  );
+
+  // Observable (presentation-only) signals: what the element really does.
+  const detachSignalsRef = useRef<(() => void) | null>(null);
+  const syncSignalsRef = useRef<() => void>(() => undefined);
+  const bindSignals = useCallback(
+    (el: HTMLMediaElement) => {
+      if (!signals) return () => undefined;
+      const wantsPlay = () => {
+        const st = controller.getState().status;
+        return st === "PLAYING" || st === "LOADING";
+      };
+      const enableSound = () => {
+        const st = controller.getState();
+        enableSoundOnElement(el, {
+          desiredMuted: st.muted,
+          desiredVolume: st.volume,
+          onUnrecoverable: latestPlayback.current.emitPlayFail,
+        });
+      };
+      signals.setGestureHandler(enableSound);
+      const gestureTypes = ["pointerdown", "keydown", "touchend"];
+      let armed = false;
+      const onGesture = () => {
+        for (const t of gestureTypes) window.removeEventListener(t, onGesture, true);
+        armed = false;
+        if (mediaRef.current === el && wantsPlay()) enableSound();
+      };
+      const armGesture = () => {
+        if (armed) return;
+        armed = true;
+        for (const t of gestureTypes) window.addEventListener(t, onGesture, true);
+      };
+      const sync = () => {
+        if (mediaRef.current !== el) return;
+        const st = controller.getState();
+        const silent = !st.muted && el.muted;
+        signals.patch({
+          effectiveMuted: el.muted,
+          audioBlocked: silent && wantsPlay(),
+        });
+      };
+      syncSignalsRef.current = sync;
+      const onPauseEv = () => {
+        if (mediaRef.current !== el || el.ended) return;
+        if (wantsPlay() && el.paused) {
+          signals.patch({ playBlocked: true, buffering: false });
+          armGesture();
+        }
+      };
+      const onPlayingEv = () => {
+        signals.patch({ playBlocked: false, buffering: false });
+        sync();
+      };
+      const onWaitingEv = () => {
+        if (mediaRef.current !== el) return;
+        if (controller.getState().status === "PLAYING" && !el.paused && el.readyState < 3) {
+          signals.patch({ buffering: true });
+        }
+      };
+      const onProgressEv = () => {
+        if (el.readyState >= 3 && !el.paused) signals.patch({ buffering: false });
+      };
+      const handlers: [string, () => void][] = [
+        ["volumechange", sync],
+        ["pause", onPauseEv],
+        ["playing", onPlayingEv],
+        ["waiting", onWaitingEv],
+        ["stalled", onWaitingEv],
+        ["canplay", onProgressEv],
+        ["seeked", onProgressEv],
+        ["timeupdate", onProgressEv],
+      ];
+      for (const [n, h] of handlers) el.addEventListener(n, h);
+      sync();
+      return () => {
+        for (const [n, h] of handlers) el.removeEventListener(n, h);
+        for (const t of gestureTypes) window.removeEventListener(t, onGesture, true);
+        signals.setGestureHandler(null);
+        syncSignalsRef.current = () => undefined;
+        signals.reset();
+      };
+    },
+    [signals, controller, mediaRef],
+  );
+
+  // Keep the effective-audio signal honest when the user's mute intent changes.
+  useEffect(() => {
+    syncSignalsRef.current();
+  }, [muted, status]);
+
+  // Stable ref callback: React only calls it on mount/unmount of the element. An inline ref
+  // is re-invoked on every render (each timeupdate), which re-ran ensureMediaPlayback()
+  // and fought the muted-autoplay fallback.
   const setMediaEl = useCallback(
     (el: HTMLVideoElement | null) => {
+      detachSignalsRef.current?.();
+      detachSignalsRef.current = null;
       localMediaRef.current = el;
       mediaRef.current = el;
+      if (!el) return;
+      detachSignalsRef.current = bindSignals(el);
       const cur = latestPlayback.current;
-      if (el && cur.status === "PLAYING") {
+      if (cur.status === "PLAYING") {
         ensureMediaPlayback(el, {
           onUnrecoverable: cur.emitPlayFail,
           desiredMuted: cur.muted,
           desiredVolume: cur.volume,
         });
+      } else if (cur.status === "PAUSED" || cur.status === "STOPPED") {
+        // Mounted while the user already paused/stopped: never auto-start.
+        el.autoplay = false;
+        el.pause();
       }
     },
-    [mediaRef],
+    [mediaRef, bindSignals],
+  );
+
+  // Native failure -> observable classification (no URLs / messages from the browser).
+  const emitNativeError = useCallback(
+    (el: HTMLMediaElement) => {
+      const c = classifyMediaError({
+        errorCode: el.error?.code ?? null,
+        online: typeof navigator !== "undefined" ? navigator.onLine : null,
+      });
+      signals?.patch({ errorKind: c.kind });
+      onMediaEvent({
+        type: "MEDIA_ERROR",
+        code: c.code,
+        message: "Media unavailable",
+        recoverable: true,
+        generation,
+      });
+    },
+    [signals, onMediaEvent, generation],
   );
 
   useEffect(() => {
@@ -651,19 +816,11 @@ function Slide({
                   : natural,
               generation,
             });
-            ensureMediaPlayback(el, {
-              onUnrecoverable: emitPlayFail,
-              desiredMuted: muted,
-              desiredVolume: volume,
-            });
+            startIfWanted(el);
           }}
           onLoadedData={(e) => {
             logVideoDiag("loadeddata");
-            ensureMediaPlayback(e.currentTarget, {
-              onUnrecoverable: emitPlayFail,
-              desiredMuted: muted,
-              desiredVolume: volume,
-            });
+            startIfWanted(e.currentTarget);
           }}
           onCanPlay={(e) => {
             logVideoDiag("canplay");
@@ -671,11 +828,7 @@ function Slide({
               const canMp4 = e.currentTarget.canPlayType("video/mp4");
               logVideoDiag(`canPlayType("video/mp4") = "${canMp4}"`);
             }
-            ensureMediaPlayback(e.currentTarget, {
-              onUnrecoverable: emitPlayFail,
-              desiredMuted: muted,
-              desiredVolume: volume,
-            });
+            startIfWanted(e.currentTarget);
           }}
           onTimeUpdate={(e) => {
             // FIXED window: the timer owns the timeline (media loops inside the window).
@@ -699,15 +852,9 @@ function Slide({
               onMediaEvent({ type: "MEDIA_ENDED", generation });
             }
           }}
-          onError={() => {
+          onError={(e) => {
             logVideoDiag("error");
-            onMediaEvent({
-              type: "MEDIA_ERROR",
-              code: MEDIA_ERROR_CODES.MEDIA_DECODE_ERROR,
-              message: "Media unavailable",
-              recoverable: true,
-              generation,
-            });
+            emitNativeError(e.currentTarget);
           }}
         />
       </div>
@@ -757,25 +904,13 @@ function Slide({
                   : natural,
               generation,
             });
-            ensureMediaPlayback(el, {
-              onUnrecoverable: emitPlayFail,
-              desiredMuted: muted,
-              desiredVolume: volume,
-            });
+            startIfWanted(el);
           }}
           onLoadedData={(e) =>
-            ensureMediaPlayback(e.currentTarget, {
-              onUnrecoverable: emitPlayFail,
-              desiredMuted: muted,
-              desiredVolume: volume,
-            })
+            startIfWanted(e.currentTarget)
           }
           onCanPlay={(e) =>
-            ensureMediaPlayback(e.currentTarget, {
-              onUnrecoverable: emitPlayFail,
-              desiredMuted: muted,
-              desiredVolume: volume,
-            })
+            startIfWanted(e.currentTarget)
           }
           onTimeUpdate={(e) => {
             // FIXED window: the timer owns the timeline (media loops inside the window).
@@ -791,14 +926,8 @@ function Slide({
               onMediaEvent({ type: "MEDIA_ENDED", generation });
             }
           }}
-          onError={() => {
-            onMediaEvent({
-              type: "MEDIA_ERROR",
-              code: MEDIA_ERROR_CODES.MEDIA_DECODE_ERROR,
-              message: "Media unavailable",
-              recoverable: true,
-              generation,
-            });
+          onError={(e) => {
+            emitNativeError(e.currentTarget);
           }}
         />
       </div>

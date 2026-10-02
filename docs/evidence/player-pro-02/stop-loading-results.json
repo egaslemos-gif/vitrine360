@@ -1,0 +1,70 @@
+{
+ "at": "2026-10-02T12:07:33.595Z",
+ "rows": [
+  {
+   "id": "A-00 precondition: video element in LOADING with its media request held",
+   "ok": true,
+   "detail": "{\"status\":\"LOADING\",\"gen\":2,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":false,\"paused\":true,\"cur\":0,\"readyState\":0}"
+  },
+  {
+   "id": "A-01 STOP during loading (before canplay) -> STOPPED",
+   "ok": true,
+   "detail": "{\"status\":\"STOPPED\",\"gen\":2,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":false,\"paused\":true,\"cur\":0,\"readyState\":0}"
+  },
+  {
+   "id": "A-02 late native events really arrived (loadedmetadata fired after STOP)",
+   "ok": true,
+   "detail": "before=0 after=1"
+  },
+  {
+   "id": "A-03 no spontaneous playback: STOPPED, element paused, time 0",
+   "ok": true,
+   "detail": "{\"status\":\"STOPPED\",\"gen\":2,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":false,\"paused\":true,\"cur\":0,\"readyState\":4}"
+  },
+  {
+   "id": "A-04 generation unchanged (nothing re-armed the item)",
+   "ok": true,
+   "detail": "gen before=2 stop=2 after=2"
+  },
+  {
+   "id": "A-05 Play afterwards starts normally",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"gen\":3,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":true,\"paused\":false,\"cur\":1.37,\"readyState\":4}"
+  },
+  {
+   "id": "A-99 no page errors",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "id": "B-00 precondition: video element in LOADING with its media request held",
+   "ok": true,
+   "detail": "{\"status\":\"LOADING\",\"gen\":2,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":false,\"paused\":true,\"cur\":0,\"readyState\":0}"
+  },
+  {
+   "id": "B-01 STOP during loading (before canplay) -> STOPPED",
+   "ok": true,
+   "detail": "{\"status\":\"STOPPED\",\"gen\":2,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":false,\"paused\":true,\"cur\":0,\"readyState\":0}"
+  },
+  {
+   "id": "B-02 NEXT after STOP changes generation and moves to the image item",
+   "ok": true,
+   "detail": "{\"status\":\"LOADING\",\"gen\":3,\"idx\":1,\"kind\":\"still-loading\",\"videos\":0,\"anyVideoPlaying\":false,\"paused\":null,\"cur\":null,\"readyState\":null}"
+  },
+  {
+   "id": "B-03 late events of the old generation did not touch the new item (still PLAYING the image)",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"gen\":3,\"idx\":1,\"kind\":\"still\",\"videos\":0,\"anyVideoPlaying\":false,\"paused\":null,\"cur\":null,\"readyState\":null}"
+  },
+  {
+   "id": "B-04 playlist wraps to the video and it plays normally afterwards",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"gen\":4,\"idx\":0,\"kind\":\"video\",\"videos\":1,\"anyVideoPlaying\":true,\"paused\":false,\"cur\":0.03,\"readyState\":4}"
+  },
+  {
+   "id": "B-99 no page errors",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

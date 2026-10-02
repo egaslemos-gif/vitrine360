@@ -1,0 +1,41 @@
+{
+ "at": "2026-10-02T10:48:47.597Z",
+ "findings": [
+  {
+   "id": "A1 video starts without gesture",
+   "ok": false,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "A2 audio state honest: UI says audible vs element muted",
+   "ok": true,
+   "detail": "element.muted=false button=\"Mute\" (UI claims audible while element is silent)"
+  },
+  {
+   "id": "S1 SIM: blocked-audio start is NOT presented as audible (UI mute state == element)",
+   "ok": true,
+   "detail": "element.muted=false button=Mute paused=true status=PLAYING"
+  },
+  {
+   "id": "S2 SIM: logical PLAYING matches physical playing",
+   "ok": false,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "S3 SIM: first user gesture restores audio automatically",
+   "ok": false,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":true,\"muted\":false,\"cur\":0,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  },
+  {
+   "id": "S4 SIM: manual Pause→Play (2 clicks) is the only recovery",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":\"0\",\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":1.5,\"ended\":false,\"vol\":1,\"btnPlay\":\"Pause\",\"btnMute\":\"Mute\"}"
+  }
+ ],
+ "rej": [
+  "NotAllowedError: simulated",
+  "NotAllowedError: simulated",
+  "NotAllowedError: simulated",
+  "NotAllowedError: simulated"
+ ]
+}

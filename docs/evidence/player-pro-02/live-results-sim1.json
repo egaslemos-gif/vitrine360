@@ -1,0 +1,26 @@
+{
+ "at": "2026-10-02T12:10:20.643Z",
+ "sim": 1,
+ "rows": [
+  {
+   "id": "SIM1-01 refused audible play -> still playing (muted), not frozen",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":true,\"cur\":2.15,\"vol\":1,\"same\":false,\"playLabel\":\"Pause\",\"muteLabel\":\"Ativar som\",\"note\":\"sound-blocked\",\"noteText\":\"Som bloqueado pelo navegador — toque para ativar\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "SIM1-02 UI is honest: element silent -> 'Ativar som' + sound-blocked note",
+   "ok": true,
+   "detail": "muteLabel=Ativar som note=sound-blocked"
+  },
+  {
+   "id": "SIM1-03 first user gesture restores sound on the same playing element",
+   "ok": true,
+   "detail": "{\"status\":\"PLAYING\",\"idx\":0,\"kind\":\"video\",\"paused\":false,\"muted\":false,\"cur\":3.71,\"vol\":1,\"same\":false,\"playLabel\":\"Pause\",\"muteLabel\":\"Mute\",\"note\":\"\",\"noteText\":\"\",\"repeatLabel\":\"Repetição: repetir lista\",\"repeatPressed\":\"true\"}"
+  },
+  {
+   "id": "SIM1-04 policy was actually exercised (play() rejections recorded)",
+   "ok": true,
+   "detail": "rejections=4"
+  }
+ ]
+}
