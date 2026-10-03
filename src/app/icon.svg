@@ -1,0 +1,76 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="v360-bezel-grad" x1="2" y1="2" x2="30" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#8b5cf6" />
+      <stop offset="100%" stopColor="#5b21b6" />
+    </linearGradient>
+    <linearGradient id="v360-glass-grad" x1="4" y1="4" x2="28" y2="21" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#1e1b4b" />
+      <stop offset="100%" stopColor="#2e1065" />
+    </linearGradient>
+    <linearGradient id="v360-v-grad" x1="10" y1="7" x2="22" y2="17" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#e0e7ff" />
+      <stop offset="45%" stopColor="#c4b5fd" />
+      <stop offset="100%" stopColor="#818cf8" />
+    </linearGradient>
+    <linearGradient id="v360-orbit-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#c084fc" />
+      <stop offset="100%" stopColor="#7057dc" />
+    </linearGradient>
+  </defs>
+
+  <!-- 360° Broadcast Orbit Arc -->
+  <path
+    d="M 28 8.5 A 14 14 0 0 0 5.5 3.5"
+    stroke="url(#v360-orbit-grad)"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    opacity="0.45"
+  />
+  <circle cx="28" cy="8.5" r="1.4" fill="url(#v360-bezel-grad)" />
+
+  <!-- Display Screen Body (Tela / Ecrã) -->
+  <rect
+    x="3.5"
+    y="4"
+    width="25"
+    height="16.5"
+    rx="3"
+    fill="url(#v360-glass-grad)"
+    stroke="url(#v360-bezel-grad)"
+    stroke-width="1.75"
+  />
+
+  <!-- Screen Glass Reflection -->
+  <path
+    d="M 4.5 5.2 L 27.5 5.2 C 27.5 5.2 20 8.5 4.5 8 Z"
+    fill="white"
+    opacity="0.15"
+  />
+
+  <!-- The "V" glowing mark on screen -->
+  <path
+    d="M 10 8.2 L 16 16 L 22 8.2"
+    stroke="url(#v360-v-grad)"
+    stroke-width="2.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Live Broadcast Status LED -->
+  <circle cx="25" cy="7" r="1" fill="#22c55e" />
+
+  <!-- Screen Stand -->
+  <path
+    d="M 16 20.5 V 24.5"
+    stroke="url(#v360-bezel-grad)"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <path
+    d="M 11 24.5 H 21"
+    stroke="url(#v360-bezel-grad)"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+</svg>
