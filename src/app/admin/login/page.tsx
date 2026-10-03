@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { V360Logo } from "@/components/v360-logo";
 
 const OAUTH_ERRORS: Record<string, string> = {
   config: "O login Google ainda não está configurado neste servidor.",
@@ -76,16 +77,18 @@ function LoginForm() {
         Página inicial
       </Link>
       <Card className="w-[min(100%,28rem)] shrink-0 border border-[var(--color-border)] bg-[var(--color-surface)]/90 shadow-lg backdrop-blur">
-        <CardHeader>
-          <CardTitle
-            className="text-3xl text-[var(--color-primary)]"
-            style={{ fontFamily: "var(--font-fraunces), serif" }}
-          >
-            Vitrine360
-          </CardTitle>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Digital Display & Presentation — sign in
-          </p>
+        <CardHeader className="space-y-3">
+          <div className="flex items-center">
+            <V360Logo size="lg" wordmark="full" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
+              Iniciar sessão
+            </CardTitle>
+            <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+              Digital Display & Presentation — consola de gestão
+            </p>
+          </div>
           {showDevHint ? (
             <p className="mt-2 text-xs text-[var(--color-warning)]">
               Desenvolvimento: após{" "}

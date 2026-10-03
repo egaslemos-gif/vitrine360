@@ -14,6 +14,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { V360Logo } from "@/components/v360-logo";
 import {
   Maximize2,
   Minimize2,
@@ -343,25 +344,28 @@ export function InteractivePlayerDemo({
               : "border-black/[0.04] bg-white/80 backdrop-blur-md relative z-10",
           )}
         >
-          <div className="min-w-0">
-            <p
-              id={labelId}
-              className={cn(
-                "truncate text-[13px] font-semibold tracking-tight",
-                dark ? "text-white" : "text-[#131316]"
-              )}
-            >
-              Vitrine360 Player
-            </p>
-            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium">
-              <span className={cn(
-                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-[0.08em]",
-                dark ? "bg-white/10 text-white/70" : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-              )}>
-                Demo ao vivo
-              </span>
-              <StatusDot status={status} light={dark} />
-            </p>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <V360Logo size="sm" collapsed={true} />
+            <div className="min-w-0">
+              <p
+                id={labelId}
+                className={cn(
+                  "truncate text-[13px] font-semibold tracking-tight",
+                  dark ? "text-white" : "text-[#131316]"
+                )}
+              >
+                Vitrine360 Player
+              </p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium">
+                <span className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-[0.08em]",
+                  dark ? "bg-white/10 text-white/70" : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                )}>
+                  Demo ao vivo
+                </span>
+                <StatusDot status={status} light={dark} />
+              </p>
+            </div>
           </div>
           <div
             className={cn(

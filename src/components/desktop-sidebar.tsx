@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
   LayoutDashboard,
   MonitorPlay,
   MonitorSpeaker,
@@ -19,6 +19,7 @@ import {
   UserRound,
   type LucideIcon,
 } from "lucide-react";
+import { V360Logo } from "@/components/v360-logo";
 import { navGroupedForRole } from "@/components/admin-nav";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
@@ -64,7 +65,7 @@ export function DesktopSidebar({
 
   return (
     <aside
-      className={`relative hidden h-full min-h-0 shrink-0 flex-col overflow-hidden rounded-[var(--radius-2xl)] pb-2 transition-all duration-300 ease-in-out md:flex ${
+      className={`relative hidden h-full min-h-0 shrink-0 flex-col rounded-xl pb-2 transition-all duration-300 ease-in-out md:flex ${
         isCollapsed ? "w-[72px] items-center" : "w-60"
       }`}
       style={{
@@ -74,35 +75,31 @@ export function DesktopSidebar({
         backdropFilter: "blur(18px)",
       }}
     >
-      {/* Logo */}
-      <div
-        className={`flex w-full shrink-0 items-center ${isCollapsed ? "justify-center" : "justify-between"} px-3 pt-4 pb-2`}
+      {/* Floating Collapse/Expand Toggle */}
+      <button
+        type="button"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-6 z-50 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-white text-[var(--color-muted-foreground)] shadow-md transition-all hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] active:scale-95"
+        aria-label={isCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+        title={isCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
       >
-        {!isCollapsed && (
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] shadow-md">
-              <span className="text-sm font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
-            </div>
-            <p
-              className="text-lg font-bold tracking-tight text-[var(--color-primary)]"
-              style={{ fontFamily: "var(--font-fraunces), serif" }}
-            >
-              Vitrine360
-            </p>
-          </div>
+        {isCollapsed ? (
+          <PanelLeftOpen className="h-4 w-4" aria-hidden />
+        ) : (
+          <PanelLeftClose className="h-4 w-4" aria-hidden />
         )}
-        {isCollapsed && (
-          <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] shadow-md">
-            <span
-              className="text-sm font-bold text-white"
-              style={{ fontFamily: "var(--font-fraunces), serif" }}
-              title="Vitrine360"
-            >
-              V
-            </span>
-          </div>
-        )}
-      </div>
+      </button>
+
+      {/* Header: Logo */}
+      {!isCollapsed ? (
+        <div className="flex w-full shrink-0 items-center px-3.5 pt-3.5 pb-2">
+          <V360Logo size="md" collapsed={false} />
+        </div>
+      ) : (
+        <div className="flex w-full shrink-0 flex-col items-center gap-2 px-2 pt-3.5 pb-2">
+          <V360Logo size="md" collapsed={true} />
+        </div>
+      )}
 
       {/* Navigation */}
       <nav
@@ -134,9 +131,9 @@ export function DesktopSidebar({
                   href={item.href}
                   title={isCollapsed ? item.label : undefined}
                   aria-current={isActive ? "page" : undefined}
-                  className={`group relative flex shrink-0 items-center rounded-2xl py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
+                  className={`group relative flex shrink-0 items-center rounded-lg py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
                     isActive
-                      ? "bg-[var(--color-primary)] text-white shadow-[0_8px_18px_rgba(112,87,220,0.32)]"
+                      ? "bg-[var(--color-primary)] text-white shadow-[0_4px_12px_rgba(112,87,220,0.28)]"
                       : "text-[var(--color-text-secondary)] hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)]"
                   } ${isCollapsed ? "justify-center px-0" : "gap-3 px-3"}`}
                 >
@@ -167,7 +164,7 @@ export function DesktopSidebar({
             <div className="flex items-start gap-2 rounded-md px-1 py-1">
               <Link
                 href="/admin/profile"
-                className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-[var(--radius-md)] px-2 py-2 transition-all hover:bg-white/50 ${
+                className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-2 transition-all hover:bg-white/50 ${
                   profileActive ? "bg-white/60 shadow-sm" : ""
                 }`}
                 title={userEmail}
@@ -213,19 +210,7 @@ export function DesktopSidebar({
         )}
       </div>
 
-      {/* Collapse Toggle */}
-      <button
-        type="button"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-5 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted-foreground)] shadow-md transition-all hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary)] hover:shadow-lg"
-        aria-label={isCollapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-        ) : (
-          <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-        )}
-      </button>
+
     </aside>
   );
 }

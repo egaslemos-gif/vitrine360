@@ -28,7 +28,7 @@ export default async function PlatformLayout({
           userEmail={session.email}
           logoutNode={<LogoutButtonIcon />}
         />
-        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] sm:rounded-2xl">
+        <main className="admin-main-pane flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] sm:rounded-xl">
           <div className="admin-main-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
             <div className="ui-content-canvas mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4 sm:py-5 md:px-8 md:py-6">
               {children}

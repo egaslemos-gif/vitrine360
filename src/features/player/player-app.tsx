@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { V360Logo } from "@/components/v360-logo";
 import {
   clearAllPlayerData,
   getConfig,
@@ -799,17 +800,9 @@ export function PlayerApp() {
             WebkitBackdropFilter: "blur(20px)",
           }}
         >
-          <p
-            style={{
-              fontSize: "clamp(28px, 5vw, 40px)",
-              fontWeight: 700,
-              margin: 0,
-              color: "#7057dc",
-              fontFamily: "var(--font-fraunces), Georgia, serif",
-            }}
-          >
-            Vitrine360
-          </p>
+          <div className="flex justify-center">
+            <V360Logo size="xl" wordmark="full" />
+          </div>
           <p style={{ marginTop: 12, color: "rgba(43,37,80,0.6)", fontSize: 18 }}>
             Código de activação
           </p>

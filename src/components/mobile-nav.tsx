@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { navGroupedForRole } from "@/components/admin-nav";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import { V360Logo } from "@/components/v360-logo";
 
 const ICONS: Record<string, LucideIcon> = {
   "/admin": LayoutDashboard,
@@ -72,17 +73,7 @@ export function MobileNav({
   return (
     <>
       <header className="z-40 flex h-12 w-full shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 shadow-[var(--shadow-subtle)] md:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-primary)] shadow-sm">
-            <span className="text-[10px] font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
-          </div>
-          <p
-            className="text-base font-bold tracking-tight text-[var(--color-primary)]"
-            style={{ fontFamily: "var(--font-fraunces), serif" }}
-          >
-            Vitrine360
-          </p>
-        </div>
+        <V360Logo size="sm" />
         <button
           onClick={() => setOpen(true)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
@@ -108,17 +99,7 @@ export function MobileNav({
         }}
       >
         <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-5 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-primary)]">
-              <span className="text-[10px] font-bold text-white" style={{ fontFamily: "var(--font-fraunces), serif" }}>V</span>
-            </div>
-            <p
-              className="text-base font-bold tracking-tight text-[var(--color-primary)]"
-              style={{ fontFamily: "var(--font-fraunces), serif" }}
-            >
-              Navegação
-            </p>
-          </div>
+          <V360Logo size="sm" />
           <button
             onClick={() => setOpen(false)}
             className="rounded-full p-2 hover:bg-[var(--color-secondary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
@@ -145,7 +126,7 @@ export function MobileNav({
                       key={item.href}
                       href={item.href}
                       aria-current={isActive ? "page" : undefined}
-                      className={`group flex items-center gap-3.5 rounded-[var(--radius-md)] px-3.5 py-3 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
+                      className={`group flex items-center gap-3.5 rounded-lg px-3.5 py-3 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] ${
                         isActive
                           ? "bg-[var(--color-primary)] text-white shadow-md"
                           : "text-[var(--color-text-secondary)] hover:bg-white/50 hover:text-[var(--color-primary)]"

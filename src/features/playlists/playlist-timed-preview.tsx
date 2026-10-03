@@ -203,7 +203,7 @@ export function PlaylistTimedPreview({
     <div
       ref={shellRef}
       className={cn(
-        "flex flex-col overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[var(--shadow-card)]",
+        "flex flex-col overflow-hidden rounded-xl border border-white/80 bg-white/90 shadow-[var(--shadow-card)]",
         expandedFallback &&
           "fixed inset-0 z-[120] rounded-none border-0 bg-black",
         isFullscreen && "h-full bg-black",

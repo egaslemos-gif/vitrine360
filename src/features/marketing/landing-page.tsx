@@ -22,6 +22,7 @@ import type { ComponentType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { InteractivePlayerDemo } from "@/components/landing/interactive-player-demo";
 import { LandingMobileMenu } from "./landing-mobile-menu";
+import { V360Logo } from "@/components/v360-logo";
 
 type Icon = ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 
@@ -125,19 +126,8 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
       {/* ───────── Header ───────── */}
       <header className="sticky top-0 z-40 border-b border-white/70 bg-white/70 backdrop-blur-xl">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex min-w-0 items-center gap-2.5">
-            <span
-              aria-hidden
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary)] text-[15px] font-bold text-white shadow-[0_6px_16px_rgba(112,87,220,0.35)]"
-            >
-              V
-            </span>
-            <span
-              className="truncate text-xl font-bold tracking-tight text-[var(--color-foreground)]"
-              style={{ fontFamily: "var(--font-display), serif" }}
-            >
-              Vitrine360
-            </span>
+          <Link href="/" className="flex min-w-0 items-center">
+            <V360Logo size="md" wordmark="full" />
           </Link>
 
           <nav
@@ -458,12 +448,7 @@ export function LandingPage({ signedIn }: { signedIn: boolean }) {
       <footer className="border-t border-white/70 bg-white/50 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p
-              className="text-lg font-bold text-[var(--color-primary)]"
-              style={{ fontFamily: "var(--font-display), serif" }}
-            >
-              Vitrine360
-            </p>
+            <V360Logo size="md" wordmark="full" />
             <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
               Plataforma de sinalização digital e apresentações
             </p>

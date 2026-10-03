@@ -69,11 +69,11 @@
   --color-player-primary: #8f78ee;
   --color-player-success: #35c98b;
   --color-preview-bg: var(--color-player);
-  --radius-sm: 0.75rem; /* 12 */
-  --radius-md: 1rem; /* 16 */
-  --radius-lg: 1.25rem; /* 20 */
-  --radius-xl: 1.5rem; /* 24 — cards */
-  --radius-2xl: 1.875rem; /* 30 — panels / dialogs */
+  --radius-sm: 0.375rem; /* 6 */
+  --radius-md: 0.5rem; /* 8 */
+  --radius-lg: 0.625rem; /* 10 */
+  --radius-xl: 0.75rem; /* 12 — cards */
+  --radius-2xl: 1rem; /* 16 — panels / dialogs */
   /* Shadow system: three tiers — soft, card, floating */
   --shadow-subtle: 0 1px 2px rgba(88, 64, 180, 0.04);
   --shadow-card: 0 2px 6px rgba(88, 64, 180, 0.04),
@@ -366,21 +366,21 @@ html.player-runtime .player-media {
 .ui-surface-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
 
 .ui-toolbar {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
 
 .ui-list-shell {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   overflow: hidden;
 }
@@ -429,7 +429,7 @@ html.player-runtime .player-media {
   gap: 0.75rem;
   align-items: flex-start;
   padding: 0.875rem 1rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   border: 1px solid color-mix(in oklab, var(--color-info) 28%, var(--color-border));
   background: color-mix(in oklab, var(--color-info) 8%, white);
   color: var(--color-text-primary);
@@ -606,7 +606,7 @@ html.dark .glass-overlay {
 }
 
 .ui-media-card {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);

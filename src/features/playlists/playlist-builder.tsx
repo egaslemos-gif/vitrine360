@@ -139,8 +139,8 @@ function SortableItem({
       }}
       className={
         (selected
-          ? "group mb-2 flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--color-primary)]/35 bg-[var(--color-primary-soft)] p-3 shadow-[0_6px_18px_-8px_rgba(112,87,220,0.35)]"
-          : "group mb-2 flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-3 shadow-[var(--shadow-subtle)] transition-colors hover:bg-[var(--color-row-hover)]") +
+          ? "group mb-2 flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--color-primary)]/35 bg-[var(--color-primary-soft)] p-3 shadow-[0_6px_18px_-8px_rgba(112,87,220,0.35)]"
+          : "group mb-2 flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--color-border)] bg-white p-3 shadow-[var(--shadow-subtle)] transition-colors hover:bg-[var(--color-row-hover)]") +
         (!item.active ? " opacity-50 grayscale-[50%]" : "")
       }
     >

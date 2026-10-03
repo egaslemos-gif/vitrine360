@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Building2, LayoutGrid } from "lucide-react";
 import { PLATFORM_NAV } from "@/components/platform-nav";
 import { cn } from "@/lib/utils";
+import { V360Logo } from "@/components/v360-logo";
 
 export function PlatformSidebar({
   userName,
@@ -19,17 +20,12 @@ export function PlatformSidebar({
 
   return (
     <aside
-      className="hidden w-56 shrink-0 flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] md:flex"
+      className="hidden w-56 shrink-0 flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] md:flex"
       aria-label="Platform navigation"
     >
       <div className="border-b border-[var(--color-border)] px-4 py-4">
-        <p
-          className="text-lg font-semibold tracking-tight text-[var(--color-primary)]"
-          style={{ fontFamily: "var(--font-fraunces), serif" }}
-        >
-          Vitrine360
-        </p>
-        <p className="ui-caption mt-0.5 uppercase tracking-wider text-[var(--color-muted-foreground)]">
+        <V360Logo size="md" wordmark="full" />
+        <p className="ui-caption mt-1 uppercase tracking-wider text-[var(--color-muted-foreground)]">
           Platform Console
         </p>
       </div>
@@ -93,13 +89,11 @@ export function PlatformMobileNav({
   const pathname = usePathname();
   return (
     <header className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 md:hidden">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-[var(--color-primary)]">
+      <div className="flex items-center gap-2 min-w-0">
+        <V360Logo size="sm" />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
           Platform
-        </p>
-        <p className="truncate text-xs text-[var(--color-muted-foreground)]">
-          {userName}
-        </p>
+        </span>
       </div>
       <nav className="flex items-center gap-2" aria-label="Platform mobile">
         {PLATFORM_NAV.map((item) => {
