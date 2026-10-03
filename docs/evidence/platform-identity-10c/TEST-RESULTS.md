@@ -42,6 +42,6 @@
 | PI10C-INV-10 | PASS | Default Plan sem privilégios especiais |
 | PI10C-RESOLVER-26 | PASS | múltiplos ACTIVE → typed failure |
 
-Generated: 2026-09-30T09:46:14.165Z
+Generated: 2026-10-03T20:23:37.831Z
 
 PI-10C RESOLVE — PI-10D ENFORCES.
