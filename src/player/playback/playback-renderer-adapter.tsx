@@ -117,24 +117,12 @@ export function PlaybackRendererAdapter({
   const generation = state.generation;
   const status = state.status;
   const mediaRef = useRef<HTMLMediaElement | null>(null);
-  const prevGenerationRef = useRef<number>(generation);
   // Target of a seek that is still in flight (cleared on `seeked`); never a permanent memory.
   const seekInFlightRef = useRef<number | null>(null);
   const signals = useMediaSignalStore();
   const timerRef = useRef<PresentationTimer | null>(null);
   if (timerRef.current == null) {
     timerRef.current = new PresentationTimer();
-  }
-
-  // P4/P5 FIX: Force-dispose the previous media element when generation changes.
-  // This prevents audio/video from continuing to play in the background when the
-  // playlist advances to the next item.
-  if (prevGenerationRef.current !== generation) {
-    prevGenerationRef.current = generation;
-    if (mediaRef.current) {
-      disposeMediaElement(mediaRef.current);
-      mediaRef.current = null;
-    }
   }
 
   // Single presentation timer owner (RP-03). PAUSE/STOP/ERROR ⇒ not PLAYING ⇒ stop.
@@ -603,9 +591,15 @@ function Slide({
   // is re-invoked on every render (each timeupdate), which re-ran ensureMediaPlayback()
   // and fought the muted-autoplay fallback.
   const setMediaEl = useCallback(
-    (el: HTMLVideoElement | null) => {
+    (el: HTMLMediaElement | null) => {
       detachSignalsRef.current?.();
       detachSignalsRef.current = null;
+
+      // FIX for P4/P5: Dispose the old media element when it is unmounted or replaced.
+      if (localMediaRef.current && localMediaRef.current !== el) {
+        disposeMediaElement(localMediaRef.current);
+      }
+
       localMediaRef.current = el;
       mediaRef.current = el;
       if (!el) return;
