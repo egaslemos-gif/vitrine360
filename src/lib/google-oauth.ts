@@ -44,6 +44,11 @@ export function googleRedirectUri(origin: string) {
   return `${appOriginFrom(origin)}/api/auth/google/callback`;
 }
 
+/** Drive connect callback — same allowlist as login via appOriginFrom. */
+export function driveRedirectUri(origin: string) {
+  return `${appOriginFrom(origin)}/api/admin/storage/drive/callback`;
+}
+
 export function createOAuthTransaction(): OAuthTransaction {
   return {
     state: randomBytes(24).toString("base64url"),

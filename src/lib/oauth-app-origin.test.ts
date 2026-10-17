@@ -9,11 +9,11 @@ import {
 } from "./oauth-app-origin";
 import {
   createOAuthTransaction,
+  driveRedirectUri,
   googleRedirectUri,
   readOAuthCookie,
   signOAuthCookie,
 } from "./google-oauth";
-import { driveRedirectUri } from "./google-drive-oauth";
 
 const PREV_APP = process.env.APP_URL;
 const PREV_PUBLIC = process.env.NEXT_PUBLIC_APP_URL;
