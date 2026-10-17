@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-17T20:09:20.408Z",
+  "database": "file:./data/rbac-a06-test.db",
+  "headNote": "security/rbac-p0-p1 worktree",
+  "passed": 16,
+  "failed": 0,
+  "results": [
+    {
+      "id": "A06-ROLE-01 viewer lacks manage_users",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-ROLE-02 editor lacks manage_devices/users",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-ROLE-03 operator lacks manage_contents/users",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-CT-01 listContents no cross-tenant leak",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-CT-02 updateContent wrong tenant no-op/reject",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-CT-03 deleteContent wrong tenant no effect",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-PL-01 listPlaylists isolation",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-PL-02 deletePlaylist wrong tenant rejected",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-PL-03 bumpPlaylistVersion requires tenantId",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-PL-04 bump wrong tenant is no-op",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-PL-05 bump same tenant increments",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-DV-01 assign foreign playlist rejected",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-DV-02 bump scopes device manifest same tenant",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-PL-06 foreign content cannot attach to playlist",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-MD-01 mediaAssets query filters by tenant",
+      "status": "PASS"
+    },
+    {
+      "id": "A06-RBAC-01 viewer permission cannot manage users",
+      "status": "PASS"
+    }
+  ]
+}

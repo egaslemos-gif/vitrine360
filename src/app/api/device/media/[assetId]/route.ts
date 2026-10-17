@@ -82,12 +82,23 @@ export async function GET(
   const limited = enforceRateLimit(req, "device-media", 600, 60_000);
   if (limited) return limited;
 
+  // Prefer Authorization header. Query `?token=` remains for HTML media
+  // elements that cannot set headers (player `<video src>` / `<audio src>`).
+  // Query tokens can leak via logs, Referer, and history — do not log the raw
+  // value; prefer header for fetch/XHR/Cache API paths (F-02 / RBAC audit).
   const authHeader = req.headers.get("authorization");
   const tokenParam = req.nextUrl.searchParams.get("token");
-  const token = authHeader ?? (tokenParam ? `Bearer ${tokenParam}` : null);
+  const usedQueryToken = !authHeader && Boolean(tokenParam?.trim());
+  const token = authHeader ?? (tokenParam?.trim() ? `Bearer ${tokenParam.trim()}` : null);
 
   const device = await authenticateDevice(token);
   if (!device?.tenantId) return jsonError("Unauthorized", 401);
+
+  const responseHeaders: Record<string, string> = {
+    ...BASE_HEADERS,
+    // Observability only — never echo the token. Helps detect query-auth usage.
+    "X-V360-Device-Auth": usedQueryToken ? "query" : "header",
+  };
 
   const { assetId } = await ctx.params;
   const decodedId = decodeURIComponent(assetId);
@@ -126,7 +137,7 @@ export async function GET(
       if (range.type === "unsatisfiable") {
         return new Response(null, {
           status: 416,
-          headers: { ...BASE_HEADERS, "Content-Range": `bytes */${total}` },
+          headers: { ...responseHeaders, "Content-Range": `bytes */${total}` },
         });
       }
 
@@ -137,7 +148,7 @@ export async function GET(
           return new Response(new Uint8Array(buf), {
             status: 206,
             headers: {
-              ...BASE_HEADERS,
+              ...responseHeaders,
               "Content-Type": contentType,
               "Content-Range": contentRangeHeader(range.start, end, total),
               "Content-Length": String(buf.byteLength),
@@ -150,7 +161,7 @@ export async function GET(
           return new Response(chunkedStream(storage, asset.storageKey, total), {
             status: 200,
             headers: {
-              ...BASE_HEADERS,
+              ...responseHeaders,
               "Content-Type": contentType,
               "Content-Length": String(total),
             },
@@ -175,7 +186,7 @@ export async function GET(
         if (range.type === "unsatisfiable") {
           return new Response(null, {
             status: 416,
-            headers: { ...BASE_HEADERS, "Content-Range": `bytes */${obj.body.byteLength}` },
+            headers: { ...responseHeaders, "Content-Range": `bytes */${obj.body.byteLength}` },
           });
         }
         if (range.type === "range") {
@@ -183,7 +194,7 @@ export async function GET(
           return new Response(new Uint8Array(slice), {
             status: 206,
             headers: {
-              ...BASE_HEADERS,
+              ...responseHeaders,
               "Content-Type": contentType,
               "Content-Range": contentRangeHeader(
                 range.start,
@@ -196,7 +207,7 @@ export async function GET(
         }
         return new Response(new Uint8Array(obj.body), {
           headers: {
-            ...BASE_HEADERS,
+            ...responseHeaders,
             "Content-Type": asset.mimeType || obj.contentType || "application/octet-stream",
             "Content-Length": String(obj.contentLength),
           },
@@ -218,7 +229,7 @@ export async function GET(
       const filePath = resolveUnderRoot(resolveMediaRoot(), asset.storageKey);
       const data = await fs.readFile(filePath);
       return new Response(data, {
-        headers: { ...BASE_HEADERS, "Content-Type": contentType },
+        headers: { ...responseHeaders, "Content-Type": contentType },
       });
     }
 
@@ -240,7 +251,7 @@ export async function GET(
     }
 
     const passthrough: Record<string, string> = {
-      ...BASE_HEADERS,
+      ...responseHeaders,
       "Content-Type": asset.mimeType || upstream.headers.get("content-type") || "application/octet-stream",
     };
     const cr = upstream.headers.get("content-range");

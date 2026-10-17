@@ -340,17 +340,23 @@ export async function updatePlaylistItem(
   });
 }
 
+/**
+ * Increment playlist version and linked device manifest versions.
+ * `tenantId` is required — never bump by playlist id alone (F-03 / RBAC audit).
+ */
 export async function bumpPlaylistVersion(
   playlistId: string,
-  tenantId?: string,
+  tenantId: string,
 ) {
+  const scopedTenantId = tenantId?.trim();
+  if (!scopedTenantId) {
+    throw new Error("tenantId is required to bump playlist version");
+  }
   const [row] = await db
     .select()
     .from(playlists)
     .where(
-      tenantId
-        ? and(eq(playlists.id, playlistId), eq(playlists.tenantId, tenantId))
-        : eq(playlists.id, playlistId),
+      and(eq(playlists.id, playlistId), eq(playlists.tenantId, scopedTenantId)),
     )
     .limit(1);
   if (!row) return;
@@ -360,12 +366,19 @@ export async function bumpPlaylistVersion(
       version: row.version + 1,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(playlists.id, playlistId));
+    .where(
+      and(eq(playlists.id, playlistId), eq(playlists.tenantId, scopedTenantId)),
+    );
 
   const linked = await db
     .select()
     .from(devices)
-    .where(eq(devices.currentPlaylistId, playlistId));
+    .where(
+      and(
+        eq(devices.currentPlaylistId, playlistId),
+        eq(devices.tenantId, scopedTenantId),
+      ),
+    );
   const now = new Date().toISOString();
   for (const device of linked) {
     await db
@@ -375,7 +388,9 @@ export async function bumpPlaylistVersion(
         effectivePlaybackKey: null,
         updatedAt: now,
       })
-      .where(eq(devices.id, device.id));
+      .where(
+        and(eq(devices.id, device.id), eq(devices.tenantId, scopedTenantId)),
+      );
   }
 }
 

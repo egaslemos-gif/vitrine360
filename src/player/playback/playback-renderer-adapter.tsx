@@ -651,6 +651,8 @@ function Slide({
 
       // PLAYBACK-HISENSE-VIDEO-01: Smart TVs (Hisense Vidaa) fail to stream video via blob URL.
       // If we are online, bypass IndexedDB and force a direct HTTP byte-range request.
+      // F-02: <video src> cannot send Authorization — query token is required for
+      // Range streaming. Prefer Bearer for fetch/Cache paths (see below).
       if (item.type === "VIDEO" && navigator.onLine) {
         try {
           const config = await getConfig();
