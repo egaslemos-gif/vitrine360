@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify, createRemoteJWKSet, createLocalJWKSet } from "jose";
 import type { JWTPayload, JWTVerifyGetKey } from "jose";
 import { getAuthSecretString } from "@/lib/auth";
+import { appOriginFrom } from "@/lib/oauth-app-origin";
 
 export const GOOGLE_SCOPES = "openid email profile";
 export const GOOGLE_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -26,16 +27,17 @@ export type GoogleIdentityClaims = {
   nonce?: string;
 };
 
+export {
+  appOriginFrom,
+  isAuthorizedOAuthOrigin,
+  safeAppRelativeRedirect,
+  AUTHORIZED_OAUTH_HOSTS,
+} from "@/lib/oauth-app-origin";
+
 export function googleConfig() {
   const clientId = process.env.GOOGLE_CLIENT_ID ?? "";
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET ?? "";
   return { clientId, clientSecret };
-}
-
-export function appOriginFrom(requestOrigin: string) {
-  const configured = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL;
-  if (configured) return configured.replace(/\/$/, "");
-  return requestOrigin.replace(/\/$/, "");
 }
 
 export function googleRedirectUri(origin: string) {

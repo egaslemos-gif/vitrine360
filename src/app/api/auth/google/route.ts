@@ -5,19 +5,31 @@ import {
   googleAuthorizeUrl,
   googleConfig,
   googleRedirectUri,
+  safeAppRelativeRedirect,
   signOAuthCookie,
 } from "@/lib/google-oauth";
 
 export async function GET(req: NextRequest) {
   const { clientId } = googleConfig();
   if (!clientId || !process.env.GOOGLE_CLIENT_SECRET) {
-    return NextResponse.redirect(new URL("/admin/login?error=config", req.url));
+    return NextResponse.redirect(
+      safeAppRelativeRedirect(req.url, "/admin/login?error=config"),
+    );
+  }
+  let redirectUri: string;
+  try {
+    // Allowlisted request origin, else allowlisted APP_URL. No returnTo/callbackUrl.
+    redirectUri = googleRedirectUri(req.nextUrl.origin);
+  } catch {
+    return NextResponse.redirect(
+      safeAppRelativeRedirect(req.url, "/admin/login?error=config"),
+    );
   }
   const transaction = createOAuthTransaction();
   const token = await signOAuthCookie(transaction);
   const destination = googleAuthorizeUrl({
     clientId,
-    redirectUri: googleRedirectUri(req.nextUrl.origin),
+    redirectUri,
     transaction,
   });
   const response = NextResponse.redirect(destination);

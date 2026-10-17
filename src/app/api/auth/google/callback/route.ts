@@ -9,20 +9,33 @@ import {
   OAUTH_COOKIE,
   googleConfig,
   googleRedirectUri,
+  isAuthorizedOAuthOrigin,
   readOAuthCookie,
+  safeAppRelativeRedirect,
   signLinkCookie,
   verifyGoogleIdToken,
 } from "@/lib/google-oauth";
 import { loginWithGoogleClaims } from "@/services/google-identity";
 
 function fail(req: NextRequest, code: string) {
-  const response = NextResponse.redirect(new URL(`/admin/login?error=${code}`, req.url));
+  const response = NextResponse.redirect(
+    safeAppRelativeRedirect(req.url, `/admin/login?error=${code}`),
+  );
   response.cookies.set(OAUTH_COOKIE, "", { path: "/", maxAge: 0 });
   return response;
 }
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl;
+  // Reject before any token exchange. Do not redirect to an unallowlisted host
+  // (would turn Host-header abuse into an open redirect).
+  if (!isAuthorizedOAuthOrigin(url.origin)) {
+    const response = new NextResponse("OAuth callback host not allowed", {
+      status: 400,
+    });
+    response.cookies.set(OAUTH_COOKIE, "", { path: "/", maxAge: 0 });
+    return response;
+  }
   if (url.searchParams.get("error")) {
     return fail(req, "oauth_cancelled");
   }
@@ -37,6 +50,7 @@ export async function GET(req: NextRequest) {
   if (!clientId || !clientSecret) return fail(req, "config");
 
   try {
+    // Must match the redirect_uri used at /api/auth/google start (same allowlist).
     const body = new URLSearchParams({
       code,
       client_id: clientId,
@@ -60,7 +74,9 @@ export async function GET(req: NextRequest) {
     const result = await loginWithGoogleClaims(claims);
     if (result.kind === "link_required") {
       const link = await signLinkCookie(claims);
-      const response = NextResponse.redirect(new URL("/admin/login?link=google", req.url));
+      const response = NextResponse.redirect(
+        safeAppRelativeRedirect(req.url, "/admin/login?link=google"),
+      );
       response.cookies.set(OAUTH_COOKIE, "", { path: "/", maxAge: 0 });
       response.cookies.set(LINK_COOKIE, link, {
         httpOnly: true,
@@ -76,7 +92,9 @@ export async function GET(req: NextRequest) {
     const session = await sessionFromUser(user);
     if (!session) return fail(req, "membership");
     await setSessionCookie(session);
-    const response = NextResponse.redirect(new URL("/admin", req.url));
+    const response = NextResponse.redirect(
+      safeAppRelativeRedirect(req.url, "/admin"),
+    );
     response.cookies.set(OAUTH_COOKIE, "", { path: "/", maxAge: 0 });
     return response;
   } catch (error) {
