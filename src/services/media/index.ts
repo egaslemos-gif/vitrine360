@@ -18,8 +18,9 @@ function createProvider(name: string): MediaStorageProvider {
 }
 
 /**
- * Resolve a storage provider by the asset's persisted `storage_provider`.
- * Cached per name so device-media can mix R2 + Drive assets in one process.
+ * Resolve a storage provider by the asset's persisted `storage_provider` name.
+ * Cached per name. Prefer {@link resolveMediaStorageForAsset} for device-media
+ * so google_drive uses Tenant Drive OAuth instead of the SA factory.
  */
 export function getMediaStorageFor(
   storageProvider: string,
@@ -28,7 +29,6 @@ export function getMediaStorageFor(
   if (!name) {
     throw new Error("Unsupported storage provider: (empty)");
   }
-  // Accept common alias
   const key = name === "drive" ? "google_drive" : name;
   const cached = cache.get(key);
   if (cached) return cached;
@@ -46,6 +46,39 @@ export function getMediaStorage(): MediaStorageProvider {
 /** Test-only: clear provider cache between cases. */
 export function clearMediaStorageCacheForTests(): void {
   cache.clear();
+}
+
+/**
+ * Resolve storage for an existing media_assets row.
+ * Never migrates bytes — uses asset.storageProvider as source of truth.
+ *
+ * google_drive → Tenant Drive OAuth (`tryTenantGoogleDriveProvider`).
+ * Does NOT fall back to GOOGLE_DRIVE_* service account or to R2.
+ */
+export async function resolveMediaStorageForAsset(asset: {
+  storageProvider: string;
+  tenantId: string;
+  storageKey?: string;
+}): Promise<MediaStorageProvider> {
+  const name = normalizeProviderName(asset.storageProvider);
+  const key = name === "drive" ? "google_drive" : name;
+
+  if (key === "google_drive") {
+    const { tryTenantGoogleDriveProvider } = await import(
+      "@/services/tenant-storage"
+    );
+    const tenantDrive = await tryTenantGoogleDriveProvider(asset.tenantId);
+    if (tenantDrive) return tenantDrive;
+    throw new Error(
+      "Asset is on google_drive but tenant Drive is disconnected or TENANT_DRIVE_ENABLED is off",
+    );
+  }
+  if (key === "r2") return getMediaStorageFor("r2");
+  if (key === "local") return getMediaStorageFor("local");
+  if (!key) {
+    throw new Error("Unsupported storage provider: (empty)");
+  }
+  throw new Error(`Unsupported storage provider: ${key}`);
 }
 
 export type {

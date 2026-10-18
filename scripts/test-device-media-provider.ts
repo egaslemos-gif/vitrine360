@@ -6,8 +6,13 @@ import assert from "node:assert/strict";
 import {
   clearMediaStorageCacheForTests,
   getMediaStorageFor,
+  resolveMediaStorageForAsset,
 } from "../src/services/media";
-import { serveDeviceObject } from "../src/services/media/serve-device-object";
+import { GoogleDriveTenantProvider } from "../src/services/media/google-drive-tenant-provider";
+import {
+  normalizeRangedBody,
+  serveDeviceObject,
+} from "../src/services/media/serve-device-object";
 import type {
   MediaStorageProvider,
   StoredObject,
@@ -187,6 +192,144 @@ async function main() {
   await record("DMP-08 unsupported provider name", () => {
     assert.throws(() => getMediaStorageFor("azure"), /Unsupported/);
   });
+
+  await record("DMP-09 resolveMediaStorageForAsset r2 (unit)", async () => {
+    const p = await resolveMediaStorageForAsset({
+      storageProvider: "r2",
+      tenantId: "t-a",
+      storageKey: "tenants/t-a/x.png",
+    });
+    assert.equal(p.name, "r2");
+  });
+
+  await record(
+    "DMP-10 google_drive resolve fails closed without Tenant Drive (unit)",
+    async () => {
+      const prev = process.env.TENANT_DRIVE_ENABLED;
+      process.env.TENANT_DRIVE_ENABLED = "0";
+      try {
+        await assert.rejects(
+          () =>
+            resolveMediaStorageForAsset({
+              storageProvider: "google_drive",
+              tenantId: "t-a",
+              storageKey: "fileId",
+            }),
+          /tenant Drive|TENANT_DRIVE/,
+        );
+      } finally {
+        if (prev === undefined) delete process.env.TENANT_DRIVE_ENABLED;
+        else process.env.TENANT_DRIVE_ENABLED = prev;
+      }
+    },
+  );
+
+  await record(
+    "DMP-11 Tenant Drive native Range via getObjectRange (unit mock)",
+    async () => {
+      const originalFetch = globalThis.fetch;
+      const body = Buffer.from("TENANT-DRIVE-RANGE-BYTES");
+      globalThis.fetch = (async (
+        _input: RequestInfo | URL,
+        init?: RequestInit,
+      ) => {
+        const range = new Headers(init?.headers).get("Range");
+        assert.equal(range, "bytes=0-5");
+        return new Response(body.subarray(0, 6), { status: 206 });
+      }) as typeof fetch;
+      try {
+        const storage = new GoogleDriveTenantProvider({
+          folderId: "fld",
+          getAccessToken: async () => "fixture-token",
+        });
+        assert.equal(typeof storage.getObjectRange, "function");
+        const res = await serveDeviceObject({
+          storage,
+          storageKey: "fid",
+          contentType: "image/png",
+          fileSize: body.byteLength,
+          rangeHeader: "bytes=0-5",
+          baseHeaders: {},
+        });
+        assert.equal(res.status, 206);
+        assert.equal(
+          Buffer.from(await res.arrayBuffer()).toString("utf8"),
+          "TENANT",
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
+  );
+
+  await record(
+    "DMP-12 OAuth/provider error message must not echo credentials (unit)",
+    async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async () =>
+        new Response("denied", { status: 403 })) as typeof fetch;
+      try {
+        const storage = new GoogleDriveTenantProvider({
+          folderId: "fld",
+          getAccessToken: async () => "super-secret-refresh-material",
+        });
+        await assert.rejects(
+          () => storage.getObjectRange("fid", 0, 1),
+          (err: unknown) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            assert.ok(!msg.includes("super-secret"));
+            return true;
+          },
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
+  );
+
+  await record("DMP-C1 full-body Range coerced to window (unit)", async () => {
+    const file = Buffer.from("0123456789ABCDEF");
+    const storage: MediaStorageProvider = {
+      name: "c1",
+      async put(): Promise<StoredObject> {
+        throw new Error("unused");
+      },
+      async getUrl() {
+        return "https://example.invalid/c1";
+      },
+      async getObject(): Promise<StoredObjectBytes> {
+        return {
+          body: file,
+          contentType: "application/octet-stream",
+          contentLength: file.byteLength,
+        };
+      },
+      async delete() {},
+      async headObject() {
+        return { contentLength: file.byteLength };
+      },
+      async getObjectRange() {
+        return Buffer.from(file); // ignore Range
+      },
+    };
+    assert.equal(normalizeRangedBody(file, 4, 7).toString("utf8"), "4567");
+    const res = await serveDeviceObject({
+      storage,
+      storageKey: "k",
+      contentType: "application/octet-stream",
+      fileSize: file.byteLength,
+      rangeHeader: "bytes=4-7",
+      baseHeaders: { "Accept-Ranges": "bytes" },
+    });
+    assert.equal(res.status, 206);
+    assert.equal(res.headers.get("Content-Range"), "bytes 4-7/16");
+    assert.equal(res.headers.get("Content-Length"), "4");
+    assert.equal(Buffer.from(await res.arrayBuffer()).toString("utf8"), "4567");
+  });
+
+  console.log(
+    "\nnote: DMP-09..12 + C1 are unit/mocks — Preview integration smoke is separate",
+  );
 
   const pass = results.filter((r) => r.outcome === "PASS").length;
   const fail = results.filter((r) => r.outcome === "FAIL").length;

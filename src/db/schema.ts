@@ -652,6 +652,41 @@ export const deviceCommandInbox = sqliteTable(
   ],
 );
 
+/**
+ * DRIVE-MT — Per-tenant storage preference + encrypted Drive OAuth.
+ * Refresh tokens stored ciphertext only. Never sent to browser/device.
+ * Ported for device-media Tenant Drive reads (from main schema).
+ */
+export const tenantStorageConfigs = sqliteTable(
+  "tenant_storage_configs",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    /** platform | google_drive — platform = use global MEDIA_STORAGE_PROVIDER */
+    provider: text("provider").notNull().default("platform"),
+    googleRefreshTokenEnc: text("google_refresh_token_enc"),
+    googleFolderId: text("google_folder_id"),
+    googleAccountEmail: text("google_account_email"),
+    /** DISCONNECTED | CONNECTED | ERROR | REVOKED */
+    status: text("status").notNull().default("DISCONNECTED"),
+    lastError: text("last_error"),
+    connectedAt: text("connected_at"),
+    disconnectedAt: text("disconnected_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex("tenant_storage_configs_tenant_uidx").on(t.tenantId),
+    index("tenant_storage_configs_status_idx").on(t.status),
+  ],
+);
+
 export type Tenant = typeof tenants.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Membership = typeof memberships.$inferSelect;
@@ -669,3 +704,4 @@ export type Plan = typeof plans.$inferSelect;
 export type PlanEntitlement = typeof planEntitlements.$inferSelect;
 export type TenantPlan = typeof tenantPlans.$inferSelect;
 export type StorageReservationRow = typeof storageReservations.$inferSelect;
+export type TenantStorageConfig = typeof tenantStorageConfigs.$inferSelect;

@@ -4,20 +4,18 @@ import { db } from "@/db";
 import { mediaAssets } from "@/db/schema";
 import { enforceRateLimit, jsonError } from "@/lib/api";
 import { authenticateDevice } from "@/services/devices";
-import { getMediaStorageFor } from "@/services/media";
+import { resolveMediaStorageForAsset } from "@/services/media";
 import { serveDeviceObject } from "@/services/media/serve-device-object";
 
 /**
  * Device-scoped same-origin media proxy.
  *
- * Selects the storage backend from `media_assets.storage_provider` so R2 and
- * Google Drive assets can coexist while Preview/Production default upload
- * provider remains `MEDIA_STORAGE_PROVIDER`.
+ * Selects storage from `media_assets.storage_provider` + tenant:
+ * - r2 / local → platform providers
+ * - google_drive → Tenant Drive OAuth (`tryTenantGoogleDriveProvider`)
  *
- * HTTP Range (RFC 9110): media elements on Smart TVs and browsers request
- * `Range: bytes=0-` and require `206 Partial Content`. Providers with
- * `getObjectRange` stream slices; providers with only `getObject` (Drive)
- * load the object then slice in memory.
+ * HTTP Range: Tenant Drive implements native `getObjectRange`; R2 likewise.
+ * Providers without range fall back to getObject + in-memory slice.
  */
 
 const BASE_HEADERS = {
@@ -70,10 +68,15 @@ export async function GET(
   try {
     let storage;
     try {
-      storage = getMediaStorageFor(asset.storageProvider);
+      // Asset row already constrained to device.tenantId — use asset.tenantId only.
+      storage = await resolveMediaStorageForAsset({
+        storageProvider: asset.storageProvider,
+        tenantId: asset.tenantId,
+        storageKey: asset.storageKey,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("[device-media] unsupported provider", {
+      console.error("[device-media] storage resolve failed", {
         assetId: decodedId,
         storageProvider: asset.storageProvider,
         message: message.slice(0, 200),

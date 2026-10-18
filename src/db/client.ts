@@ -248,6 +248,28 @@ export function ensureSchema(): Promise<void> {
       await client.execute(
         "CREATE INDEX IF NOT EXISTS device_command_inbox_expires_idx ON device_command_inbox (expires_at)",
       );
+      // DRIVE-MT — tenant storage configs (local self-heal; Preview Turso already has table)
+      await client.execute(`CREATE TABLE IF NOT EXISTS tenant_storage_configs (
+        id text PRIMARY KEY NOT NULL,
+        tenant_id text NOT NULL,
+        provider text DEFAULT 'platform' NOT NULL,
+        google_refresh_token_enc text,
+        google_folder_id text,
+        google_account_email text,
+        status text DEFAULT 'DISCONNECTED' NOT NULL,
+        last_error text,
+        connected_at text,
+        disconnected_at text,
+        created_at text DEFAULT (datetime('now')) NOT NULL,
+        updated_at text DEFAULT (datetime('now')) NOT NULL,
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE cascade
+      )`);
+      await client.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS tenant_storage_configs_tenant_uidx ON tenant_storage_configs (tenant_id)",
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS tenant_storage_configs_status_idx ON tenant_storage_configs (status)",
+      );
       // PI-10L: diagnose duplicates → create unique only when safe; never mask as OK
       const { ensureMediaChecksumUniqueIntegrity } = await import(
         "@/services/media-checksum-integrity"

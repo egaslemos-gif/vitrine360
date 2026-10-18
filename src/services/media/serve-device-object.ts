@@ -5,6 +5,37 @@ import {
 } from "@/lib/http-range";
 import type { MediaStorageProvider } from "./types";
 
+/**
+ * C1 — Map a ranged-read buffer to exactly `[start, end]` (inclusive).
+ *
+ * - Exact/short bodies: trusted as the slice beginning at `start` (RFC allows
+ *   shorter-than-requested responses).
+ * - Oversized bodies that cover `end` when treated as file offset 0: extract
+ *   `subarray(start, end+1)` (providers that ignore Range and return a full object).
+ * - Otherwise fail closed — never emit a 206 with bytes outside the window.
+ *
+ * Does not change well-behaved providers (R2) that already return the exact slice.
+ */
+export function normalizeRangedBody(
+  buf: Buffer,
+  start: number,
+  end: number,
+): Buffer {
+  const expected = end - start + 1;
+  if (!(expected > 0) || !Number.isFinite(start) || !Number.isFinite(end)) {
+    throw new Error("Invalid range bounds");
+  }
+  if (buf.byteLength <= expected) {
+    return buf;
+  }
+  if (buf.byteLength > end) {
+    return buf.subarray(start, end + 1);
+  }
+  throw new Error(
+    `Ranged body length ${buf.byteLength} exceeds requested ${expected} without covering offset ${end}`,
+  );
+}
+
 async function readSlice(
   storage: MediaStorageProvider,
   storageKey: string,
@@ -12,7 +43,8 @@ async function readSlice(
   end: number,
 ): Promise<Buffer> {
   if (typeof storage.getObjectRange === "function") {
-    return storage.getObjectRange(storageKey, start, end);
+    const raw = await storage.getObjectRange(storageKey, start, end);
+    return normalizeRangedBody(raw, start, end);
   }
   const obj = await storage.getObject(storageKey);
   return obj.body.subarray(start, end + 1);
@@ -57,8 +89,9 @@ export type ServeDeviceObjectParams = {
 
 /**
  * Serve bytes from an already-selected storage provider.
- * Prefer getObjectRange when available; otherwise whole getObject + in-memory slice
- * (Google Drive today has getObject only — Range still works, but loads the object).
+ * Prefer getObjectRange when available; otherwise whole getObject + in-memory slice.
+ * Ranged responses pass through {@link normalizeRangedBody} (C1) so ignored-Range
+ * full-object bodies cannot produce misleading 206 windows.
  */
 export async function serveDeviceObject(
   params: ServeDeviceObjectParams,
