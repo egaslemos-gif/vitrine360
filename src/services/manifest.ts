@@ -127,6 +127,7 @@ export async function buildDeviceManifest(
   ) {
     const interrupt = await buildContentManifestItem(
       effectiveState.emergencyContentId,
+      device.tenantId ?? "",
     );
     if (interrupt) {
       playlistBlock = {
@@ -221,6 +222,7 @@ function finalizeManifestItem(
 
 async function buildContentManifestItem(
   contentId: string,
+  expectedTenantId: string,
 ): Promise<ManifestItem | null> {
   const rows = await db
     .select({
@@ -229,8 +231,20 @@ async function buildContentManifestItem(
     })
     .from(contents)
     .leftJoin(contentAssets, eq(contentAssets.contentId, contents.id))
-    .leftJoin(mediaAssets, eq(mediaAssets.id, contentAssets.mediaAssetId))
-    .where(and(eq(contents.id, contentId), eq(contents.status, "ACTIVE")));
+    .leftJoin(
+      mediaAssets,
+      and(
+        eq(mediaAssets.id, contentAssets.mediaAssetId),
+        eq(mediaAssets.tenantId, expectedTenantId),
+      ),
+    )
+    .where(
+      and(
+        eq(contents.id, contentId),
+        eq(contents.status, "ACTIVE"),
+        eq(contents.tenantId, expectedTenantId),
+      ),
+    );
 
   if (!rows.length) return null;
   const content = rows[0].content;
@@ -300,7 +314,13 @@ async function buildPlaylistBlock(
     .from(playlistItems)
     .innerJoin(contents, eq(contents.id, playlistItems.contentId))
     .leftJoin(contentAssets, eq(contentAssets.contentId, contents.id))
-    .leftJoin(mediaAssets, eq(mediaAssets.id, contentAssets.mediaAssetId))
+    .leftJoin(
+      mediaAssets,
+      and(
+        eq(mediaAssets.id, contentAssets.mediaAssetId),
+        eq(mediaAssets.tenantId, playlist.tenantId),
+      ),
+    )
     .where(
       and(
         eq(playlistItems.playlistId, playlistId),

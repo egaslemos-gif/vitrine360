@@ -23,6 +23,7 @@
     "test:rbac-guards": "tsx scripts/check-admin-route-guards.ts && tsx scripts/check-admin-client-tenant.ts",
     "test:rbac-a06": "tsx scripts/test-rbac-cross-tenant-a06.ts",
     "test:rbac-security": "npm run test:rbac-guards && npm run test:rbac-a06",
+    "test:manifest-tenant-safe": "tsx scripts/test-manifest-tenant-safe.ts",
     "test:media-3a": "tsx scripts/test-media-library-3a.ts",
     "test:content-3b": "tsx scripts/test-content-studio-3b.ts",
     "test:preview-3f": "tsx scripts/test-content-preview-3f.ts",
