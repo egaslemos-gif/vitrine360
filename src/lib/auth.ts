@@ -48,13 +48,6 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-/** Temporary staging timings. Stage name, milliseconds, and a generic result only. */
-export function logAuthTiming(stage: string, started: number, result: string) {
-  console.info(
-    `[auth-timing] stage=${stage} ms=${Math.round(performance.now() - started)} result=${result}`,
-  );
-}
-
 export function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -172,16 +165,11 @@ export async function authenticateUser(
   password: string,
   tenantSlug?: string,
 ): Promise<User | null> {
-  const queryStarted = performance.now();
   let candidates: User[];
   if (tenantSlug) {
     const { getTenantBySlug } = await import("@/services/tenants");
     const tenant = await getTenantBySlug(tenantSlug);
-    if (!tenant) {
-      logAuthTiming("user_query", queryStarted, "miss");
-      logAuthTiming("bcrypt", performance.now(), "skipped");
-      return null;
-    }
+    if (!tenant) return null;
     candidates = await db
       .select()
       .from(users)
@@ -193,25 +181,14 @@ export async function authenticateUser(
       .from(users)
       .where(eq(users.email, email))
       .limit(5);
-  }
-  logAuthTiming("user_query", queryStarted, candidates.length ? "ok" : "miss");
-  if (!tenantSlug && candidates.length > 1) {
-    logAuthTiming("bcrypt", performance.now(), "skipped");
-    throw new AuthError("tenantSlug required for this account", 400);
-  }
-  if (candidates.length === 0) {
-    logAuthTiming("bcrypt", performance.now(), "skipped");
-    return null;
-  }
-  const bcryptStarted = performance.now();
-  for (const user of candidates) {
-    const ok = await verifyPassword(password, user.passwordHash);
-    if (ok) {
-      logAuthTiming("bcrypt", bcryptStarted, "ok");
-      return user;
+    if (candidates.length > 1) {
+      throw new AuthError("tenantSlug required for this account", 400);
     }
   }
-  logAuthTiming("bcrypt", bcryptStarted, "fail");
+  for (const user of candidates) {
+    const ok = await verifyPassword(password, user.passwordHash);
+    if (ok) return user;
+  }
   return null;
 }
 

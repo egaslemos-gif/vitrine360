@@ -4,7 +4,6 @@ import {
   authenticateUser,
   clearSessionCookie,
   getSession,
-  logAuthTiming,
   sessionFromUser,
   setSessionCookie,
 } from "@/lib/auth";
@@ -20,14 +19,9 @@ const loginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const started = performance.now();
-  const finish = (result: string) => logAuthTiming("handler", started, result);
   try {
     const limited = enforceRateLimit(req, "auth-login", 20, 60_000);
-    if (limited) {
-      finish("rate_limited");
-      return limited;
-    }
+    if (limited) return limited;
     const body = loginSchema.parse(await req.json());
     const user = await authenticateUser(
       body.email,
@@ -36,16 +30,10 @@ export async function POST(req: NextRequest) {
     );
     if (!user) {
       console.warn("[auth] login failed", { email: body.email });
-      finish("invalid_credentials");
       return jsonError("Invalid credentials", 401);
     }
-    const membershipStarted = performance.now();
     const session = await sessionFromUser(user);
-    logAuthTiming("membership_tenant", membershipStarted, session ? "ok" : "miss");
-    if (!session) {
-      finish("no_workspace");
-      return jsonError("Sem workspace activo", 403);
-    }
+    if (!session) return jsonError("Sem workspace activo", 403);
     const linkToken = req.cookies.get(LINK_COOKIE)?.value;
     if (linkToken) {
       const pending = await readLinkCookie(linkToken);
@@ -58,15 +46,11 @@ export async function POST(req: NextRequest) {
             409,
           );
           conflict.cookies.set(LINK_COOKIE, "", { path: "/", maxAge: 0 });
-          finish("link_conflict");
           return conflict;
         }
       }
     }
-    const sessionStarted = performance.now();
     await setSessionCookie(session);
-    logAuthTiming("session", sessionStarted, "ok");
-    const auditStarted = performance.now();
     await logActivity({
       userId: session.id,
       tenantId: session.activeTenantId,
@@ -74,7 +58,6 @@ export async function POST(req: NextRequest) {
       resource: "user",
       resourceId: session.id,
     });
-    logAuthTiming("audit", auditStarted, "ok");
     const response = jsonOk({
       user: {
         id: session.id,
@@ -88,10 +71,8 @@ export async function POST(req: NextRequest) {
     if (linkToken) {
       response.cookies.set(LINK_COOKIE, "", { path: "/", maxAge: 0 });
     }
-    finish("ok");
     return response;
   } catch (e) {
-    finish("error");
     return handleApiError(e);
   }
 }
