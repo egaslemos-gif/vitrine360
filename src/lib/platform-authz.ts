@@ -8,7 +8,7 @@
 import { eq } from "drizzle-orm";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { db, ensureSchema } from "@/db";
+import { db } from "@/db";
 import { users } from "@/db/schema";
 import {
   hasPlatformPermission as roleHasPlatformPermission,
@@ -88,6 +88,7 @@ export async function resolveTenantAuthz(
 
 /**
  * Build AuthContext from known user id (tests + server). JWT is not consulted.
+ * Schema is prepared by an explicit step. This read does not call ensureSchema.
  */
 export async function buildAuthContext(params: {
   userId: string;
@@ -95,7 +96,6 @@ export async function buildAuthContext(params: {
   sessionClaim?: unknown;
   checkSessionVersion?: boolean;
 }): Promise<AuthContext | null> {
-  await ensureSchema();
   const [user] = await db
     .select()
     .from(users)

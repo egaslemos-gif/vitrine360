@@ -23,10 +23,10 @@ export class TenantLifecycleError extends Error {
   }
 }
 
+/** Schema is prepared by an explicit step. This read does not call ensureSchema. */
 export async function getTenantLifecycleStatus(
   tenantId: string,
 ): Promise<string | null> {
-  await ensureSchema();
   const [row] = await db
     .select({ status: tenants.status })
     .from(tenants)

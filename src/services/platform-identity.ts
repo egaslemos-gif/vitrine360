@@ -42,22 +42,22 @@ function assertInfrastructureAvailable() {
   }
 }
 
+/** Schema is prepared by an explicit step. This read does not call ensureSchema. */
 export async function findByUser(
   userId: string,
 ): Promise<PlatformAssignmentRow[]> {
   assertInfrastructureAvailable();
-  await ensureSchema();
   return db
     .select()
     .from(schema.platformAssignments)
     .where(eq(schema.platformAssignments.userId, userId));
 }
 
+/** Schema is prepared by an explicit step. This read does not call ensureSchema. */
 export async function findActiveByUser(
   userId: string,
 ): Promise<PlatformAssignmentRow[]> {
   assertInfrastructureAvailable();
-  await ensureSchema();
   return db
     .select()
     .from(schema.platformAssignments)

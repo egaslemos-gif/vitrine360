@@ -11,8 +11,8 @@ function isRole(value: string): value is UserRole {
   return (USER_ROLES as readonly string[]).includes(value);
 }
 
+/** Schema is prepared by an explicit step. This read does not call ensureSchema. */
 export async function listMemberships(userId: string) {
-  await ensureSchema();
   return db
     .select({
       id: memberships.id,
@@ -31,8 +31,8 @@ export async function listMemberships(userId: string) {
     .orderBy(asc(memberships.createdAt), asc(memberships.id));
 }
 
+/** Schema is prepared by an explicit step. This read does not call ensureSchema. */
 export async function getMembership(userId: string, tenantId: string) {
-  await ensureSchema();
   const [row] = await db
     .select()
     .from(memberships)

@@ -77,17 +77,43 @@ async function main() {
   assert.equal(await verifyPassword("wrong", hash), false);
   process.env.AUTH_SECRET =
     process.env.AUTH_SECRET ?? "dev-secret-change-me-in-production-min-32-chars";
-  const token = await createSessionToken({
-    id: "u1",
-    email: "a@test.local",
-    name: "A",
+  await assert.rejects(
+    () =>
+      createSessionToken({
+        id: "missing-user",
+        email: "missing@example.com",
+        name: "Missing",
+        role: "ADMIN",
+        tenantId: "missing-tenant",
+        activeTenantId: "missing-tenant",
+      }),
+    /session_version_unavailable/,
+  );
+  const tokenTenantId = await createTenant({
+    name: `Sec JWT ${stamp}`,
+    slug: `sec-jwt-${stamp}`,
+  });
+  const tokenUserId = crypto.randomUUID();
+  await db.insert(schema.users).values({
+    id: tokenUserId,
+    email: `sec-jwt-${stamp}@example.com`,
+    name: "JWT",
+    passwordHash: hash,
     role: "ADMIN",
-    tenantId: "t1",
-    activeTenantId: "t1",
+    tenantId: tokenTenantId,
+  });
+  const token = await createSessionToken({
+    id: tokenUserId,
+    email: `sec-jwt-${stamp}@example.com`,
+    name: "JWT",
+    role: "ADMIN",
+    tenantId: tokenTenantId,
+    activeTenantId: tokenTenantId,
   });
   const secret = new TextEncoder().encode(process.env.AUTH_SECRET!);
   const { payload } = await jwtVerify(token, secret);
-  assert.equal(payload.tenantId, "t1");
+  assert.equal(payload.tenantId, tokenTenantId);
+  assert.equal(payload.sv, 0);
   assert.ok(typeof payload.exp === "number");
 
   console.log("3. Cross-tenant isolation + IDOR");
