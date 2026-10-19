@@ -3,7 +3,8 @@
 **Data:** 2026-10-19
 **Branch de integração:** `security/rbac-p0-p1-atomicity`
 **Worktree:** `E:/PROJECTOS IA/UNILICUNGO/PROJECTOS FCT2026/Vitrine360-atomicity-on-security`
-**Pai do commit de fecho:** `809a950ea3668126b04b0a5d4e857339896dad66`
+**Commit local:** `63fa74cc1dab7f3bae76509439a149afbca69cfc`
+**Pai:** `809a950ea3668126b04b0a5d4e857339896dad66`
 **Mensagem:** `fix(playlists): preserve tenant RBAC in atomic item additions`
 **Método:** edição manual, sem cherry-pick. Sem push, deployment ou migração remota.
 
@@ -90,8 +91,8 @@ A suite A-06 reescreveu o timestamp de `docs/security/RBAC-A06-LOCAL-RESULTS.jso
 3. Bumps sem transacção podem escrever na inbox para devices `ACTIVE`. A-06 desta sessão continuou verde.
 4. A migração `0012` não entrou. Sem `ensureSchema()`, a coluna `effective_playback_key` continua ausente.
 5. O relatório original da Etapa 2 não foi copiado, porque descreve um bump sem filtro de tenant.
-6. O hash deste commit não cabe dentro do próprio objecto Git. Identifica-se por ser o primeiro commit desta branch acima de `809a950`, com a mensagem indicada no cabeçalho.
+6. O hash `63fa74cc1dab7f3bae76509439a149afbca69cfc` fica registado neste segundo commit documental. Não altera o commit de código.
 
 ## Fecho
 
-Commit local único. Sem push e sem deployment. `main` permanece em `e338f84`. `security/rbac-p0-p1` e `origin/security/rbac-p0-p1` permanecem em `809a950`.
+Commit local `63fa74cc1dab7f3bae76509439a149afbca69cfc`, filho directo de `809a950`. Sem push e sem deployment. `main` permanece em `e338f84`. `security/rbac-p0-p1` e `origin/security/rbac-p0-p1` permanecem em `809a950`.
