@@ -1,3 +1,4 @@
+import { hashSync } from "bcryptjs";
 import { config } from "dotenv";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
@@ -26,8 +27,7 @@ async function main() {
   });
   
   if (user && user.length > 0) {
-    const bcrypt = require("bcryptjs");
-    const newHash = bcrypt.hashSync("Admin123!", 12);
+    const newHash = hashSync("Admin123!", 12);
     await db.update(schema.users).set({ passwordHash: newHash }).where(eq(schema.users.id, user[0].id));
     console.log("Password updated to Admin123!");
   }

@@ -12,6 +12,8 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
+    "release:gate": "tsx scripts/release-gate.ts",
+    "release:gate:quick": "tsx scripts/release-gate.ts --profile quick",
     "test:domain": "tsx scripts/test-domain.ts",
     "test:acceptance": "tsx scripts/acceptance-mvp.ts",
     "test:tenant": "tsx scripts/test-tenant-isolation.ts",
