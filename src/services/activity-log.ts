@@ -1,10 +1,26 @@
 import { db, type AllocationTx } from "@/db";
 import { activityLogs } from "@/db/schema";
+import { AuditWriteError, isUnpreparedSchemaError } from "@/lib/schema-readiness";
 
 /**
  * Com `tx`, o registo entra na transacção do chamador.
- * Sem `tx`, escreve na ligação principal (melhor-esforço).
+ * Sem `tx`, escreve na ligação principal.
+ *
+ * Política dos logins: a sessão só abre depois deste registo.
+ * Uma falha faz rollback da conta ou da associação quando vai na mesma
+ * transacção, e nunca é apresentada como token ou credencial inválidos.
  */
+export async function recordLoginAudit(
+  params: Parameters<typeof logActivity>[0],
+  tx?: AllocationTx,
+) {
+  try {
+    await logActivity(params, tx);
+  } catch (error) {
+    if (isUnpreparedSchemaError(error)) throw error;
+    throw new AuditWriteError();
+  }
+}
 export async function logActivity(
   params: {
     userId?: string | null;

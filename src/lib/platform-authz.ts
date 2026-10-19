@@ -1,7 +1,8 @@
 /**
  * PLATFORM-IDENTITY-05B — Dual-axis authorization (Control Plane).
  *
- * getSession() remains tenant-only. JWT claims unchanged.
+ * getSession() remains tenant-only. Tenant claims are unchanged.
+ * `sv` must match users.session_version; a token without `sv` is generation 0.
  * Platform authority = flag ON + ACTIVE platform_assignments + static catalogue.
  */
 import { eq } from "drizzle-orm";
@@ -25,7 +26,9 @@ import {
   AuthError,
   SESSION_COOKIE,
   getAuthSecretString,
+  sessionClaimAccepted,
 } from "@/lib/auth";
+import { isUnpreparedSchemaError } from "@/lib/schema-readiness";
 import { isPlatformIdentityEnabled } from "@/lib/platform-identity-flag";
 import { membershipRole, resolveActiveMembership } from "@/services/memberships";
 import { findActiveByUser } from "@/services/platform-identity";
@@ -89,6 +92,8 @@ export async function resolveTenantAuthz(
 export async function buildAuthContext(params: {
   userId: string;
   claimedTenantId?: string | null;
+  sessionClaim?: unknown;
+  checkSessionVersion?: boolean;
 }): Promise<AuthContext | null> {
   await ensureSchema();
   const [user] = await db
@@ -97,6 +102,12 @@ export async function buildAuthContext(params: {
     .where(eq(users.id, params.userId))
     .limit(1);
   if (!user) return null;
+  if (
+    params.checkSessionVersion &&
+    !sessionClaimAccepted(params.sessionClaim, user.sessionVersion)
+  ) {
+    return null;
+  }
 
   const enabled = isPlatformIdentityEnabled();
   const tenant = await resolveTenantAuthz(user.id, params.claimedTenantId);
@@ -166,8 +177,11 @@ export async function getAuthContextFromSessionToken(
     return buildAuthContext({
       userId: payload.sub,
       claimedTenantId: claimedTenant,
+      sessionClaim: payload.sv,
+      checkSessionVersion: true,
     });
-  } catch {
+  } catch (error) {
+    if (isUnpreparedSchemaError(error)) throw error;
     return null;
   }
 }

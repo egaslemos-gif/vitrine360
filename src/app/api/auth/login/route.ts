@@ -3,13 +3,20 @@ import { z } from "zod";
 import {
   authenticateUser,
   clearSessionCookie,
+  completeLogout,
   getSession,
   sessionFromUser,
   setSessionCookie,
 } from "@/lib/auth";
 import { enforceRateLimit, handleApiError, jsonOk, jsonError } from "@/lib/api";
 import { LINK_COOKIE, readLinkCookie } from "@/lib/google-oauth";
-import { logActivity } from "@/services/activity-log";
+import { recordLoginAudit } from "@/services/activity-log";
+import {
+  auditUnavailableResponse,
+  isAuditWriteError,
+  isUnpreparedSchemaError,
+  schemaNotReadyResponse,
+} from "@/lib/schema-readiness";
 import { linkGoogleIdentity } from "@/services/google-identity";
 
 const loginSchema = z.object({
@@ -40,7 +47,8 @@ export async function POST(req: NextRequest) {
       if (pending && pending.email.toLowerCase() === user.email.toLowerCase()) {
         try {
           await linkGoogleIdentity({ userId: user.id, claims: pending });
-        } catch {
+        } catch (error) {
+          if (isUnpreparedSchemaError(error) || isAuditWriteError(error)) throw error;
           const conflict = jsonError(
             "Esta conta Google já está ligada a outro utilizador",
             409,
@@ -50,14 +58,14 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-    await setSessionCookie(session);
-    await logActivity({
+    await recordLoginAudit({
       userId: session.id,
       tenantId: session.activeTenantId,
       action: "LOGIN_PASSWORD",
       resource: "user",
       resourceId: session.id,
     });
+    await setSessionCookie(session);
     const response = jsonOk({
       user: {
         id: session.id,
@@ -73,21 +81,22 @@ export async function POST(req: NextRequest) {
     }
     return response;
   } catch (e) {
+    if (isUnpreparedSchemaError(e)) return schemaNotReadyResponse();
+    if (isAuditWriteError(e)) return auditUnavailableResponse();
     return handleApiError(e);
   }
 }
 
 export async function DELETE() {
-  const session = await getSession();
-  if (session) {
-    await logActivity({
-      userId: session.id,
-      tenantId: session.activeTenantId,
-      action: "LOGOUT",
-      resource: "user",
-      resourceId: session.id,
-    });
+  try {
+    const session = await getSession();
+    if (session) {
+      await completeLogout(session);
+    }
+    await clearSessionCookie();
+    return jsonOk({ ok: true });
+  } catch (error) {
+    if (isUnpreparedSchemaError(error)) return schemaNotReadyResponse();
+    return handleApiError(error);
   }
-  await clearSessionCookie();
-  return jsonOk({ ok: true });
 }

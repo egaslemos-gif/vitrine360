@@ -1,10 +1,12 @@
 import { createHash, randomBytes, randomInt } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { SchemaNotReadyError, isUnpreparedSchemaError } from "@/lib/schema-readiness";
 import { db } from "@/db";
 import { users, type User } from "@/db/schema";
+import { logActivity } from "@/services/activity-log";
 import {
   hasPermission,
   type Permission,
@@ -64,8 +66,38 @@ export function generateActivationCode() {
   return String(randomInt(100000, 1000000));
 }
 
+export function normalizeSessionVersion(value: unknown): number | null {
+  if (typeof value === "bigint") {
+    if (value < BigInt(0) || value > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+    return Number(value);
+  }
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) return null;
+  return value;
+}
+
+/**
+ * A missing `sv` claim is generation 0.
+ * Any other missing, fractional, negative, or non-numeric claim is rejected.
+ */
+export function sessionClaimAccepted(claim: unknown, current: unknown): boolean {
+  const version = normalizeSessionVersion(current);
+  if (version === null) return false;
+  if (claim === undefined) return version === 0;
+  const presented = normalizeSessionVersion(claim);
+  if (presented === null) return false;
+  return presented === version;
+}
+
 export async function createSessionToken(user: SessionUser) {
   const activeTenantId = user.activeTenantId || user.tenantId;
+  const [row] = await db
+    .select({ sessionVersion: users.sessionVersion })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+  if (!row) throw new Error("session_version_unavailable");
+  const sessionVersion = normalizeSessionVersion(row.sessionVersion);
+  if (sessionVersion === null) throw new SchemaNotReadyError("schema_not_ready");
   return new SignJWT({
     sub: user.id,
     email: user.email,
@@ -73,6 +105,7 @@ export async function createSessionToken(user: SessionUser) {
     role: user.role,
     tenantId: activeTenantId,
     activeTenantId,
+    sv: sessionVersion,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -97,9 +130,43 @@ export async function clearSessionCookie() {
   jar.delete(SESSION_COOKIE);
 }
 
+/**
+ * Audit and session revocation commit together.
+ * The caller clears the cookie only after this resolves.
+ * `session.id` must come from a validated session, never from the request body.
+ */
+export async function completeLogout(session: SessionUser): Promise<void> {
+  await db.transaction(async (tx) => {
+    await logActivity(
+      {
+        userId: session.id,
+        tenantId: session.activeTenantId,
+        action: "LOGOUT",
+        resource: "user",
+        resourceId: session.id,
+      },
+      tx,
+    );
+    const updated = await tx
+      .update(users)
+      .set({ sessionVersion: sql`${users.sessionVersion} + 1` })
+      .where(eq(users.id, session.id))
+      .returning({ sessionVersion: users.sessionVersion });
+    if (updated.length !== 1 || normalizeSessionVersion(updated[0]?.sessionVersion) === null) {
+      throw new Error("session_revoke_failed");
+    }
+  });
+}
+
 export async function getSession(): Promise<SessionUser | null> {
   const jar = await cookies();
-  const token = jar.get(SESSION_COOKIE)?.value;
+  return readSessionFromToken(jar.get(SESSION_COOKIE)?.value);
+}
+
+/** Cookie-free session read. A missing schema is thrown, not treated as anonymous. */
+export async function readSessionFromToken(
+  token: string | undefined,
+): Promise<SessionUser | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
@@ -111,14 +178,13 @@ export async function getSession(): Promise<SessionUser | null> {
           ? payload.tenantId
           : null;
     if (!claimedTenant) return null;
-    const { ensureSchema } = await import("@/db");
-    await ensureSchema();
     const [user] = await db
       .select()
       .from(users)
       .where(eq(users.id, payload.sub))
       .limit(1);
     if (!user) return null;
+    if (!sessionClaimAccepted(payload.sv, user.sessionVersion)) return null;
     const { membershipRole, resolveActiveMembership } = await import(
       "@/services/memberships"
     );
@@ -135,7 +201,8 @@ export async function getSession(): Promise<SessionUser | null> {
       tenantId: membership.tenantId,
       activeTenantId: membership.tenantId,
     };
-  } catch {
+  } catch (error) {
+    if (isUnpreparedSchemaError(error)) throw error;
     return null;
   }
 }

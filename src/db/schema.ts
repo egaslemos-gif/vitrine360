@@ -41,6 +41,8 @@ export const users = sqliteTable(
     tenantId: text("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
+    /** Incremented on logout. New JWTs carry this value as `sv`. */
+    sessionVersion: integer("session_version").notNull().default(0),
     createdAt: text("created_at")
       .notNull()
       .default(sql`(datetime('now'))`),
