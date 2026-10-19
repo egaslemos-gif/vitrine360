@@ -1,7 +1,8 @@
 import { and, asc, eq, max, sql } from "drizzle-orm";
-import { db, ensureSchema } from "@/db";
+import { db, ensureSchema, type AllocationTx } from "@/db";
 import { contents, devices, playlistItems, playlists, schedules } from "@/db/schema";
 import { logActivity } from "@/services/activity-log";
+import type { EnqueueCommandInput } from "@/services/device-commands";
 import {
   TRANSITIONS,
   assertTransition,
@@ -9,6 +10,35 @@ import {
   type Transition,
 } from "@/domain/types";
 import { z } from "zod";
+
+/**
+ * Mutex por playlist neste processo. Junto com BEGIN IMMEDIATE, o cálculo
+ * max(position)+1 não corre em paralelo para a mesma playlist. Não substitui
+ * o filtro de tenant.
+ */
+const playlistMutationChains = new Map<string, Promise<unknown>>();
+
+async function withPlaylistMutationLock<T>(
+  playlistId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const prev = playlistMutationChains.get(playlistId) ?? Promise.resolve();
+  let release!: () => void;
+  const hold = new Promise<void>((r) => {
+    release = r;
+  });
+  const tail = prev.then(() => hold);
+  playlistMutationChains.set(playlistId, tail);
+  await prev;
+  try {
+    return await fn();
+  } finally {
+    release();
+    if (playlistMutationChains.get(playlistId) === tail) {
+      playlistMutationChains.delete(playlistId);
+    }
+  }
+}
 
 export const createPlaylistSchema = z.object({
   name: z.string().min(1).max(200),
@@ -156,60 +186,88 @@ export async function addPlaylistItem(params: {
   transition?: Transition | string;
   userId?: string;
 }) {
-  const [playlist] = await db
-    .select()
-    .from(playlists)
-    .where(
-      and(
-        eq(playlists.id, params.playlistId),
-        eq(playlists.tenantId, params.tenantId),
-      ),
-    )
-    .limit(1);
-  if (!playlist) throw new Error("Playlist not found");
-
-  const [content] = await db
-    .select()
-    .from(contents)
-    .where(
-      and(
-        eq(contents.id, params.contentId),
-        eq(contents.tenantId, params.tenantId),
-      ),
-    )
-    .limit(1);
-  if (!content) throw new Error("Content not found");
-
   const transition =
     params.transition !== undefined
       ? assertTransition(params.transition)
       : ("fade" satisfies Transition);
-
-  const [{ value: maxPos }] = await db
-    .select({ value: max(playlistItems.position) })
-    .from(playlistItems)
-    .where(eq(playlistItems.playlistId, params.playlistId));
-
   const id = crypto.randomUUID();
-  await db.insert(playlistItems).values({
-    id,
-    playlistId: params.playlistId,
-    contentId: params.contentId,
-    position: (maxPos ?? -1) + 1,
-    durationOverrideMs: params.durationOverrideMs ?? null,
-    transition,
-  });
 
-  await bumpPlaylistVersion(params.playlistId, params.tenantId);
-  await logActivity({
-    userId: params.userId,
-    tenantId: params.tenantId,
-    action: "playlist.item_added",
-    resource: "playlist",
-    resourceId: params.playlistId,
-    metadata: { contentId: params.contentId },
+  return withPlaylistMutationLock(params.playlistId, async () => {
+    let pendingSyncHints: EnqueueCommandInput[] = [];
+
+    await db.transaction(async (tx) => {
+      const [playlist] = await tx
+        .select()
+        .from(playlists)
+        .where(
+          and(
+            eq(playlists.id, params.playlistId),
+            eq(playlists.tenantId, params.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!playlist) throw new Error("Playlist not found");
+
+      const [content] = await tx
+        .select()
+        .from(contents)
+        .where(
+          and(
+            eq(contents.id, params.contentId),
+            eq(contents.tenantId, params.tenantId),
+          ),
+        )
+        .limit(1);
+      if (!content) throw new Error("Content not found");
+
+      const [{ value: maxPos }] = await tx
+        .select({ value: max(playlistItems.position) })
+        .from(playlistItems)
+        .where(eq(playlistItems.playlistId, params.playlistId));
+
+      await tx.insert(playlistItems).values({
+        id,
+        playlistId: params.playlistId,
+        contentId: params.contentId,
+        position: (maxPos ?? -1) + 1,
+        durationOverrideMs: params.durationOverrideMs ?? null,
+        transition,
+      });
+
+      const bump = await bumpPlaylistVersion(
+        params.playlistId,
+        params.tenantId,
+        tx,
+      );
+      pendingSyncHints = bump.pendingSyncHints;
+
+      await logActivity(
+        {
+          userId: params.userId,
+          tenantId: params.tenantId,
+          action: "playlist.item_added",
+          resource: "playlist",
+          resourceId: params.playlistId,
+          metadata: { contentId: params.contentId },
+        },
+        tx,
+      );
+    });
+
+    if (pendingSyncHints.length > 0) {
+      try {
+        const { enqueueDeviceCommand } = await import(
+          "@/services/device-commands"
+        );
+        for (const hint of pendingSyncHints) {
+          await enqueueDeviceCommand(hint);
+        }
+      } catch {
+        /* a falha do hint não desfaz nem esconde a inserção já commitada */
+      }
+    }
+    return id;
   });
-  return id;
 }
 
 export async function reorderPlaylistItems(
@@ -343,34 +401,42 @@ export async function updatePlaylistItem(
 /**
  * Increment playlist version and linked device manifest versions.
  * `tenantId` is required — never bump by playlist id alone (F-03 / RBAC audit).
+ * Com `tx`, todas as queries usam esse handle. Hints FORCE_SYNC ficam para
+ * depois do commit. Sem `tx`, o enqueue corre depois das escritas, em best-effort.
  */
 export async function bumpPlaylistVersion(
   playlistId: string,
   tenantId: string,
-) {
+  tx?: AllocationTx,
+): Promise<{
+  newVersion: number | null;
+  pendingSyncHints: EnqueueCommandInput[];
+}> {
   const scopedTenantId = tenantId?.trim();
   if (!scopedTenantId) {
     throw new Error("tenantId is required to bump playlist version");
   }
-  const [row] = await db
+  const q = tx ?? db;
+  const [row] = await q
     .select()
     .from(playlists)
     .where(
       and(eq(playlists.id, playlistId), eq(playlists.tenantId, scopedTenantId)),
     )
     .limit(1);
-  if (!row) return;
-  await db
+  if (!row) return { newVersion: null, pendingSyncHints: [] };
+  const newVersion = row.version + 1;
+  await q
     .update(playlists)
     .set({
-      version: row.version + 1,
+      version: newVersion,
       updatedAt: new Date().toISOString(),
     })
     .where(
       and(eq(playlists.id, playlistId), eq(playlists.tenantId, scopedTenantId)),
     );
 
-  const linked = await db
+  const linked = await q
     .select()
     .from(devices)
     .where(
@@ -380,8 +446,10 @@ export async function bumpPlaylistVersion(
       ),
     );
   const now = new Date().toISOString();
+  const pendingSyncHints: EnqueueCommandInput[] = [];
+  const { enqueueDeviceCommand } = await import("@/services/device-commands");
   for (const device of linked) {
-    await db
+    await q
       .update(devices)
       .set({
         manifestVersion: device.manifestVersion + 1,
@@ -391,7 +459,28 @@ export async function bumpPlaylistVersion(
       .where(
         and(eq(devices.id, device.id), eq(devices.tenantId, scopedTenantId)),
       );
+
+    if (device.tenantId && device.status === "ACTIVE") {
+      const hint: EnqueueCommandInput = {
+        tenantId: device.tenantId,
+        deviceId: device.id,
+        type: "FORCE_SYNC",
+        payload: {},
+        ttlMs: 30_000,
+        correlationId: `playlist:${playlistId}:v${newVersion}`,
+      };
+      if (tx) {
+        pendingSyncHints.push(hint);
+      } else {
+        try {
+          await enqueueDeviceCommand(hint);
+        } catch {
+          /* never fail playlist mutation if command inbox is busy/unavailable */
+        }
+      }
+    }
   }
+  return { newVersion, pendingSyncHints };
 }
 
 export async function duplicatePlaylist(

@@ -22,6 +22,8 @@ export const DEVICE_COMMAND_TYPES = [
   "SET_VOLUME",
   "SET_MUTED",
   "SET_REPEAT_MODE",
+  /** Trigger device manifest/playlist sync (not a playback transport action). */
+  "FORCE_SYNC",
 ] as const;
 export type DeviceCommandType = (typeof DEVICE_COMMAND_TYPES)[number];
 
@@ -216,7 +218,8 @@ export function validateCommandPayload(
     case "STOP":
     case "NEXT":
     case "PREVIOUS":
-    case "RESTART": {
+    case "RESTART":
+    case "FORCE_SYNC": {
       if (Object.keys(p).length > 0) {
         return { ok: false, reason: "INVALID_PAYLOAD" };
       }

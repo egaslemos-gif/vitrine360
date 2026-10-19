@@ -39,6 +39,8 @@ export function mapCommandToPlaybackAction(
         .repeatMode;
       return { type: "SET_REPEAT_MODE", mode: repeatMode };
     }
+    case "FORCE_SYNC":
+      throw new Error("FORCE_SYNC_NOT_PLAYBACK");
     default: {
       const _exhaustive: never = command.type;
       void _exhaustive;
